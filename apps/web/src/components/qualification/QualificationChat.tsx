@@ -41,6 +41,7 @@ import {
   validatePhone,
 } from "../../lib/qualification/validation";
 import { DiagnosisCard } from "./DiagnosisCard";
+import { installTrackingTags, trackDiagnosticEvent } from "../../lib/tracking";
 
 type Props = {
   mode?: "page" | "modal";
@@ -232,6 +233,10 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
       { id: nextId(), role: "bot", text: botQuestion("result", nextForm, config.brandName) },
       { id: nextId(), role: "report", report },
     ]);
+    trackDiagnosticEvent("diagnostic_report_viewed", {
+      score: report.score,
+      is_low_revenue: report.isLowRevenue,
+    });
 
     setTimeout(() => {
       reportTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -320,6 +325,14 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
     setInput("");
     setMessages((prev) => [...prev, { id: nextId(), role: "lead", text: answerLabel }]);
 
+    if (fromStep === "name") {
+      trackDiagnosticEvent("diagnostic_started", { step: "name" });
+    }
+    trackDiagnosticEvent("diagnostic_step_completed", {
+      step: fromStep,
+      step_index: STEPS.indexOf(fromStep) + 1,
+    });
+
     const idx = STEPS.indexOf(fromStep);
     const next = STEPS[idx + 1];
 
@@ -393,6 +406,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
   }
 
   async function handleWhatsappCta() {
+    trackDiagnosticEvent("diagnostic_cta_clicked", { cta: "whatsapp" });
     if (!leadId) {
       toast.error("Salvando diagnóstico… tente de novo em instantes.");
       return;
@@ -458,6 +472,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
   }
 
   async function handleOfferYes() {
+    trackDiagnosticEvent("diagnostic_cta_clicked", { cta: "offer_yes" });
     setBotBusy(true);
     await sayBot(
       "Perfeito. Montei o resumo do Plano Essencial pra sua agência — valor, o que inclui e como contratar."
@@ -479,6 +494,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
   }
 
   async function handleCheckout() {
+    trackDiagnosticEvent("diagnostic_cta_clicked", { cta: "checkout" });
     if (leadId) {
       try {
         await completeLead(leadId, "checkout");
@@ -503,8 +519,16 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
       try {
         const page = await getPageConfig("diagnostico");
         setConfig((c) => ({ ...c, ...page, ...brandOverride }));
+        installTrackingTags({
+          gtmId: page.gtmId,
+          ga4MeasurementId: page.ga4MeasurementId,
+          metaPixelId: page.metaPixelId,
+          googleAdsId: page.googleAdsId,
+        });
+        trackDiagnosticEvent("diagnostic_page_view", { mode });
       } catch {
         // keep defaults
+        trackDiagnosticEvent("diagnostic_page_view", { mode });
       }
 
       const draft = loadDraft();

@@ -40,6 +40,12 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(16).default("muratori-dev-secret-change-me!!"),
   INTERNAL_WEBHOOK_URL: z.string().optional(),
+  META_PIXEL_ID: z.string().optional(),
+  META_ACCESS_TOKEN: z.string().optional(),
+  GA4_MEASUREMENT_ID: z.string().optional(),
+  GA4_API_SECRET: z.string().optional(),
+  GOOGLE_ADS_ID: z.string().optional(),
+  GOOGLE_ADS_CONVERSION_LABEL: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

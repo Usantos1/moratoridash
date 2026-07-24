@@ -246,6 +246,7 @@ export const leadsExtraRoutes: FastifyPluginAsync = async (app) => {
       gtmId: page.gtmId,
       ga4MeasurementId: page.ga4MeasurementId,
       metaPixelId: page.metaPixelId,
+      googleAdsId: page.googleAdsId,
       offer: offer
         ? {
             name: offer.name,

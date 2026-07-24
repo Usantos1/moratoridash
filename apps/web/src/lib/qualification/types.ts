@@ -74,6 +74,10 @@ export type PageConfig = {
   whatsappNumber: string | null;
   whatsappMessageTemplate: string | null;
   segmentPreset: string;
+  gtmId?: string | null;
+  ga4MeasurementId?: string | null;
+  metaPixelId?: string | null;
+  googleAdsId?: string | null;
   offer: {
     name: string;
     priceLabel: string;
