@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { formatPhoneBr, onlyDigits } from "../lib/smart-forms/phone-mask";
 import { darkenHex } from "../lib/qualification/chat-theme";
+import {
+  bootstrapPublicTracking,
+  fireSmartFormConversion,
+  type PublicTrackingConfig,
+} from "../lib/smart-forms/tracking";
 
 type PublicMeta = {
   formId: string;
@@ -97,6 +102,8 @@ export function PublicSmartFormPage() {
   const chatBg =
     (meta?.theme?.backgroundColor as string) || "var(--sf-chat-bg-light)";
   const usePattern = meta?.theme?.chatWallpaperPattern !== false;
+  const wallpaper = meta?.theme?.chatWallpaperUrl as string | undefined;
+  const logoUrl = meta?.theme?.logoUrl as string | undefined;
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
@@ -138,6 +145,7 @@ export function PublicSmartFormPage() {
         );
         if (cancelled) return;
         setMeta(m);
+        bootstrapPublicTracking((m.tracking || {}) as PublicTrackingConfig);
 
         const cacheRaw = localStorage.getItem(completedCacheKey(slug));
         if (cacheRaw) {
@@ -271,6 +279,10 @@ export function PublicSmartFormPage() {
             redirectUrl: next.redirectUrl || null,
           })
         );
+        fireSmartFormConversion((meta?.tracking || {}) as PublicTrackingConfig, {
+          leadId: next.leadId,
+          temperature: next.temperature,
+        });
         const banner =
           next.currentNode?.bannerText ||
           (meta?.theme?.completionBannerText as string) ||
@@ -355,9 +367,17 @@ export function PublicSmartFormPage() {
             background: `linear-gradient(180deg, ${primary}, ${primaryDark})`,
           }}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-sm font-bold">
-            {(meta?.name || "M").slice(0, 1).toUpperCase()}
-          </div>
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt=""
+              className="h-10 w-10 rounded-full object-cover ring-2 ring-white/30"
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-sm font-bold">
+              {(meta?.name || "M").slice(0, 1).toUpperCase()}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <div className="truncate text-[15px] font-semibold">
               {meta?.name || "…"}
@@ -372,11 +392,14 @@ export function PublicSmartFormPage() {
           ref={scroller}
           className="relative flex-1 space-y-2 overflow-y-auto px-3 py-4"
           style={{
-            background: chatBg,
-            backgroundImage: usePattern
-              ? "radial-gradient(circle at 20% 20%, rgba(0,0,0,0.04) 1px, transparent 1px)"
-              : undefined,
-            backgroundSize: usePattern ? "18px 18px" : undefined,
+            backgroundColor: chatBg,
+            backgroundImage: wallpaper
+              ? `url(${wallpaper})`
+              : usePattern
+                ? "radial-gradient(circle at 20% 20%, rgba(0,0,0,0.04) 1px, transparent 1px)"
+                : undefined,
+            backgroundSize: wallpaper ? "cover" : usePattern ? "18px 18px" : undefined,
+            backgroundPosition: "center",
           }}
         >
           <div className="mx-auto mb-3 w-fit rounded-full bg-[var(--sf-date-chip-bg)] px-2.5 py-0.5 text-[10px] font-medium text-[var(--sf-date-chip-text)]">

@@ -160,6 +160,15 @@ export function SmartFormBuilderPage() {
             .then(() => toast.success("Removido"))
             .catch((e) => toast.error(e.message));
         }}
+        onVerifyDomain={(domainId) => {
+          void smartFormsApi
+            .verifyDomain(domainId)
+            .then((res) => {
+              toast[res.ok ? "success" : "error"](res.message);
+              return load();
+            })
+            .catch((e) => toast.error(e.message));
+        }}
       />
     </div>
   );

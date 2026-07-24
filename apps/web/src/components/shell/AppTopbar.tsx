@@ -25,7 +25,7 @@ type Props = {
 };
 
 const PRIMARY_NAV = [
-  { to: "/admin", end: true, label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/forms/dashboard", end: true, label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/forms", label: "Painel Forms", icon: Megaphone },
   { to: "/admin/flows", label: "Muratori IA", icon: Globe2 },
 ] as const;

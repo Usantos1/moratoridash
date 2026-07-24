@@ -189,16 +189,28 @@ cd /var/www/muratori
 git fetch origin
 git reset --hard origin/main
 
-# Importante: com NODE_ENV=production o npm pula devDeps.
-# Use --include=dev OU deixe as deps de build no package do web.
+# deps de build (Prisma/tsc) precisam de devDeps
 unset NODE_ENV
 npm install --include=dev
 set -a && . ./.env && set +a
+
+npm run db:generate
+npm run db:migrate:deploy
+npm run db:seed
 
 npm run build
 pm2 restart muratori-api --update-env
 ```
 
+Uploads de logo/wallpaper do Smart Forms ficam em `apps/api/uploads/` (ou `uploads/` relativo ao cwd do PM2).  
+Opcional no `.env`:
+
+```env
+PUBLIC_APP_URL=https://app.muratorimkt.com.br
+SMART_FORM_CNAME_TARGET=app.muratorimkt.com.br
+```
+
+Nginx já faz proxy de `/api/` — imagens em `/api/uploads/:file` passam pela API.
 ## Backup do Postgres
 
 ```bash

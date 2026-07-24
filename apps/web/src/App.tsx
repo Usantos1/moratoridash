@@ -29,7 +29,7 @@ export default function App() {
         <Route path="/f/:slug" element={<PublicSmartFormPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminLeadsPage />} />
+          <Route index element={<SmartFormsDashboardPage />} />
           <Route path="leads" element={<AdminLeadsPage />} />
           <Route path="leads/:id" element={<AdminLeadDetailPage />} />
           <Route path="marca" element={<AdminOnboardingPage />} />

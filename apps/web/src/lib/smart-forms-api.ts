@@ -113,4 +113,17 @@ export const smartFormsApi = {
     }),
   deleteDomain: (id: string) =>
     sfFetch(`/api/forms/domains/${id}`, { method: "DELETE" }),
+  verifyDomain: (id: string) =>
+    sfFetch<{
+      ok: boolean;
+      message: string;
+      status: string;
+      records: string[];
+      domain: Record<string, unknown>;
+    }>(`/api/forms/domains/${id}/verify`, { method: "POST" }),
+  uploadAsset: (dataUrl: string) =>
+    sfFetch<{ url: string; filename: string; mime: string; bytes: number }>(
+      "/api/forms/assets",
+      { method: "POST", body: JSON.stringify({ dataUrl }) }
+    ),
 };

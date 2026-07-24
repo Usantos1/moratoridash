@@ -33,3 +33,7 @@ Thumbs.db
 # Coverage / test
 coverage/
 .turbo/
+
+# Smart Forms uploads
+uploads/
+**/uploads/

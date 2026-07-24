@@ -11,6 +11,8 @@ import {
   uniqueOrgSlug,
   uniquePublicSlug,
 } from "./service";
+import { publicUploadUrl, readUpload, saveBase64Image } from "./assets";
+import { verifyHostnameDns } from "./domain-verify";
 
 const slugSchema = z
   .string()
@@ -352,11 +354,45 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     return { ok: true };
   });
 
-  // Nota: upload multipart fica para fase UI; stub JSON
-  app.post("/forms/assets", async (_request, reply) => {
-    return reply.status(501).send({
-      error: "Upload multipart ainda não habilitado nesta fase",
+  app.post("/forms/domains/:id/verify", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const domain = await prisma.smartFormDomain.findUnique({ where: { id } });
+    if (!domain) return reply.status(404).send({ error: "Domínio não encontrado" });
+
+    const result = await verifyHostnameDns(domain.hostname);
+    const updated = await prisma.smartFormDomain.update({
+      where: { id },
+      data: { status: result.status },
     });
+    return { domain: updated, ...result };
+  });
+
+  app.post("/forms/assets", async (request, reply) => {
+    const body = z
+      .object({
+        dataUrl: z.string().min(32).max(12_000_000),
+      })
+      .parse(request.body);
+
+    try {
+      const saved = await saveBase64Image({ dataUrl: body.dataUrl });
+      const proto = String(request.headers["x-forwarded-proto"] || "http");
+      const host = String(request.headers["x-forwarded-host"] || request.headers.host || "");
+      const base =
+        process.env.PUBLIC_APP_URL ||
+        (host ? `${proto}://${host}` : `http://127.0.0.1:${process.env.API_PORT || 3340}`);
+      const url = publicUploadUrl(saved.filename, base);
+      return reply.status(201).send({
+        url,
+        filename: saved.filename,
+        mime: saved.mime,
+        bytes: saved.bytes,
+      });
+    } catch (e) {
+      return reply.status(400).send({
+        error: e instanceof Error ? e.message : "Upload inválido",
+      });
+    }
   });
 
   app.get("/forms/:id", async (request, reply) => {

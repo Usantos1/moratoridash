@@ -155,7 +155,11 @@ export function SmartTemplatesPage() {
   }, []);
 
   const cards = useMemo(() => {
-    const merged = [...apiTemplates, ...FALLBACK_TEMPLATES.filter((f) => !apiTemplates.some((a) => a.name === f.name))];
+    if (apiTemplates.length > 0) {
+      if (cat === "Todos") return apiTemplates;
+      return apiTemplates.filter((c) => c.category === cat);
+    }
+    const merged = FALLBACK_TEMPLATES;
     if (cat === "Todos") return merged;
     return merged.filter((c) => c.category === cat);
   }, [apiTemplates, cat]);

@@ -34,6 +34,8 @@ import {
 } from "../../lib/smart-forms/types";
 import { AdminField, AdminInput, AdminSelect, AdminTextarea } from "../admin/ui";
 import { DraftSimulator } from "./DraftSimulator";
+import { smartFormsApi } from "../../lib/smart-forms-api";
+import { toast } from "sonner";
 
 type SidebarTab = "score" | "visual" | "simulador" | "pixels" | "dominio";
 
@@ -75,6 +77,7 @@ type Props = {
   domains: Array<Record<string, unknown>>;
   onAddDomain: (hostname: string) => void;
   onDeleteDomain: (id: string) => void;
+  onVerifyDomain: (id: string) => void;
 };
 
 export function SmartFormBuilder({
@@ -87,6 +90,7 @@ export function SmartFormBuilder({
   domains,
   onAddDomain,
   onDeleteDomain,
+  onVerifyDomain,
 }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [sidebar, setSidebar] = useState<SidebarTab>("score");
@@ -719,6 +723,22 @@ export function SmartFormBuilder({
                     }
                   />
                 </AdminField>
+                <AssetField
+                  label="Logo do chat"
+                  value={theme.logoUrl || ""}
+                  onChange={(url) =>
+                    patchSettings({ theme: { ...theme, logoUrl: url || undefined } })
+                  }
+                />
+                <AssetField
+                  label="Wallpaper da conversa"
+                  value={theme.chatWallpaperUrl || ""}
+                  onChange={(url) =>
+                    patchSettings({
+                      theme: { ...theme, chatWallpaperUrl: url || undefined },
+                    })
+                  }
+                />
                 <label className="flex items-center gap-2.5 text-[13px]">
                   <input
                     type="checkbox"
@@ -762,6 +782,17 @@ export function SmartFormBuilder({
                         }
                       />
                     </AdminField>
+                  </div>
+                  <div className="mt-3">
+                    <AssetField
+                      label="OG Image"
+                      value={settings.seo?.ogImage || ""}
+                      onChange={(url) =>
+                        patchSettings({
+                          seo: { ...settings.seo, ogImage: url || undefined },
+                        })
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -1003,19 +1034,30 @@ export function SmartFormBuilder({
                     {domains.map((d) => (
                       <li
                         key={String(d.id)}
-                        className="flex items-center justify-between rounded-xl border border-border/60 px-3 py-2 text-xs"
+                        className="rounded-xl border border-border/60 px-3 py-2 text-xs"
                       >
-                        <div>
-                          <div className="font-semibold">{String(d.hostname)}</div>
-                          <div className="text-muted-foreground">{String(d.status)}</div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <div className="font-semibold">{String(d.hostname)}</div>
+                            <div className="text-muted-foreground">{String(d.status)}</div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              className="font-semibold text-primary hover:underline"
+                              onClick={() => onVerifyDomain(String(d.id))}
+                            >
+                              Verificar
+                            </button>
+                            <button
+                              type="button"
+                              className="text-destructive hover:underline"
+                              onClick={() => onDeleteDomain(String(d.id))}
+                            >
+                              Remover
+                            </button>
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          className="text-destructive hover:underline"
-                          onClick={() => onDeleteDomain(String(d.id))}
-                        >
-                          Remover
-                        </button>
                       </li>
                     ))}
                   </ul>
@@ -1026,6 +1068,86 @@ export function SmartFormBuilder({
         </div>
       </aside>
     </div>
+  );
+}
+
+function AssetField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+
+  async function onFile(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Envie uma imagem");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Máx. 8 MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
+        reader.readAsDataURL(file);
+      });
+      const res = await smartFormsApi.uploadAsset(dataUrl);
+      onChange(res.url);
+      toast.success("Imagem enviada");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro no upload");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <AdminField label={label}>
+      <div className="space-y-2">
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border/80 bg-muted/30 px-3 py-4 text-center hover:border-primary/40">
+          <span className="text-xs font-semibold text-foreground">
+            {uploading ? "Enviando…" : "Arraste ou clique · PNG, JPG, WebP · máx. 8 MB"}
+          </span>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="hidden"
+            disabled={uploading}
+            onChange={(e) => void onFile(e.target.files?.[0] || null)}
+          />
+        </label>
+        {value ? (
+          <div className="flex items-center gap-2">
+            <img
+              src={value}
+              alt=""
+              className="h-10 w-10 rounded-lg object-cover ring-1 ring-border"
+            />
+            <button
+              type="button"
+              className="text-[11px] font-semibold text-destructive hover:underline"
+              onClick={() => onChange("")}
+            >
+              Remover
+            </button>
+          </div>
+        ) : null}
+        <AdminInput
+          placeholder="https://… ou envie acima"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </div>
+    </AdminField>
   );
 }
 
