@@ -2,6 +2,22 @@ import type { FastifyPluginAsync } from "fastify";
 import { prisma } from "@muratori/database";
 
 export const healthRoutes: FastifyPluginAsync = async (app) => {
+  app.get("/", async () => {
+    return {
+      ok: true,
+      service: "muratori-api",
+      version: "0.1.0",
+      message: "Muratori Dash API",
+      docs: {
+        health: "/health",
+        healthDb: "/health/db",
+        leadsAutosave: "POST /api/leads/autosave",
+        leadsCheck: "GET /api/leads/check-completed",
+      },
+      timestamp: new Date().toISOString(),
+    };
+  });
+
   app.get("/health", async () => {
     return {
       ok: true,
