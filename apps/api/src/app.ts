@@ -8,6 +8,7 @@ import { leadsRoutes } from "./routes/leads";
 import { leadsExtraRoutes } from "./routes/leads-extra";
 import { authRoutes } from "./routes/auth";
 import { adminRoutes } from "./routes/admin";
+import { settingsAdminRoutes, settingsPublicRoutes } from "./routes/settings";
 
 export async function buildApp() {
   const app = Fastify({
@@ -31,7 +32,9 @@ export async function buildApp() {
   await app.register(authRoutes, { prefix: "/api" });
   await app.register(leadsRoutes, { prefix: "/api" });
   await app.register(leadsExtraRoutes, { prefix: "/api" });
+  await app.register(settingsPublicRoutes, { prefix: "/api" });
   await app.register(adminRoutes, { prefix: "/api" });
+  await app.register(settingsAdminRoutes, { prefix: "/api" });
 
   app.addHook("onClose", async () => {
     await prisma.$disconnect();

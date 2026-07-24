@@ -10,6 +10,7 @@ import { AdminPagesPage } from "./pages/admin/AdminPagesPage";
 import { AdminWhatsappPage } from "./pages/admin/AdminWhatsappPage";
 import { AdminDeliveriesPage } from "./pages/admin/AdminDeliveriesPage";
 import { AdminFlowsPage } from "./pages/admin/AdminFlowsPage";
+import { AdminOnboardingPage } from "./pages/admin/AdminOnboardingPage";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminLeadsPage />} />
           <Route path="leads/:id" element={<AdminLeadDetailPage />} />
+          <Route path="marca" element={<AdminOnboardingPage />} />
           <Route path="pages" element={<AdminPagesPage />} />
           <Route path="whatsapp" element={<AdminWhatsappPage />} />
           <Route path="flows" element={<AdminFlowsPage />} />

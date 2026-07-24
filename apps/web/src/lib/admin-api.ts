@@ -74,4 +74,13 @@ export const adminApi = {
     adminFetch("/api/admin/flows", { method: "POST", body: JSON.stringify(body) }),
   publishFlow: (id: string) =>
     adminFetch(`/api/admin/flows/${id}/publish`, { method: "POST" }),
+  settings: () =>
+    adminFetch<{
+      branding: Record<string, unknown>;
+      business: Record<string, unknown>;
+      whatsapp: Record<string, unknown>;
+      tracking: Record<string, unknown>;
+    }>("/api/admin/settings"),
+  saveSettings: (body: Record<string, unknown>) =>
+    adminFetch("/api/admin/settings", { method: "PATCH", body: JSON.stringify(body) }),
 };

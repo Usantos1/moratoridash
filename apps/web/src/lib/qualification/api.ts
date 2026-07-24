@@ -30,6 +30,21 @@ export function getPageConfig(slug = "diagnostico") {
   );
 }
 
+/** Marca global da instalação (fallback quando não há page config) */
+export function getBrandSettings() {
+  return request<{
+    brandName: string;
+    assistantName: string;
+    primaryColor: string;
+    secondaryColor: string;
+    logoUrl: string | null;
+    gtmId: string | null;
+    ga4MeasurementId: string | null;
+    metaPixelId: string | null;
+    googleAdsId: string | null;
+  }>("/api/config/settings");
+}
+
 export function getWhatsappConfig() {
   return request<{ whatsappNumber: string; whatsappMessageTemplate: string | null }>(
     "/api/config/whatsapp"

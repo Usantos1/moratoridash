@@ -28,6 +28,7 @@ import {
   autosaveLead,
   checkCompleted,
   completeLead,
+  getBrandSettings,
   getPageConfig,
   getWhatsappConfig,
   trackWhatsapp,
@@ -516,20 +517,45 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
     startedRef.current = true;
 
     (async () => {
+      // Marca global primeiro; a page config sobrescreve o que definir
+      const tracking = {
+        gtmId: null as string | null,
+        ga4MeasurementId: null as string | null,
+        metaPixelId: null as string | null,
+        googleAdsId: null as string | null,
+      };
+
+      try {
+        const brand = await getBrandSettings();
+        setConfig((c) => ({ ...c, ...brand, ...brandOverride }));
+        Object.assign(tracking, {
+          gtmId: brand.gtmId,
+          ga4MeasurementId: brand.ga4MeasurementId,
+          metaPixelId: brand.metaPixelId,
+          googleAdsId: brand.googleAdsId,
+        });
+      } catch {
+        // mantém defaults
+      }
+
       try {
         const page = await getPageConfig("diagnostico");
-        setConfig((c) => ({ ...c, ...page, ...brandOverride }));
-        installTrackingTags({
-          gtmId: page.gtmId,
-          ga4MeasurementId: page.ga4MeasurementId,
-          metaPixelId: page.metaPixelId,
-          googleAdsId: page.googleAdsId,
+        const merged = Object.fromEntries(
+          Object.entries(page).filter(([, v]) => v !== null && v !== undefined)
+        ) as Partial<PageConfig>;
+        setConfig((c) => ({ ...c, ...merged, ...brandOverride }));
+        Object.assign(tracking, {
+          gtmId: page.gtmId ?? tracking.gtmId,
+          ga4MeasurementId: page.ga4MeasurementId ?? tracking.ga4MeasurementId,
+          metaPixelId: page.metaPixelId ?? tracking.metaPixelId,
+          googleAdsId: page.googleAdsId ?? tracking.googleAdsId,
         });
-        trackDiagnosticEvent("diagnostic_page_view", { mode });
       } catch {
         // keep defaults
-        trackDiagnosticEvent("diagnostic_page_view", { mode });
       }
+
+      installTrackingTags(tracking);
+      trackDiagnosticEvent("diagnostic_page_view", { mode });
 
       const draft = loadDraft();
       if (draft) {
@@ -609,7 +635,8 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
           <div className="mt-6 flex flex-col gap-2">
             <button
               type="button"
-              className="rounded-full bg-[#075e54] px-4 py-3 font-semibold text-white"
+              className="rounded-full px-4 py-3 font-semibold text-white"
+              style={{ backgroundColor: config.primaryColor }}
               onClick={() => {
                 const text = `Olá! Sou ${alreadyDone.name}, da agência ${alreadyDone.companyName || ""}. Já fiz o diagnóstico no site e quero continuar a conversa.`;
                 window.open(
@@ -640,7 +667,10 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
         mode === "modal" ? "" : ""
       }`}
     >
-      <header className="flex items-center gap-3 bg-[#075e54] px-4 py-3 text-white">
+      <header
+        className="flex items-center gap-3 px-4 py-3 text-white"
+        style={{ backgroundColor: config.primaryColor }}
+      >
         <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-emerald-300 bg-white text-sm font-bold text-emerald-800">
           {config.logoUrl ? (
             <img src={config.logoUrl} alt="" className="h-full w-full object-cover" />
@@ -902,7 +932,8 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
           <button
             type="button"
             onClick={() => void handleTextSubmit()}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#075e54] text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-white"
+            style={{ backgroundColor: config.primaryColor }}
             aria-label="Enviar"
           >
             ➤
