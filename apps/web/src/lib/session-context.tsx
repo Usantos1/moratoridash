@@ -46,18 +46,20 @@ export function SessionProvider({ children, onUnauthenticated, fallback }: Provi
 
   const load = useCallback(async () => {
     const res = await adminApi.me();
+    const workspaces = Array.isArray(res.workspaces) ? res.workspaces : [];
+    const permissions = Array.isArray(res.permissions) ? res.permissions : [];
     const activeId =
-      res.workspaces.find((item) => item.id === getActiveWorkspaceId())?.id ??
+      workspaces.find((item) => item.id === getActiveWorkspaceId())?.id ??
       res.activeWorkspaceId ??
-      res.workspaces[0]?.id ??
+      workspaces[0]?.id ??
       null;
     setActiveWorkspaceId(activeId);
-    const active = res.workspaces.find((item) => item.id === activeId) ?? null;
+    const active = workspaces.find((item) => item.id === activeId) ?? null;
     setState({
       user: res.user,
-      workspaces: res.workspaces,
+      workspaces,
       activeWorkspaceId: activeId,
-      permissions: active?.permissions ?? res.permissions,
+      permissions: active?.permissions ?? permissions,
     });
   }, []);
 

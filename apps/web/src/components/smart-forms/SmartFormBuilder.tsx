@@ -35,6 +35,7 @@ import {
 import { AdminField, AdminInput, AdminSelect, AdminTextarea } from "../admin/ui";
 import { DraftSimulator } from "./DraftSimulator";
 import { smartFormsApi } from "../../lib/smart-forms-api";
+import { assetSrc } from "../../lib/asset-url";
 import { toast } from "sonner";
 
 type SidebarTab = "score" | "visual" | "simulador" | "pixels" | "dominio";
@@ -1081,6 +1082,7 @@ function AssetField({
   onChange: (url: string) => void;
 }) {
   const [uploading, setUploading] = useState(false);
+  const previewSrc = assetSrc(value);
 
   async function onFile(file: File | null) {
     if (!file) return;
@@ -1113,6 +1115,25 @@ function AssetField({
   return (
     <AdminField label={label}>
       <div className="space-y-2">
+        {previewSrc ? (
+          <div className="flex items-center gap-2">
+            <img
+              src={previewSrc}
+              alt=""
+              className="h-10 w-10 rounded-lg object-cover ring-1 ring-border"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.opacity = "0.35";
+              }}
+            />
+            <button
+              type="button"
+              className="text-[11px] font-semibold text-destructive hover:underline"
+              onClick={() => onChange("")}
+            >
+              Remover
+            </button>
+          </div>
+        ) : null}
         <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border/80 bg-muted/30 px-3 py-4 text-center hover:border-primary/40">
           <span className="text-xs font-semibold text-foreground">
             {uploading ? "Enviando…" : "Arraste ou clique · PNG, JPG, WebP · máx. 8 MB"}
@@ -1125,22 +1146,6 @@ function AssetField({
             onChange={(e) => void onFile(e.target.files?.[0] || null)}
           />
         </label>
-        {value ? (
-          <div className="flex items-center gap-2">
-            <img
-              src={value}
-              alt=""
-              className="h-10 w-10 rounded-lg object-cover ring-1 ring-border"
-            />
-            <button
-              type="button"
-              className="text-[11px] font-semibold text-destructive hover:underline"
-              onClick={() => onChange("")}
-            >
-              Remover
-            </button>
-          </div>
-        ) : null}
         <AdminInput
           placeholder="https://… ou envie acima"
           value={value}

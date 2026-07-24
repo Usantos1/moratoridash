@@ -219,7 +219,10 @@ npm run build
 pm2 restart muratori-api --update-env
 ```
 
-Uploads de logo/wallpaper do Smart Forms ficam em `apps/api/uploads/` (ou `uploads/` relativo ao cwd do PM2).  
+Uploads de logo/wallpaper do Smart Forms ficam em `apps/api/uploads/smart-forms/`
+(caminho fixo relativo ao pacote da API, independente do `cwd` do PM2).  
+Arquivos antigos em `/var/www/muratori/uploads/smart-forms/` ainda são lidos como fallback.
+
 Opcional no `.env`:
 
 ```env
@@ -228,6 +231,8 @@ SMART_FORM_CNAME_TARGET=app.muratorimkt.com.br
 ```
 
 Nginx já faz proxy de `/api/` — imagens em `/api/uploads/:file` passam pela API.
+URLs novas são salvas como caminho relativo (`/api/uploads/...`); no formulário público
+a API absolutiza com `PUBLIC_APP_URL` para funcionar em domínio customizado.
 ## Backup do Postgres
 
 ```bash

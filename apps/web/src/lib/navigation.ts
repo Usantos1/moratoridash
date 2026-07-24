@@ -1,10 +1,8 @@
 import {
   ClipboardList,
-  Globe2,
   KeyRound,
   LayoutDashboard,
   MessageCircle,
-  Palette,
   Settings2,
   ShieldCheck,
   Users,
@@ -92,51 +90,11 @@ export const MENU_GROUPS: NavGroup[] = [
     group: "Instalação",
     items: [
       {
-        to: "/admin/marca",
-        label: "Marca",
-        desc: "Identidade e tracking",
-        icon: Palette,
-        permission: "settings.write",
-      },
-      {
         to: "/admin/whatsapp",
         label: "WhatsApp",
         desc: "Número e template",
         icon: MessageCircle,
         permission: "settings.write",
-      },
-    ],
-  },
-  {
-    group: "Legado",
-    items: [
-      {
-        to: "/admin/legacy/flows",
-        label: "Builder legado",
-        desc: "Fluxo diagnóstico antigo",
-        icon: Workflow,
-        permission: "legacy.access",
-      },
-      {
-        to: "/admin/legacy/leads",
-        label: "Leads legado",
-        desc: "Diagnósticos antigos",
-        icon: ClipboardList,
-        permission: "leads.read",
-      },
-      {
-        to: "/admin/legacy/pages",
-        label: "Páginas",
-        desc: "Slugs legado",
-        icon: Globe2,
-        permission: "legacy.access",
-      },
-      {
-        to: "/admin/legacy/deliveries",
-        label: "Entregas",
-        desc: "Meta, GA4, webhooks",
-        icon: Settings2,
-        permission: "legacy.access",
       },
     ],
   },

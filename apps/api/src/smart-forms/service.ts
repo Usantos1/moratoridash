@@ -21,6 +21,7 @@ import {
   type SmartFormDefinition,
 } from "./types";
 import { runPostSubmit } from "./post-submit";
+import { absolutizeAssetUrl } from "./assets";
 
 export type { FormSettings };
 
@@ -126,13 +127,29 @@ function publicMeta(form: {
   settings: unknown;
 }) {
   const settings = asSettings(form.settings);
+  const base = (process.env.PUBLIC_APP_URL || "").replace(/\/$/, "");
+  const theme = { ...(settings.theme ?? {}) } as Record<string, unknown>;
+  if (base) {
+    for (const key of ["logoUrl", "chatWallpaperUrl"] as const) {
+      const v = theme[key];
+      if (typeof v === "string") {
+        const abs = absolutizeAssetUrl(v, base);
+        if (abs) theme[key] = abs;
+      }
+    }
+  }
+  const seo = { ...(settings.seo ?? {}) } as Record<string, unknown>;
+  if (base && typeof seo.ogImage === "string") {
+    const abs = absolutizeAssetUrl(seo.ogImage, base);
+    if (abs) seo.ogImage = abs;
+  }
   return {
     formId: form.id,
     name: form.name,
     publicSlug: form.publicSlug,
     description: form.description,
-    theme: settings.theme ?? {},
-    seo: settings.seo ?? {},
+    theme,
+    seo,
     tracking: publicTracking(settings),
     chat: {
       messageDelayMs: settings.chat?.messageDelayMs ?? 900,

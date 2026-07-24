@@ -22,6 +22,9 @@ export async function buildApp() {
 
   await app.register(helmet, {
     contentSecurityPolicy: false,
+    // Assets públicos (logo/wallpaper) precisam carregar em outros origins
+    // (admin local via proxy absoluto, formulários em domínio customizado).
+    crossOriginResourcePolicy: { policy: "cross-origin" },
   });
 
   await app.register(cors, {

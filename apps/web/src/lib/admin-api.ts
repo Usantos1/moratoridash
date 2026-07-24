@@ -2,6 +2,7 @@ import {
   setActiveWorkspaceId,
   workspaceHeaders,
   type SessionPayload,
+  type SessionUser,
   type WorkspaceSummary,
 } from "./session";
 
@@ -49,6 +50,21 @@ export const adminApi = {
       body: JSON.stringify({ email, password }),
     }),
   me: () => adminFetch<SessionPayload>("/api/auth/me"),
+  updateProfile: (body: {
+    name?: string;
+    avatarUrl?: string | null;
+    currentPassword?: string;
+    newPassword?: string;
+  }) =>
+    adminFetch<{ user: SessionUser }>("/api/auth/profile", {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+  uploadAvatar: (dataUrl: string) =>
+    adminFetch<{ url: string; user: SessionUser }>("/api/auth/profile/avatar", {
+      method: "POST",
+      body: JSON.stringify({ dataUrl }),
+    }),
   workspaces: () => adminFetch<{ items: WorkspaceSummary[] }>("/api/workspaces"),
   permissionCatalog: () =>
     adminFetch<{ groups: Array<{ label: string; items: Array<{ key: string; label: string }> }> }>(

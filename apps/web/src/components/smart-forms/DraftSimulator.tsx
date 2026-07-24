@@ -61,13 +61,8 @@ export function DraftSimulator({
 
   return (
     <div>
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-bold">Simulador do chat</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Teste o rascunho como no celular — com opções e ramificações.
-          </p>
-        </div>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-bold">Simulador do chat</h3>
         <button
           type="button"
           className="rounded-full border border-border/70 px-2.5 py-1 text-[11px] font-semibold hover:border-primary/40"
@@ -81,9 +76,9 @@ export function DraftSimulator({
         </button>
       </div>
 
-      <div className="mx-auto w-[270px] overflow-hidden rounded-[1.75rem] border-[6px] border-[#1a1a1a] bg-[#0b141a] shadow-xl">
+      <div className="mx-auto flex h-[560px] w-[280px] flex-col overflow-hidden rounded-[1.85rem] border-[6px] border-[#1a1a1a] bg-[#0b141a] shadow-xl">
         <div
-          className="flex items-center gap-2 px-3 py-2.5 text-white"
+          className="flex shrink-0 items-center gap-2 px-3 py-2.5 text-white"
           style={{ background: primaryColor }}
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
@@ -95,7 +90,7 @@ export function DraftSimulator({
           </div>
         </div>
 
-        <div className="min-h-[340px] max-h-[380px] space-y-2 overflow-y-auto p-3">
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
           <div className="mx-auto w-fit rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/70">
             Hoje
           </div>
@@ -123,7 +118,7 @@ export function DraftSimulator({
         </div>
 
         {!session.completed && node && !isDisplayOnly(node.type) && (
-          <div className="border-t border-white/10 bg-[#1a1a1a] p-2">
+          <div className="shrink-0 border-t border-white/10 bg-[#1a1a1a] p-2">
             {node.type === "lgpd" ? (
               <button
                 type="button"
@@ -209,18 +204,6 @@ export function DraftSimulator({
           </div>
         )}
       </div>
-
-      <button
-        type="button"
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-border/70 py-2.5 text-xs font-semibold hover:border-primary/40"
-        onClick={() => {
-          setSession(startDraft(definition));
-          setInput("");
-          setMulti([]);
-        }}
-      >
-        Reiniciar simulação
-      </button>
     </div>
   );
 }

@@ -9,16 +9,7 @@ import {
   startSession,
 } from "./service";
 import type { AnswerValue } from "./types";
-import { readUpload, uploadPath } from "./assets";
-import { extname } from "node:path";
-
-const MIME: Record<string, string> = {
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png",
-  ".webp": "image/webp",
-  ".gif": "image/gif",
-};
+import { readUpload, uploadMime } from "./assets";
 
 const trackingSchema = z.object({
   utmSource: z.string().max(200).optional(),
@@ -47,9 +38,10 @@ export const smartFormsPublicRoutes: FastifyPluginAsync = async (app) => {
     const { filename } = request.params as { filename: string };
     try {
       const buf = await readUpload(filename);
-      const mime = MIME[extname(uploadPath(filename)).toLowerCase()] || "application/octet-stream";
-      reply.header("Content-Type", mime);
+      // Logos/wallpapers precisam ser embutíveis em domínios customizados e no admin local.
+      reply.header("Content-Type", uploadMime(filename));
       reply.header("Cache-Control", "public, max-age=31536000, immutable");
+      reply.header("Cross-Origin-Resource-Policy", "cross-origin");
       return reply.send(buf);
     } catch {
       return reply.status(404).send({ error: "Arquivo não encontrado" });

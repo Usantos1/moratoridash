@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { PageHeaderPremium } from "./PageHeaderPremium";
 
 /** Cabeçalho das páginas fora do módulo Smart Forms (legado e instalação). */
@@ -143,7 +145,33 @@ const controlClass =
   "w-full rounded-[calc(var(--radius)-2px)] border border-input bg-background px-3 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-ring/25";
 
 export function AdminInput(props: InputHTMLAttributes<HTMLInputElement>) {
+  if (props.type === "password") {
+    return <AdminPasswordInput {...props} />;
+  }
   return <input className={`${controlClass} ${props.className || ""}`} {...props} />;
+}
+
+/// Campo de senha com botão de mostrar/ocultar (olhinho).
+function AdminPasswordInput({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        {...props}
+        type={show ? "text" : "password"}
+        className={`${controlClass} pr-11 ${className}`}
+      />
+      <button
+        type="button"
+        tabIndex={-1}
+        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground transition hover:text-foreground"
+        aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+        onClick={() => setShow((v) => !v)}
+      >
+        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
 }
 
 export function AdminTextarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {

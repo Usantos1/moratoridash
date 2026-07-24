@@ -9,10 +9,14 @@ import {
   Menu,
   Moon,
   Search,
+  Settings,
+  UserCog,
 } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
 import { MENU_GROUPS, PRIMARY_NAV, filterNav } from "../../lib/navigation";
 import { useSession } from "../../lib/session-context";
+import { assetSrc } from "../../lib/asset-url";
+import { ProfileModal } from "../admin/ProfileModal";
 
 type Props = {
   onLogout: () => void;
@@ -27,6 +31,8 @@ export function AppTopbar({ onLogout }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [wsOpen, setWsOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -35,17 +41,18 @@ export function AppTopbar({ onLogout }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!menuOpen && !langOpen && !wsOpen) return;
+    if (!menuOpen && !langOpen && !wsOpen && !userOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setMenuOpen(false);
         setLangOpen(false);
         setWsOpen(false);
+        setUserOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [menuOpen, langOpen, wsOpen]);
+  }, [menuOpen, langOpen, wsOpen, userOpen]);
 
   const clock = useMemo(
     () =>
@@ -66,6 +73,14 @@ export function AppTopbar({ onLogout }: Props) {
   );
 
   const workspaceInitial = (workspace?.name || "M")[0].toUpperCase();
+  const userInitial = (user.name || user.email || "M")[0].toUpperCase();
+  const avatarSrc = assetSrc(user.avatarUrl);
+  /// "Configurações" leva ao workspace; branding/tracking agora é por formulário.
+  const settingsPath = can("workspace.manage")
+    ? "/admin/workspace"
+    : can("settings.read")
+      ? "/admin/forms/config"
+      : null;
 
   return (
     <header
@@ -107,6 +122,7 @@ export function AppTopbar({ onLogout }: Props) {
               onClick={() => {
                 setLangOpen(false);
                 setWsOpen(false);
+                setUserOpen(false);
                 setMenuOpen((v) => !v);
               }}
             >
@@ -124,17 +140,6 @@ export function AppTopbar({ onLogout }: Props) {
                   onClick={() => setMenuOpen(false)}
                 />
                 <div className="absolute left-0 top-[calc(100%+0.55rem)] z-50 max-h-[72vh] w-[min(360px,calc(100vw-2rem))] overflow-y-auto rounded-[28px] border border-[#e5e7eb] bg-white p-3 shadow-[0_18px_50px_rgba(16,24,40,0.18)]">
-                  <div className="mb-2 border-b border-[#eef0f4] px-3 pb-3">
-                    <div className="text-[15px] font-semibold text-[#1d202b]">
-                      {user.name || "Admin"}
-                    </div>
-                    <div className="truncate text-xs text-[#6b7280]">{user.email}</div>
-                    {workspace?.role && (
-                      <div className="mt-1 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                        {workspace.role.name}
-                      </div>
-                    )}
-                  </div>
                   {menuGroups.map((group) => (
                     <div key={group.group} className="mb-2">
                       <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
@@ -175,26 +180,6 @@ export function AppTopbar({ onLogout }: Props) {
                       </ul>
                     </div>
                   ))}
-                  <div className="mt-1 border-t border-[#eef0f4] pt-2">
-                    <Link
-                      to="/"
-                      onClick={() => setMenuOpen(false)}
-                      className="block rounded-2xl px-3 py-3 text-sm font-medium text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1d202b]"
-                    >
-                      Ver site público
-                    </Link>
-                    <button
-                      type="button"
-                      className="flex w-full items-center gap-2 rounded-2xl px-3 py-3 text-sm font-semibold text-[#ef4444] hover:bg-red-50"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        onLogout();
-                      }}
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Sair
-                    </button>
-                  </div>
                 </div>
               </>
             )}
@@ -220,6 +205,7 @@ export function AppTopbar({ onLogout }: Props) {
               onClick={() => {
                 setMenuOpen(false);
                 setLangOpen(false);
+                setUserOpen(false);
                 setWsOpen((v) => !v);
               }}
             >
@@ -305,6 +291,7 @@ export function AppTopbar({ onLogout }: Props) {
               onClick={() => {
                 setMenuOpen(false);
                 setWsOpen(false);
+                setUserOpen(false);
                 setLangOpen((v) => !v);
               }}
             >
@@ -352,20 +339,95 @@ export function AppTopbar({ onLogout }: Props) {
             <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
           </button>
 
-          <button
-            type="button"
-            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#ebf3ff] text-sm font-bold text-brand-600 ring-1 ring-[#d8dde6] hover:ring-primary/40"
-            title={user.email}
-            onClick={() => {
-              setLangOpen(false);
-              setWsOpen(false);
-              setMenuOpen((v) => !v);
-            }}
-          >
-            {(user.name || user.email || "M")[0].toUpperCase()}
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#ebf3ff] text-sm font-bold text-brand-600 ring-1 ring-[#d8dde6] hover:ring-primary/40"
+              title={user.email}
+              onClick={() => {
+                setLangOpen(false);
+                setWsOpen(false);
+                setMenuOpen(false);
+                setUserOpen((v) => !v);
+              }}
+            >
+              {avatarSrc ? (
+                <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
+              ) : (
+                userInitial
+              )}
+            </button>
+
+            {userOpen && (
+              <>
+                <button
+                  type="button"
+                  className="fixed inset-0 z-40"
+                  aria-label="Fechar"
+                  onClick={() => setUserOpen(false)}
+                />
+                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-[264px] rounded-2xl border border-[#e5e7eb] bg-white p-2 shadow-[0_18px_50px_rgba(16,24,40,0.18)]">
+                  <div className="flex items-center gap-3 border-b border-[#eef0f4] px-3 pb-3 pt-2">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#ebf3ff] text-sm font-bold text-brand-600 ring-1 ring-[#e5e7eb]">
+                      {avatarSrc ? (
+                        <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        userInitial
+                      )}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="truncate text-[15px] font-semibold text-[#1d202b]">
+                        {user.name || "Admin"}
+                      </div>
+                      <div className="truncate text-xs text-[#6b7280]">{user.email}</div>
+                      {workspace?.role && (
+                        <div className="truncate text-[11px] text-[#9aa1ad]">
+                          {workspace.role.name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserOpen(false);
+                      setProfileOpen(true);
+                    }}
+                    className="mt-1 flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-[#1d202b] hover:bg-[#f3f4f6]"
+                  >
+                    <UserCog className="h-4 w-4 text-[#6b7280]" />
+                    Meu perfil
+                  </button>
+                  {settingsPath && (
+                    <Link
+                      to={settingsPath}
+                      onClick={() => setUserOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-[#1d202b] hover:bg-[#f3f4f6]"
+                    >
+                      <Settings className="h-4 w-4 text-[#6b7280]" />
+                      Configurações
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    className="mt-1 flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#ef4444] hover:bg-red-50"
+                    onClick={() => {
+                      setUserOpen(false);
+                      onLogout();
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sair
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
+
+      <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
     </header>
   );
 }

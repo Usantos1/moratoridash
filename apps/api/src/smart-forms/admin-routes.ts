@@ -10,8 +10,9 @@ import {
   uniqueWorkspaceSlug,
   uniquePublicSlug,
 } from "./service";
-import { publicUploadUrl, readUpload, saveBase64Image } from "./assets";
+import { publicUploadUrl, saveBase64Image } from "./assets";
 import { verifyHostnameDns } from "./domain-verify";
+import { ensureBuiltinTemplates } from "./builtin-templates";
 
 const slugSchema = z
   .string()
@@ -171,6 +172,7 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/forms/templates", { preHandler: requirePermission("forms.read") }, async (request) => {
+    await ensureBuiltinTemplates();
     const workspaceId = currentWorkspaceId(request);
     const items = await prisma.smartFormTemplate.findMany({
       where: {
@@ -297,17 +299,43 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
       },
       include: {
         events: { orderBy: { createdAt: "asc" } },
-        form: { select: { id: true, name: true, publicSlug: true } },
+        form: {
+          select: {
+            id: true,
+            name: true,
+            publicSlug: true,
+            draftDefinition: true,
+            publishedVersion: { select: { definition: true } },
+          },
+        },
         session: true,
       },
     });
     if (!lead) return reply.status(404).send({ error: "Lead não encontrado" });
 
+    const definition = coerceDefinition(
+      lead.form.publishedVersion?.definition ?? lead.form.draftDefinition
+    );
+    const nodeById = new Map(definition.nodes.map((n) => [n.id, n]));
+
     const answers = (lead.answers || {}) as Record<string, unknown>;
-    const answerItems = Object.entries(answers).map(([nodeId, value]) => ({
-      nodeId,
-      value,
-    }));
+    const answerItems = Object.entries(answers).map(([nodeId, value]) => {
+      const node = nodeById.get(nodeId);
+      return {
+        nodeId,
+        title: node?.title || node?.internalName || nodeId,
+        type: node?.type || null,
+        mapTo: node?.mapTo || null,
+        value,
+      };
+    });
+
+    // Ordena respostas na ordem dos nós do fluxo, quando possível.
+    const order = new Map(definition.nodes.map((n, i) => [n.id, i]));
+    answerItems.sort(
+      (a, b) => (order.get(a.nodeId) ?? 9999) - (order.get(b.nodeId) ?? 9999)
+    );
+
     return { ...lead, answerItems };
     },
   );
@@ -417,12 +445,8 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
 
     try {
       const saved = await saveBase64Image({ dataUrl: body.dataUrl });
-      const proto = String(request.headers["x-forwarded-proto"] || "http");
-      const host = String(request.headers["x-forwarded-host"] || request.headers.host || "");
-      const base =
-        process.env.PUBLIC_APP_URL ||
-        (host ? `${proto}://${host}` : `http://127.0.0.1:${process.env.API_PORT || 3340}`);
-      const url = publicUploadUrl(saved.filename, base);
+      // URL relativa: o admin (Vite proxy) e o app principal resolvem no mesmo host.
+      const url = publicUploadUrl(saved.filename);
       return reply.status(201).send({
         url,
         filename: saved.filename,

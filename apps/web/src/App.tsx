@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
 import { HomePage } from "./pages/HomePage";
 import { DiagnosticoPage } from "./pages/DiagnosticoPage";
@@ -18,11 +18,16 @@ import { SmartLeadsPage } from "./pages/admin/smart-forms/SmartLeadsPage";
 import { SmartConfigPage } from "./pages/admin/smart-forms/SmartConfigPage";
 import { SmartFormBuilderPage } from "./pages/admin/smart-forms/SmartFormBuilderPage";
 import { SmartFormsDashboardPage } from "./pages/admin/smart-forms/SmartFormsDashboardPage";
-import { SmartLeadDetailPage } from "./pages/admin/smart-forms/SmartLeadDetailPage";
 import { WorkspacePage } from "./pages/admin/account/WorkspacePage";
 import { UsersPage } from "./pages/admin/account/UsersPage";
 import { RolesPage } from "./pages/admin/account/RolesPage";
 import { RequirePermission } from "./components/admin/RequirePermission";
+
+/// Links antigos /admin/forms/leads/:id abrem o modal na lista.
+function SmartLeadDeepLink() {
+  const { leadId } = useParams<{ leadId: string }>();
+  return <Navigate to={`/admin/forms/leads?lead=${leadId || ""}`} replace />;
+}
 
 export default function App() {
   return (
@@ -63,11 +68,7 @@ export default function App() {
           />
           <Route
             path="forms/leads/:leadId"
-            element={
-              <RequirePermission permission="leads.read">
-                <SmartLeadDetailPage />
-              </RequirePermission>
-            }
+            element={<SmartLeadDeepLink />}
           />
           <Route
             path="forms/config"
@@ -88,6 +89,7 @@ export default function App() {
 
           {/* Conta */}
           <Route path="workspace" element={<WorkspacePage />} />
+          <Route path="perfil" element={<Navigate to="/admin" replace />} />
           <Route
             path="users"
             element={

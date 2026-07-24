@@ -3,7 +3,14 @@ import { mkdir, writeFile, readFile, access } from "node:fs/promises";
 import { join, extname } from "node:path";
 import { constants } from "node:fs";
 
-const UPLOAD_DIR = join(process.cwd(), "uploads", "smart-forms");
+/** Sempre em apps/api/uploads/smart-forms — independente do cwd do PM2. */
+const API_ROOT = join(__dirname, "..", "..");
+const UPLOAD_DIR = join(API_ROOT, "uploads", "smart-forms");
+/** Fallback: uploads salvos quando o cwd era a raiz do monorepo. */
+const LEGACY_UPLOAD_DIRS = [
+  join(process.cwd(), "uploads", "smart-forms"),
+  join(API_ROOT, "..", "..", "uploads", "smart-forms"),
+];
 
 const MIME_EXT: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -12,6 +19,10 @@ const MIME_EXT: Record<string, string> = {
   "image/webp": ".webp",
   "image/gif": ".gif",
 };
+
+export function safeUploadFilename(filename: string) {
+  return filename.replace(/[^a-zA-Z0-9._-]/g, "");
+}
 
 export async function ensureUploadDir() {
   await mkdir(UPLOAD_DIR, { recursive: true });
@@ -42,18 +53,45 @@ export async function saveBase64Image(input: {
 }
 
 export function uploadPath(filename: string) {
-  // impede path traversal
-  const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "");
-  return join(UPLOAD_DIR, safe);
+  return join(UPLOAD_DIR, safeUploadFilename(filename));
 }
 
 export async function readUpload(filename: string) {
-  const path = uploadPath(filename);
-  await access(path, constants.R_OK);
-  return readFile(path);
+  const safe = safeUploadFilename(filename);
+  const candidates = [join(UPLOAD_DIR, safe), ...LEGACY_UPLOAD_DIRS.map((d) => join(d, safe))];
+  let lastErr: unknown;
+  for (const path of candidates) {
+    try {
+      await access(path, constants.R_OK);
+      return readFile(path);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr ?? new Error("Arquivo não encontrado");
 }
 
+/** URL relativa — funciona no admin (proxy Vite) e no app principal. */
 export function publicUploadUrl(filename: string, baseUrl?: string) {
+  const path = `/api/uploads/${safeUploadFilename(filename)}`;
   const base = (baseUrl || "").replace(/\/$/, "");
-  return `${base}/api/uploads/${filename}`;
+  return base ? `${base}${path}` : path;
+}
+
+export function absolutizeAssetUrl(url: string | undefined | null, baseUrl: string): string | undefined {
+  if (!url) return undefined;
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith("/")) return `${baseUrl.replace(/\/$/, "")}${url}`;
+  return url;
+}
+
+export function uploadMime(filename: string) {
+  const MIME: Record<string, string> = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
+  };
+  return MIME[extname(safeUploadFilename(filename)).toLowerCase()] || "application/octet-stream";
 }

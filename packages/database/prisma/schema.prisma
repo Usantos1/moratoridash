@@ -89,6 +89,7 @@ model AdminUser {
   email        String   @unique
   passwordHash String   @map("password_hash")
   name         String?
+  avatarUrl    String?  @map("avatar_url")
   /// Papel na plataforma: "superadmin" acessa todos os workspaces.
   role         String   @default("member")
   active       Boolean  @default(true)

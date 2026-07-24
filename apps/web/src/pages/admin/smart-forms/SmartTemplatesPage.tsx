@@ -12,9 +12,9 @@ import {
   Stethoscope,
   Wrench,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { smartFormsApi } from "../../../lib/smart-forms-api";
-import { emptyDefinition } from "../../../lib/smart-forms/types";
 import { FormsModuleNav } from "../../../components/admin/FormsModuleNav";
 import { AdminButton } from "../../../components/admin/ui";
 
@@ -30,89 +30,28 @@ const CATEGORIES = [
   "Digital",
 ] as const;
 
-const FALLBACK_TEMPLATES = [
-  {
-    id: "local:marketing",
-    name: "Agência de Marketing",
-    category: "Marketing",
-    description: "Diagnóstico B2B com score de qualificação e handoff comercial.",
-    steps: 12,
-    icon: Briefcase,
-    tint: "bg-orange-50",
-  },
-  {
-    id: "local:saude",
-    name: "Clínica & Saúde",
-    category: "Saúde",
-    description: "Triagem de urgência, especialidade e convênio.",
-    steps: 9,
-    icon: Stethoscope,
-    tint: "bg-emerald-50",
-  },
-  {
-    id: "local:imoveis",
-    name: "Imobiliária",
-    category: "Imóveis",
-    description: "Qualificação de compra/aluguel e faixa de investimento.",
-    steps: 10,
-    icon: Home,
-    tint: "bg-sky-50",
-  },
-  {
-    id: "local:juridico",
-    name: "Escritório de Advocacia",
-    category: "Jurídico",
-    description: "Área do direito, urgência e qualificação do caso.",
-    steps: 8,
-    icon: Scale,
-    tint: "bg-violet-50",
-  },
-  {
-    id: "local:beleza",
-    name: "Clínica de Estética",
-    category: "Beleza",
-    description: "Procedimento desejado, orçamento e agenda.",
-    steps: 8,
-    icon: Sparkles,
-    tint: "bg-pink-50",
-  },
-  {
-    id: "local:fitness",
-    name: "Academia & Fitness",
-    category: "Fitness",
-    description: "Objetivo, plano e disponibilidade para treino.",
-    steps: 7,
-    icon: Dumbbell,
-    tint: "bg-lime-50",
-  },
-  {
-    id: "local:consultoria",
-    name: "Consultoria Empresarial",
-    category: "Serviços",
-    description: "Dor do negócio, porte e maturidade digital.",
-    steps: 11,
-    icon: Building2,
-    tint: "bg-amber-50",
-  },
-  {
-    id: "local:assistencia",
-    name: "Assistência Técnica",
-    category: "Serviços",
-    description: "Aparelho, problema e urgência de reparo.",
-    steps: 9,
-    icon: Wrench,
-    tint: "bg-slate-100",
-  },
-  {
-    id: "local:infoproduto",
-    name: "Infoproduto & Cursos",
-    category: "Digital",
-    description: "Interesse, nível e prontidão de compra.",
-    steps: 8,
-    icon: GraduationCap,
-    tint: "bg-indigo-50",
-  },
-];
+const ICON_BY_SLUG: Record<string, LucideIcon> = {
+  "agencia-marketing": Briefcase,
+  "clinica-saude": Stethoscope,
+  imobiliaria: Home,
+  advocacia: Scale,
+  estetica: Sparkles,
+  "academia-fitness": Dumbbell,
+  consultoria: Building2,
+  "assistencia-tecnica": Wrench,
+  infoproduto: GraduationCap,
+};
+
+const TINT_BY_CATEGORY: Record<string, string> = {
+  Marketing: "bg-orange-50",
+  Saúde: "bg-emerald-50",
+  Imóveis: "bg-sky-50",
+  Jurídico: "bg-violet-50",
+  Beleza: "bg-pink-50",
+  Fitness: "bg-lime-50",
+  Serviços: "bg-slate-100",
+  Digital: "bg-indigo-50",
+};
 
 type Card = {
   id: string;
@@ -120,49 +59,52 @@ type Card = {
   category: string;
   description: string;
   steps: number;
-  icon: typeof Briefcase;
+  icon: LucideIcon;
   tint: string;
-  apiId?: string;
+  apiId: string;
 };
 
 export function SmartTemplatesPage() {
   const navigate = useNavigate();
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]>("Todos");
-  const [apiTemplates, setApiTemplates] = useState<Card[]>([]);
+  const [cards, setCards] = useState<Card[]>([]);
+  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
     void smartFormsApi
       .templates()
       .then((res) => {
-        setApiTemplates(
+        setCards(
           res.items.map((t) => {
             const def = t.definition as { nodes?: unknown[] } | undefined;
+            const settings = (t.settings || {}) as { description?: string };
+            const slug = String(t.slug || "");
+            const category = String(t.category || "Marketing");
             return {
-              id: `api:${String(t.id)}`,
+              id: String(t.id),
               apiId: String(t.id),
               name: String(t.name || "Template"),
-              category: String(t.category || "Marketing"),
-              description: "Fluxo conversacional pronto — use e personalize no builder.",
-              steps: Array.isArray(def?.nodes) ? def!.nodes!.length : 3,
-              icon: HeartPulse,
-              tint: "bg-primary/8",
+              category,
+              description:
+                settings.description ||
+                "Fluxo conversacional pronto — use e personalize no builder.",
+              steps: Array.isArray(def?.nodes) ? def!.nodes!.length : 0,
+              icon: ICON_BY_SLUG[slug] || HeartPulse,
+              tint: TINT_BY_CATEGORY[category] || "bg-primary/8",
             };
           })
         );
       })
-      .catch(() => undefined);
+      .catch((e) => toast.error(e instanceof Error ? e.message : "Erro ao carregar templates"))
+      .finally(() => setLoading(false));
   }, []);
 
-  const cards = useMemo(() => {
-    if (apiTemplates.length > 0) {
-      if (cat === "Todos") return apiTemplates;
-      return apiTemplates.filter((c) => c.category === cat);
-    }
-    const merged = FALLBACK_TEMPLATES;
-    if (cat === "Todos") return merged;
-    return merged.filter((c) => c.category === cat);
-  }, [apiTemplates, cat]);
+  const visible = useMemo(() => {
+    if (cat === "Todos") return cards;
+    return cards.filter((c) => c.category === cat);
+  }, [cards, cat]);
 
   async function useTemplate(card: Card) {
     setBusy(card.id);
@@ -171,7 +113,6 @@ export function SmartTemplatesPage() {
         name: card.name,
         description: card.description,
         templateId: card.apiId,
-        draftDefinition: card.apiId ? undefined : emptyDefinition(),
       });
       toast.success("Template aplicado");
       navigate(`/admin/forms/${form.id}`);
@@ -213,42 +154,57 @@ export function SmartTemplatesPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {cards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <article
-              key={card.id}
-              className={`flex flex-col rounded-2xl border border-border/60 p-5 shadow-[var(--shadow-surface-sm)] ${card.tint}`}
-            >
-              <div className="mb-3 flex items-start justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 text-foreground shadow-sm">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                  {card.category}
-                </span>
-              </div>
-              <h2 className="text-[15px] font-bold text-foreground">{card.name}</h2>
-              <p className="mt-1 flex-1 text-xs leading-relaxed text-muted-foreground">
-                {card.description}
-              </p>
-              <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
-                <span>{card.steps} etapas</span>
-                <span>·</span>
-                <span>Sistema</span>
-              </div>
-              <AdminButton
-                className="mt-4 w-full"
-                disabled={busy === card.id}
-                onClick={() => void useTemplate(card)}
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-56 animate-pulse rounded-2xl border border-border/60 bg-muted/40"
+            />
+          ))}
+        </div>
+      ) : visible.length === 0 ? (
+        <p className="rounded-2xl border border-border/60 bg-white px-4 py-8 text-sm text-muted-foreground">
+          Nenhum template nesta categoria.
+        </p>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {visible.map((card) => {
+            const Icon = card.icon;
+            return (
+              <article
+                key={card.id}
+                className={`flex flex-col rounded-2xl border border-border/60 p-5 shadow-[var(--shadow-surface-sm)] ${card.tint}`}
               >
-                Usar template
-              </AdminButton>
-            </article>
-          );
-        })}
-      </div>
+                <div className="mb-3 flex items-start justify-between">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 text-foreground shadow-sm">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                    {card.category}
+                  </span>
+                </div>
+                <h2 className="text-[15px] font-bold text-foreground">{card.name}</h2>
+                <p className="mt-1 flex-1 text-xs leading-relaxed text-muted-foreground">
+                  {card.description}
+                </p>
+                <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <span>{card.steps} etapas</span>
+                  <span>·</span>
+                  <span>Sistema</span>
+                </div>
+                <AdminButton
+                  className="mt-4 w-full"
+                  disabled={busy === card.id}
+                  onClick={() => void useTemplate(card)}
+                >
+                  {busy === card.id ? "Criando…" : "Usar template"}
+                </AdminButton>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
