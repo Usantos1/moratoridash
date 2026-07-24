@@ -224,7 +224,7 @@ export const BLOCK_META: Record<
 export const PRIMARY_SWATCHES = [
   "#ee654e",
   "#f97316",
-  "#22c55e",
+  "#f94c30",
   "#128c7e",
   "#0ea5e9",
   "#6366f1",

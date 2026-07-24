@@ -46,7 +46,7 @@ const TINT_BY_CATEGORY: Record<string, string> = {
   Imóveis: "bg-sky-50",
   Jurídico: "bg-violet-50",
   Beleza: "bg-pink-50",
-  Fitness: "bg-lime-50",
+  Fitness: "bg-orange-50",
   Serviços: "bg-slate-100",
   Digital: "bg-indigo-50",
 };

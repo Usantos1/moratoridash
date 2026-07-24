@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-/** Wordmark Ativa: marca em azul + DASH em laranja — sem círculo */
+/** Wordmark: MURATORI em azul + DASH no laranja da marca (#F94C30). */
 export function BrandLogo({
   className = "",
   to = "/admin",

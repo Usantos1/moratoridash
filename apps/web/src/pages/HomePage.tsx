@@ -40,16 +40,16 @@ export function HomePage() {
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(90% 70% at 85% 20%, rgba(28,59,50,0.95) 0%, transparent 55%), linear-gradient(155deg, #070b0a 0%, #0c1512 40%, #08110e 100%)",
+                "radial-gradient(90% 70% at 85% 20%, rgba(59,24,18,0.95) 0%, transparent 55%), linear-gradient(155deg, #0a0a0a 0%, #141414 40%, #0f0c0b 100%)",
             }}
           />
-          <div className="anim-glow absolute -right-16 top-[-8%] h-[75vh] w-[75vh] rounded-full bg-[radial-gradient(circle,rgba(182,242,108,0.2),transparent_68%)] blur-2xl" />
-          <div className="absolute bottom-[-25%] left-[-15%] h-[60vh] w-[60vh] rounded-full bg-[radial-gradient(circle,rgba(28,59,50,0.6),transparent_70%)] blur-3xl" />
+          <div className="anim-glow absolute -right-16 top-[-8%] h-[75vh] w-[75vh] rounded-full bg-[radial-gradient(circle,rgba(249,76,48,0.22),transparent_68%)] blur-2xl" />
+          <div className="absolute bottom-[-25%] left-[-15%] h-[60vh] w-[60vh] rounded-full bg-[radial-gradient(circle,rgba(59,24,18,0.65),transparent_70%)] blur-3xl" />
           <div
             className="absolute inset-0 opacity-[0.16]"
             style={{
               backgroundImage:
-                "linear-gradient(rgba(182,242,108,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(182,242,108,0.09) 1px, transparent 1px)",
+                "linear-gradient(rgba(249,76,48,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(249,76,48,0.1) 1px, transparent 1px)",
               backgroundSize: "64px 64px",
               maskImage: "radial-gradient(ellipse at 70% 30%, black 15%, transparent 72%)",
             }}
@@ -101,7 +101,7 @@ export function HomePage() {
               <button
                 type="button"
                 onClick={openChat}
-                className="bg-[var(--leaf)] px-7 py-3.5 text-sm font-bold tracking-wide text-[#0a140f] transition hover:brightness-110"
+                className="bg-[var(--leaf)] px-7 py-3.5 text-sm font-bold tracking-wide text-white transition hover:brightness-110"
               >
                 Experimentar o diagnóstico
               </button>
@@ -119,7 +119,7 @@ export function HomePage() {
             <div
               className="pointer-events-none absolute -inset-8 -z-10 rounded-full opacity-70 blur-2xl"
               style={{
-                background: "radial-gradient(circle, rgba(182,242,108,0.18), transparent 65%)",
+                background: "radial-gradient(circle, rgba(249,76,48,0.2), transparent 65%)",
               }}
             />
             <div className="home-phone-float overflow-hidden border border-white/10 bg-[#0a1210] shadow-[0_40px_100px_rgba(0,0,0,0.55)]">
@@ -169,7 +169,7 @@ export function HomePage() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, #08110e 0%, #0a1210 50%, #070b0a 100%)",
+              "linear-gradient(180deg, #0f0c0b 0%, #121010 50%, #0a0a0a 100%)",
           }}
         />
         <div className="relative mx-auto max-w-6xl px-6 py-24 sm:px-8 sm:py-28">
@@ -212,7 +212,7 @@ export function HomePage() {
 
       {/* —— COMO FUNCIONA —— */}
       <section id="como-funciona" className="relative border-t border-white/[0.06]">
-        <div className="absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_0%,rgba(28,59,50,0.35),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_0%,rgba(59,24,18,0.4),transparent_60%)]" />
         <div className="relative mx-auto max-w-6xl px-6 py-24 sm:px-8 sm:py-28">
           <p className="font-display text-[11px] font-bold uppercase tracking-[0.28em] text-[var(--leaf)]">
             Como funciona
@@ -244,7 +244,7 @@ export function HomePage() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(70% 80% at 50% 100%, rgba(182,242,108,0.12) 0%, transparent 55%), #070b0a",
+              "radial-gradient(70% 80% at 50% 100%, rgba(249,76,48,0.14) 0%, transparent 55%), #0a0a0a",
           }}
         />
         <div className="relative mx-auto max-w-6xl px-6 py-24 text-center sm:px-8 sm:py-32">
@@ -262,7 +262,7 @@ export function HomePage() {
             <button
               type="button"
               onClick={openChat}
-              className="bg-[var(--leaf)] px-8 py-4 text-sm font-bold text-[#0a140f] transition hover:brightness-110"
+              className="bg-[var(--leaf)] px-8 py-4 text-sm font-bold text-white transition hover:brightness-110"
             >
               Abrir diagnóstico
             </button>

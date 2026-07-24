@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* —— Dashboard (Muratori Dash · primary verde) —— */
+/* —— Dashboard (Muratori Dash · primary laranja da marca) —— */
 :root {
   --background: 0 0% 100%;
   --foreground: 224 20% 14%;
@@ -8,26 +8,27 @@
   --card-foreground: 224 20% 14%;
   --popover: 0 0% 100%;
   --popover-foreground: 224 20% 14%;
-  --primary: 98 72% 42%;
+  /* #F94C30 — laranja Muratori Marketing Digital */
+  --primary: 8 94% 58%;
   --primary-foreground: 0 0% 100%;
   --secondary: 220 14% 96%;
   --secondary-foreground: 224 20% 20%;
   --muted: 220 14% 96%;
   --muted-foreground: 220 9% 46%;
-  --accent: 216 100% 96%;
-  --accent-foreground: 216 100% 31%;
+  --accent: 8 100% 96%;
+  --accent-foreground: 8 80% 35%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --success: 142 71% 45%;
   --warning: 38 92% 50%;
   --border: 220 13% 84%;
   --input: 220 13% 84%;
-  --ring: 98 72% 42%;
+  --ring: 8 94% 58%;
   --radius: 0.75rem;
   --shadow-surface: 0 1px 0 hsl(220 13% 91% / 0.9), 0 14px 40px -24px hsl(224 20% 14% / 0.18);
   --shadow-surface-sm: 0 1px 0 hsl(220 13% 91% / 0.85), 0 8px 24px -18px hsl(224 20% 14% / 0.12);
 
-  /* Brand azul (topbar) */
+  /* Brand azul (topbar wordmark) */
   --brand-50: 216 100% 97%;
   --brand-100: 216 100% 93%;
   --brand-200: 216 100% 85%;
@@ -35,15 +36,15 @@
   --brand-800: 216 100% 20%;
   --brand-900: 216 100% 15%;
 
-  /* Legacy marketing (Home) */
-  --ink: #070b0a;
-  --ink-2: #0e1614;
-  --moss: #1c3b32;
-  --leaf: #b6f26c;
-  --fog: rgba(236, 245, 238, 0.78);
-  --line: rgba(182, 242, 108, 0.18);
+  /* Marketing (Home) — ink + laranja da LP */
+  --ink: #0a0a0a;
+  --ink-2: #141414;
+  --moss: #3b1812;
+  --leaf: #f94c30;
+  --fog: rgba(245, 240, 236, 0.78);
+  --line: rgba(249, 76, 48, 0.22);
 
-  /* —— Smart Form chat (WhatsApp teal — separado do verde do dashboard) —— */
+  /* —— Smart Form chat (WhatsApp teal — UI do chat, não é branding) —— */
   --sf-primary: #128c7e;
   --sf-primary-dark: #0d655b;
   --sf-page-bg-light: #1a5c4f;
@@ -94,19 +95,19 @@
   --card-foreground: 210 20% 98%;
   --popover: 224 20% 10%;
   --popover-foreground: 210 20% 98%;
-  --primary: 98 70% 48%;
+  --primary: 8 90% 58%;
   --primary-foreground: 0 0% 100%;
   --secondary: 224 20% 16%;
   --secondary-foreground: 210 20% 98%;
   --muted: 224 20% 16%;
   --muted-foreground: 215 16% 57%;
-  --accent: 216 55% 18%;
-  --accent-foreground: 216 85% 72%;
+  --accent: 8 45% 16%;
+  --accent-foreground: 8 95% 72%;
   --destructive: 0 62% 50%;
   --destructive-foreground: 0 0% 100%;
   --border: 224 20% 18%;
   --input: 224 20% 18%;
-  --ring: 98 70% 48%;
+  --ring: 8 90% 58%;
   --shadow-surface: 0 1px 0 hsl(224 20% 18% / 0.9), 0 18px 48px -28px hsl(0 0% 0% / 0.55);
   --shadow-surface-sm: 0 1px 0 hsl(224 20% 18% / 0.8), 0 10px 28px -20px hsl(0 0% 0% / 0.4);
 }
