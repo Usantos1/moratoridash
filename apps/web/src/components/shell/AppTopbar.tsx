@@ -26,7 +26,7 @@ type Props = {
 
 const PRIMARY_NAV = [
   { to: "/admin", end: true, label: "Dashboard", icon: LayoutDashboard },
-  { to: "/admin/pages", label: "Painel Forms", icon: Megaphone },
+  { to: "/admin/forms", label: "Painel Forms", icon: Megaphone },
   { to: "/admin/flows", label: "Muratori IA", icon: Globe2 },
 ] as const;
 
@@ -34,18 +34,20 @@ const MENU_ITEMS = [
   {
     group: "Formulário inteligente",
     items: [
-      { to: "/admin", label: "Dashboard", desc: "Visão geral e leads", icon: LayoutDashboard },
-      { to: "/admin/flows", label: "Builder", desc: "Fluxo conversacional", icon: Workflow },
-      { to: "/admin/pages", label: "Páginas", desc: "Slugs e pixels", icon: ClipboardList },
-      { to: "/admin/whatsapp", label: "WhatsApp", desc: "Número e template", icon: MessageCircle },
-      { to: "/admin/leads", label: "Leads", desc: "Lista completa", icon: ClipboardList },
+      { to: "/admin/forms", label: "Formulários", desc: "Lista e métricas", icon: ClipboardList },
+      { to: "/admin/forms/templates", label: "Templates", desc: "Fluxos prontos", icon: Workflow },
+      { to: "/admin/forms/leads", label: "Leads", desc: "Capturas Smart Forms", icon: ClipboardList },
+      { to: "/admin/forms/config", label: "Configurações", desc: "Checklist do módulo", icon: Settings2 },
+      { to: "/admin/flows", label: "Builder legado", desc: "Fluxo diagnóstico antigo", icon: Workflow },
     ],
   },
   {
     group: "Instalação",
     items: [
       { to: "/admin/marca", label: "Marca", desc: "Identidade e tracking", icon: Palette },
+      { to: "/admin/whatsapp", label: "WhatsApp", desc: "Número e template", icon: MessageCircle },
       { to: "/admin/deliveries", label: "Entregas", desc: "Meta, GA4, webhooks", icon: Settings2 },
+      { to: "/admin/pages", label: "Páginas", desc: "Slugs legado", icon: ClipboardList },
     ],
   },
 ] as const;

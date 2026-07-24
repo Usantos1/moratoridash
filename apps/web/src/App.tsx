@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
 import { HomePage } from "./pages/HomePage";
 import { DiagnosticoPage } from "./pages/DiagnosticoPage";
+import { PublicSmartFormPage } from "./pages/PublicSmartFormPage";
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
 import { AdminLayout } from "./pages/admin/AdminLayout";
 import { AdminLeadsPage } from "./pages/admin/AdminLeadsPage";
@@ -11,6 +12,11 @@ import { AdminWhatsappPage } from "./pages/admin/AdminWhatsappPage";
 import { AdminDeliveriesPage } from "./pages/admin/AdminDeliveriesPage";
 import { AdminFlowsPage } from "./pages/admin/AdminFlowsPage";
 import { AdminOnboardingPage } from "./pages/admin/AdminOnboardingPage";
+import { SmartFormsListPage } from "./pages/admin/smart-forms/SmartFormsListPage";
+import { SmartTemplatesPage } from "./pages/admin/smart-forms/SmartTemplatesPage";
+import { SmartLeadsPage } from "./pages/admin/smart-forms/SmartLeadsPage";
+import { SmartConfigPage } from "./pages/admin/smart-forms/SmartConfigPage";
+import { SmartFormBuilderPage } from "./pages/admin/smart-forms/SmartFormBuilderPage";
 
 export default function App() {
   return (
@@ -18,6 +24,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/diagnostico" element={<DiagnosticoPage />} />
+        <Route path="/f/:slug" element={<PublicSmartFormPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminLeadsPage />} />
@@ -28,6 +35,11 @@ export default function App() {
           <Route path="whatsapp" element={<AdminWhatsappPage />} />
           <Route path="flows" element={<AdminFlowsPage />} />
           <Route path="deliveries" element={<AdminDeliveriesPage />} />
+          <Route path="forms" element={<SmartFormsListPage />} />
+          <Route path="forms/templates" element={<SmartTemplatesPage />} />
+          <Route path="forms/leads" element={<SmartLeadsPage />} />
+          <Route path="forms/config" element={<SmartConfigPage />} />
+          <Route path="forms/:id" element={<SmartFormBuilderPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
