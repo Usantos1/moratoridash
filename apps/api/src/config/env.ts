@@ -49,6 +49,7 @@ if (!parsed.success) {
   console.error("CWD:", process.cwd());
   console.error("Tried:", candidates);
   process.exit(1);
+  throw new Error("Invalid env");
 }
 
 export const env = parsed.data;
