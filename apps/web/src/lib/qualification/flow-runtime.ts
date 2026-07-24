@@ -37,14 +37,30 @@ export type FlowBranchRule = {
   else?: { offer?: string; cta?: string };
 };
 
+export type FlowLeadScore = {
+  coldMax?: number;
+  warmMax?: number;
+  hotMax?: number;
+};
+
+export type FlowAiConfig = {
+  systemPrompt?: string;
+  summaryOnComplete?: boolean;
+  crmHandoff?: boolean;
+};
+
 export type FlowDefinition = {
   version?: number;
   name?: string;
+  description?: string;
   segment?: string;
   brandVars?: { assistantLabel?: string };
   steps: FlowStepDef[];
   branching?: FlowBranchRule[];
   diagnosis_preset?: string;
+  leadScore?: FlowLeadScore;
+  ai?: FlowAiConfig;
+  chat?: { messageDelayMs?: number };
 };
 
 const POST_RESULT: ChatStep[] = ["offer_ask", "offer_detail", "offer_done"];
@@ -59,6 +75,7 @@ export function normalizeFlowDefinition(raw: unknown): FlowDefinition {
   return {
     version: typeof d.version === "number" ? d.version : 1,
     name: typeof d.name === "string" ? d.name : "default",
+    description: typeof d.description === "string" ? d.description : undefined,
     segment: typeof d.segment === "string" ? d.segment : undefined,
     brandVars:
       d.brandVars && typeof d.brandVars === "object"
@@ -68,6 +85,15 @@ export function normalizeFlowDefinition(raw: unknown): FlowDefinition {
     branching: Array.isArray(d.branching) ? (d.branching as FlowBranchRule[]) : [],
     diagnosis_preset:
       typeof d.diagnosis_preset === "string" ? d.diagnosis_preset : undefined,
+    leadScore:
+      d.leadScore && typeof d.leadScore === "object"
+        ? (d.leadScore as FlowLeadScore)
+        : undefined,
+    ai: d.ai && typeof d.ai === "object" ? (d.ai as FlowAiConfig) : undefined,
+    chat:
+      d.chat && typeof d.chat === "object"
+        ? (d.chat as FlowDefinition["chat"])
+        : undefined,
   };
 }
 

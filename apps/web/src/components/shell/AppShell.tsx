@@ -19,7 +19,7 @@ export function AppShell({ user, onLogout, children }: Props) {
       />
       <AppTopbar user={user} onLogout={onLogout} />
       <main
-        className="relative mx-auto w-full max-w-[1200px] px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-4 md:px-5"
+        className="relative mx-auto w-full max-w-[1320px] px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-4 md:px-6"
         style={{
           paddingTop: "calc(1.15rem + 4.5rem + env(safe-area-inset-top))",
         }}

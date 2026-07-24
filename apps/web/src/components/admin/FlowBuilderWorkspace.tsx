@@ -1,31 +1,35 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ChevronDown,
+  Code2,
+  Gauge,
   GripVertical,
   Hash,
+  LayoutGrid,
+  ListChecks,
   Mail,
   MessageSquareText,
+  Palette,
   Phone,
   Plus,
+  Smartphone,
   Type,
 } from "lucide-react";
-import type { FlowBranchRule, FlowDefinition, FlowStepDef } from "../../lib/qualification/flow-runtime";
+import type {
+  FlowBranchRule,
+  FlowDefinition,
+  FlowStepDef,
+} from "../../lib/qualification/flow-runtime";
 import { normalizeFlowDefinition } from "../../lib/qualification/flow-runtime";
-import {
-  AdminBadge,
-  AdminField,
-  AdminInput,
-  AdminSelect,
-  AdminTextarea,
-} from "./ui";
+import { AdminField, AdminInput, AdminSelect, AdminTextarea } from "./ui";
 
 const STEP_TYPES = [
   { value: "text", label: "Texto", icon: Type },
   { value: "email", label: "E-mail", icon: Mail },
   { value: "phone_br", label: "Telefone", icon: Phone },
   { value: "number_or_choice", label: "Número / chips", icon: Hash },
-  { value: "multi_choice", label: "Múltipla escolha", icon: MessageSquareText },
-  { value: "single_choice_cards", label: "Cards", icon: MessageSquareText },
+  { value: "multi_choice", label: "Múltipla escolha", icon: ListChecks },
+  { value: "single_choice_cards", label: "Cards", icon: LayoutGrid },
   { value: "system_report", label: "Relatório", icon: MessageSquareText },
 ] as const;
 
@@ -41,6 +45,9 @@ const STEP_LABELS: Record<string, string> = {
   response: "Tempo de resposta",
   result: "Diagnóstico",
 };
+
+const DEFAULT_SCORE = { coldMax: 24, warmMax: 49, hotMax: 74 };
+const DEFAULT_DELAY = 900;
 
 type SidebarTab = "score" | "visual" | "simulador" | "json";
 
@@ -122,9 +129,6 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
   const [expanded, setExpanded] = useState<string | null>(null);
   const [sidebar, setSidebar] = useState<SidebarTab>("score");
   const [formName, setFormName] = useState(displayName(value.name));
-  const [formDesc, setFormDesc] = useState(
-    "Monte o fluxo conversacional bloco a bloco."
-  );
 
   useEffect(() => {
     setFormName(displayName(value.name));
@@ -132,6 +136,9 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
 
   const steps = value.steps || [];
   const branch = value.branching?.[0];
+  const score = { ...DEFAULT_SCORE, ...(value.leadScore || {}) };
+  const ai = value.ai || {};
+  const delay = value.chat?.messageDelayMs ?? DEFAULT_DELAY;
 
   function patchRoot(patch: Partial<FlowDefinition>) {
     onChange({ ...value, ...patch });
@@ -188,17 +195,51 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
     [steps]
   );
 
-  const sidebarTabs: Array<{ id: SidebarTab; label: string }> = [
-    { id: "score", label: "Score" },
-    { id: "visual", label: "Visual" },
-    { id: "simulador", label: "Simulador" },
-    { id: "json", label: "JSON" },
+  const sidebarTabs: Array<{ id: SidebarTab; label: string; icon: typeof Gauge }> = [
+    { id: "score", label: "Score", icon: Gauge },
+    { id: "visual", label: "Visual", icon: Palette },
+    { id: "simulador", label: "Simulador", icon: Smartphone },
+    { id: "json", label: "JSON", icon: Code2 },
   ];
 
+  const bands = [
+    {
+      key: "cold",
+      label: "Frio",
+      range: `0–${score.coldMax} pts`,
+      cls: "border-sky-200 bg-sky-50 text-sky-700",
+    },
+    {
+      key: "warm",
+      label: "Morno",
+      range: `${score.coldMax + 1}–${score.warmMax} pts`,
+      cls: "border-amber-200 bg-amber-50 text-amber-700",
+    },
+    {
+      key: "hot",
+      label: "Quente",
+      range: `${score.warmMax + 1}–${score.hotMax} pts`,
+      cls: "border-orange-200 bg-orange-50 text-orange-700",
+    },
+    {
+      key: "very",
+      label: "Muito quente",
+      range: `${score.hotMax + 1} pts ou mais`,
+      cls: "border-rose-200 bg-rose-50 text-rose-700",
+    },
+  ];
+
+  function patchScore(patch: Partial<typeof DEFAULT_SCORE>) {
+    patchRoot({ leadScore: { ...score, ...patch } });
+  }
+
   return (
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-      <div className="min-w-0 space-y-4">
-        <section className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)]">
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="min-w-0 space-y-5">
+        <section className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
+          <h2 className="mb-4 text-[15px] font-bold tracking-tight text-foreground">
+            Identidade
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <AdminField label="Nome">
               <AdminInput
@@ -212,120 +253,147 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
             </AdminField>
             <AdminField label="Descrição">
               <AdminInput
-                value={formDesc}
-                onChange={(e) => setFormDesc(e.target.value)}
-                placeholder="Monte o fluxo conversacional bloco a bloco."
+                value={value.description || ""}
+                onChange={(e) => patchRoot({ description: e.target.value })}
+                placeholder="Para uso interno da equipe"
               />
             </AdminField>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border/60 bg-white p-4 shadow-[var(--shadow-surface-sm)] sm:p-5">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-[15px] font-bold tracking-tight text-foreground">
-              Fluxo conversacional
-            </h2>
+        <section className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
+          <div className="mb-1 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-[15px] font-bold tracking-tight text-foreground">
+                Fluxo da conversa
+              </h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Monte a conversa etapa a etapa. Expanda um bloco para editar.
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => insertStep(steps.length)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-sm hover:brightness-110"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-sm hover:brightness-110"
             >
               <Plus className="h-3.5 w-3.5" />
               Adicionar bloco
             </button>
           </div>
+          <p className="mb-4 text-[11px] text-muted-foreground/70">
+            Arraste pelo ícone para reordenar as perguntas.
+          </p>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {steps.map((step, i) => {
               const open = expanded === step.key;
               const meta = typeMeta(String(step.type));
               const Icon = meta.icon;
               const mode = optionsMode(String(step.type));
+              const title =
+                step.bot_text || STEP_LABELS[step.key] || step.key;
 
               return (
                 <div key={step.key}>
                   {i > 0 && (
-                    <div className="flex justify-center py-0.5">
+                    <div className="flex justify-center py-1">
                       <button
                         type="button"
                         onClick={() => insertStep(i)}
-                        className="text-[11px] font-medium text-muted-foreground/80 hover:text-primary"
+                        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium text-muted-foreground/70 transition hover:bg-primary/8 hover:text-primary"
                       >
-                        + Adicionar bloco
+                        <Plus className="h-3 w-3" />
+                        Adicionar bloco
                       </button>
                     </div>
                   )}
 
                   <div
-                    className={`overflow-hidden rounded-xl border bg-white transition ${
+                    className={`overflow-hidden rounded-xl border transition ${
                       open
-                        ? "border-primary/35 shadow-[var(--shadow-surface-sm)]"
-                        : "border-border/55 hover:border-border"
+                        ? "border-primary/40 bg-white shadow-[var(--shadow-surface-sm)]"
+                        : "border-border/55 bg-white hover:border-border"
                     }`}
                   >
-                    <div className="flex items-center gap-1">
-                      <div className="flex items-center gap-0.5 pl-2 text-muted-foreground/50">
+                    <div className="flex items-center gap-2 pl-2.5 pr-3">
+                      <div className="flex flex-col items-center text-muted-foreground/40">
                         <button
                           type="button"
-                          className="rounded p-1 hover:bg-muted hover:text-foreground disabled:opacity-25"
+                          className="rounded p-0.5 hover:text-foreground disabled:opacity-20"
                           disabled={i === 0}
                           onClick={() => moveStep(step.key, -1)}
                           aria-label="Subir"
                         >
-                          <span className="text-[10px]">▲</span>
+                          <span className="block text-[9px] leading-none">▲</span>
                         </button>
-                        <GripVertical className="h-4 w-4" />
+                        <GripVertical className="h-3.5 w-3.5" />
                         <button
                           type="button"
-                          className="rounded p-1 hover:bg-muted hover:text-foreground disabled:opacity-25"
+                          className="rounded p-0.5 hover:text-foreground disabled:opacity-20"
                           disabled={i === steps.length - 1}
                           onClick={() => moveStep(step.key, 1)}
                           aria-label="Descer"
                         >
-                          <span className="text-[10px]">▼</span>
+                          <span className="block text-[9px] leading-none">▼</span>
                         </button>
                       </div>
 
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/12 text-[11px] font-bold text-primary">
+                        {i + 1}
+                      </span>
+
                       <button
                         type="button"
-                        className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pr-3 text-left"
+                        className="flex min-w-0 flex-1 items-center gap-3 py-3 text-left"
                         onClick={() => setExpanded(open ? null : step.key)}
                       >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-                          <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                          <Icon className="h-4 w-4" strokeWidth={2.1} />
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground">
-                          {step.bot_text || STEP_LABELS[step.key] || step.key}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[14px] font-semibold text-foreground">
+                            {title}
+                          </span>
+                          <span className="block text-[11px] text-muted-foreground">
+                            {meta.label}
+                          </span>
                         </span>
-                        <input
-                          className="hidden w-32 shrink-0 rounded-lg border border-border/60 bg-[#f8f9fb] px-2 py-1.5 font-mono text-[11px] text-muted-foreground outline-none focus:border-primary sm:block"
-                          value={step.key}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => {
-                            const nextKey = e.target.value
-                              .trim()
-                              .replace(/\s+/g, "_")
-                              .toLowerCase();
-                            if (
-                              !nextKey ||
-                              steps.some((s) => s.key === nextKey && s.key !== step.key)
-                            ) {
-                              return;
-                            }
-                            onChange({
-                              ...value,
-                              steps: steps.map((s) =>
-                                s.key === step.key ? { ...s, key: nextKey } : s
-                              ),
-                            });
-                            if (expanded === step.key) setExpanded(nextKey);
-                          }}
-                          aria-label="Label interno"
-                        />
+                      </button>
+
+                      <input
+                        className="hidden w-40 shrink-0 rounded-lg border border-dashed border-border/70 bg-transparent px-2.5 py-1.5 text-[11px] text-muted-foreground outline-none transition placeholder:text-muted-foreground/50 focus:border-primary focus:text-foreground lg:block"
+                        value={step.key}
+                        placeholder="Rótulo interno…"
+                        onChange={(e) => {
+                          const nextKey = e.target.value
+                            .trim()
+                            .replace(/\s+/g, "_")
+                            .toLowerCase();
+                          if (
+                            !nextKey ||
+                            steps.some((s) => s.key === nextKey && s.key !== step.key)
+                          ) {
+                            return;
+                          }
+                          onChange({
+                            ...value,
+                            steps: steps.map((s) =>
+                              s.key === step.key ? { ...s, key: nextKey } : s
+                            ),
+                          });
+                          if (expanded === step.key) setExpanded(nextKey);
+                        }}
+                        aria-label="Rótulo interno"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(open ? null : step.key)}
+                        className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted"
+                        aria-label="Expandir"
+                      >
                         <ChevronDown
-                          className={`h-4 w-4 shrink-0 text-muted-foreground transition ${
-                            open ? "rotate-180" : ""
-                          }`}
+                          className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`}
                         />
                       </button>
                     </div>
@@ -336,7 +404,9 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                           <AdminField label="Tipo">
                             <AdminSelect
                               value={String(step.type)}
-                              onChange={(e) => updateStep(step.key, { type: e.target.value })}
+                              onChange={(e) =>
+                                updateStep(step.key, { type: e.target.value })
+                              }
                             >
                               {STEP_TYPES.map((t) => (
                                 <option key={t.value} value={t.value}>
@@ -433,76 +503,177 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
 
       <aside className="xl:sticky xl:top-[calc(4.5rem+1rem)] xl:self-start">
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-[var(--shadow-surface-sm)]">
-          <div className="flex border-b border-border/50">
-            {sidebarTabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setSidebar(tab.id)}
-                className={`flex-1 px-1.5 py-3 text-[11px] font-semibold uppercase tracking-wide transition ${
-                  sidebar === tab.id
-                    ? "border-b-2 border-primary text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="grid grid-cols-4 border-b border-border/50">
+            {sidebarTabs.map((tab) => {
+              const TabIcon = tab.icon;
+              const activeTab = sidebar === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSidebar(tab.id)}
+                  className={`flex flex-col items-center gap-1 py-3 text-[10px] font-semibold uppercase tracking-wide transition ${
+                    activeTab
+                      ? "border-b-2 border-primary text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <TabIcon className="h-4 w-4" strokeWidth={2.1} />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="p-4">
+          <div className="p-5">
             {sidebar === "score" && (
-              <div className="space-y-4">
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  Valores listados seguem para <strong className="text-foreground">oferta</strong>;
-                  os demais vão para WhatsApp.
-                </p>
-                <AdminField label="Campo">
-                  <AdminInput
-                    value={branch?.when?.field || "revenue_level"}
-                    onChange={(e) =>
-                      setBranch({
-                        ...branch,
-                        when: {
-                          ...branch?.when,
-                          field: e.target.value,
-                          in: branch?.when?.in || [],
-                        },
-                        then: branch?.then || { offer: "plano_essencial" },
-                        else: branch?.else || { cta: "whatsapp" },
-                      })
-                    }
+              <div className="space-y-5">
+                <div>
+                  <h3 className="text-sm font-bold tracking-tight text-foreground">
+                    Lead score
+                  </h3>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    Defina o teto de cada faixa. O lead é classificado ao concluir o
+                    formulário.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <ScoreInput
+                    label="Até (frio)"
+                    value={score.coldMax}
+                    onChange={(v) => patchScore({ coldMax: v })}
                   />
-                </AdminField>
-                <AdminField label="Valores → oferta">
-                  <AdminTextarea
-                    className="min-h-28 font-mono text-xs"
-                    value={(branch?.when?.in || []).join("\n")}
-                    onChange={(e) =>
-                      setBranch({
-                        when: {
-                          field: branch?.when?.field || "revenue_level",
-                          in: e.target.value
-                            .split("\n")
-                            .map((l) => l.trim())
-                            .filter(Boolean),
-                        },
-                        then: branch?.then || { offer: "plano_essencial" },
-                        else: branch?.else || { cta: "whatsapp" },
-                      })
-                    }
+                  <ScoreInput
+                    label="Até (morno)"
+                    value={score.warmMax}
+                    onChange={(v) => patchScore({ warmMax: v })}
                   />
-                </AdminField>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-[#FFF7E8] px-3 py-3 text-center">
-                    <div className="text-[10px] font-bold uppercase text-[#B45309]">Oferta</div>
-                    <div className="mt-0.5 text-xs text-foreground">then</div>
-                  </div>
-                  <div className="rounded-xl bg-primary/10 px-3 py-3 text-center">
-                    <div className="text-[10px] font-bold uppercase text-primary">WhatsApp</div>
-                    <div className="mt-0.5 text-xs text-foreground">else</div>
+                  <ScoreInput
+                    label="Até (quente)"
+                    value={score.hotMax}
+                    onChange={(v) => patchScore({ hotMax: v })}
+                  />
+                </div>
+
+                <div>
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Como fica a classificação
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {bands.map((b) => (
+                      <div
+                        key={b.key}
+                        className={`rounded-xl border px-3 py-2.5 ${b.cls}`}
+                      >
+                        <div className="text-[13px] font-bold">{b.label}</div>
+                        <div className="text-[11px] opacity-80">{b.range}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
+
+                <AdminField label="Prompt do sistema (IA)">
+                  <AdminTextarea
+                    className="min-h-24 text-[13px]"
+                    placeholder="Instruções para a IA gerar o resumo executivo do lead…"
+                    value={ai.systemPrompt || ""}
+                    onChange={(e) =>
+                      patchRoot({ ai: { ...ai, systemPrompt: e.target.value } })
+                    }
+                  />
+                </AdminField>
+
+                <div className="space-y-2.5">
+                  <label className="flex items-center gap-2.5 text-[13px] text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={ai.summaryOnComplete !== false}
+                      onChange={(e) =>
+                        patchRoot({
+                          ai: { ...ai, summaryOnComplete: e.target.checked },
+                        })
+                      }
+                      className="accent-primary"
+                    />
+                    Gerar resumo com IA ao concluir
+                  </label>
+                  <label className="flex items-center gap-2.5 text-[13px] text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={ai.crmHandoff !== false}
+                      onChange={(e) =>
+                        patchRoot({ ai: { ...ai, crmHandoff: e.target.checked } })
+                      }
+                      className="accent-primary"
+                    />
+                    Enviar handoff para o CRM
+                  </label>
+                </div>
+
+                <AdminField label="Delay entre mensagens (ms)">
+                  <AdminInput
+                    type="number"
+                    min={0}
+                    max={60000}
+                    value={delay}
+                    onChange={(e) =>
+                      patchRoot({
+                        chat: {
+                          ...value.chat,
+                          messageDelayMs: Number(e.target.value) || 0,
+                        },
+                      })
+                    }
+                  />
+                </AdminField>
+
+                <details className="rounded-xl border border-border/60 bg-muted/30 px-3.5 py-3">
+                  <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Regra de oferta (Muratori)
+                  </summary>
+                  <div className="mt-3 space-y-3">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      Valores listados seguem para{" "}
+                      <strong className="text-foreground">oferta</strong>; os demais vão
+                      para WhatsApp.
+                    </p>
+                    <AdminField label="Campo">
+                      <AdminInput
+                        value={branch?.when?.field || "revenue_level"}
+                        onChange={(e) =>
+                          setBranch({
+                            when: {
+                              field: e.target.value,
+                              in: branch?.when?.in || [],
+                            },
+                            then: branch?.then || { offer: "plano_essencial" },
+                            else: branch?.else || { cta: "whatsapp" },
+                          })
+                        }
+                      />
+                    </AdminField>
+                    <AdminField label="Valores → oferta">
+                      <AdminTextarea
+                        className="min-h-24 font-mono text-xs"
+                        value={(branch?.when?.in || []).join("\n")}
+                        onChange={(e) =>
+                          setBranch({
+                            when: {
+                              field: branch?.when?.field || "revenue_level",
+                              in: e.target.value
+                                .split("\n")
+                                .map((l) => l.trim())
+                                .filter(Boolean),
+                            },
+                            then: branch?.then || { offer: "plano_essencial" },
+                            else: branch?.else || { cta: "whatsapp" },
+                          })
+                        }
+                      />
+                    </AdminField>
+                  </div>
+                </details>
               </div>
             )}
 
@@ -526,32 +697,36 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                   O chat público usa teal WhatsApp. Cores do formulário ficam em{" "}
                   <strong className="text-foreground">Marca</strong>.
                 </p>
-                <AdminBadge tone="live">#128C7E</AdminBadge>
               </div>
             )}
 
             {sidebar === "simulador" && (
-              <div className="overflow-hidden rounded-2xl border border-black/5 bg-[#E5DDD5]">
-                <div className="bg-[linear-gradient(180deg,#128C7E,#0D655B)] px-3 py-2.5 text-white">
-                  <div className="text-[13px] font-semibold">Muratori · IA</div>
-                  <div className="text-[10px] text-white/70">prévia</div>
-                </div>
-                <div className="space-y-2 p-3">
-                  {previewBubbles.map((text, i) => (
-                    <div
-                      key={i}
-                      className="max-w-[92%] rounded-2xl rounded-bl-sm bg-white px-3 py-2 text-[12px] leading-snug text-[#111B21] shadow-sm"
-                    >
-                      {text}
-                    </div>
-                  ))}
+              <div>
+                <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+                  Prévia do fluxo — as bolhas seguem os blocos configurados.
+                </p>
+                <div className="overflow-hidden rounded-2xl border border-black/5 bg-[#E5DDD5]">
+                  <div className="bg-[linear-gradient(180deg,#128C7E,#0D655B)] px-3 py-2.5 text-white">
+                    <div className="text-[13px] font-semibold">Muratori · IA</div>
+                    <div className="text-[10px] text-white/70">prévia</div>
+                  </div>
+                  <div className="space-y-2 p-3">
+                    {previewBubbles.map((text, i) => (
+                      <div
+                        key={i}
+                        className="max-w-[92%] rounded-2xl rounded-bl-sm bg-white px-3 py-2 text-[12px] leading-snug text-[#111B21] shadow-sm"
+                      >
+                        {text}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
             {sidebar === "json" && (
               <AdminTextarea
-                className="min-h-[380px] font-mono text-[11px] leading-relaxed"
+                className="min-h-[420px] font-mono text-[11px] leading-relaxed"
                 value={json}
                 onChange={(e) => onJsonChange(e.target.value)}
                 spellCheck={false}
@@ -561,6 +736,31 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
         </div>
       </aside>
     </div>
+  );
+}
+
+function ScoreInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </span>
+      <input
+        type="number"
+        min={0}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value) || 0)}
+        className="mt-1 w-full rounded-lg border border-input bg-background px-2.5 py-2 text-center text-sm font-semibold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-ring/25"
+      />
+    </label>
   );
 }
 
