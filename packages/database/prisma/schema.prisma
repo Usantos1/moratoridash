@@ -19,6 +19,8 @@ model Workspace {
   id        String   @id @default(cuid())
   slug      String   @unique @db.VarChar(80)
   name      String   @db.VarChar(160)
+  /// Miniatura do logo do cliente (seletor de workspace, etc.).
+  logoUrl   String?  @map("logo_url")
   active    Boolean  @default(true)
   settings  Json     @default("{}")
   createdAt DateTime @default(now()) @map("created_at")

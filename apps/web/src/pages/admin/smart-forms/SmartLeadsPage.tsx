@@ -8,6 +8,7 @@ import type { SmartFormRecord } from "../../../lib/smart-forms/types";
 import { FormsModuleNav } from "../../../components/admin/FormsModuleNav";
 import { SmartLeadModal } from "../../../components/admin/SmartLeadModal";
 import { AdminBadge, AdminButton, AdminInput } from "../../../components/admin/ui";
+import { useConfirm } from "../../../components/admin/ConfirmDialog";
 import { useCan } from "../../../lib/session-context";
 
 function tempTone(t: string): "neutral" | "warn" | "live" | "danger" {
@@ -39,6 +40,7 @@ function statusLabel(s: string) {
 
 export function SmartLeadsPage() {
   const can = useCan();
+  const confirm = useConfirm();
   const [searchParams, setSearchParams] = useSearchParams();
   const [forms, setForms] = useState<SmartFormRecord[]>([]);
   const [formId, setFormId] = useState<string>(searchParams.get("formId") || "");
@@ -108,7 +110,13 @@ export function SmartLeadsPage() {
   }, [formId]);
 
   async function remove(id: string) {
-    if (!confirm("Excluir este lead?")) return;
+    const ok = await confirm({
+      title: "Excluir este lead?",
+      description: "Essa ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await smartFormsApi.deleteLead(id);
       toast.success("Lead excluído");

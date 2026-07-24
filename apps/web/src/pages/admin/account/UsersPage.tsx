@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { adminApi } from "../../../lib/admin-api";
 import { useSession } from "../../../lib/session-context";
+import { useConfirm } from "../../../components/admin/ConfirmDialog";
 import {
   AdminBadge,
   AdminButton,
@@ -17,6 +18,7 @@ type Role = Awaited<ReturnType<typeof adminApi.roles>>["items"][number];
 
 export function UsersPage() {
   const { workspace, user, can } = useSession();
+  const confirm = useConfirm();
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +109,13 @@ export function UsersPage() {
 
   async function removeMember(member: Member) {
     if (!workspace) return;
-    if (!window.confirm(`Remover ${member.user.email} deste workspace?`)) return;
+    const ok = await confirm({
+      title: "Remover usuário?",
+      description: `${member.user.email} perderá o acesso a este workspace.`,
+      confirmLabel: "Remover",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await adminApi.removeMember(workspace.id, member.id);
       await load();

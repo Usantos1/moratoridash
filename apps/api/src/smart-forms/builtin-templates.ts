@@ -416,55 +416,11 @@ export const BUILTIN_TEMPLATES: BuiltinTemplate[] = [
     },
   },
   {
-    slug: "assistencia-tecnica",
-    name: "Assistência Técnica",
-    category: "Serviços",
-    description: "Aparelho, problema e urgência de reparo.",
-    sortOrder: 7,
-    definition: {
-      schemaVersion: 1,
-      startNodeId: "welcome",
-      nodes: [
-        ...baseContact({
-          title: "Olá! Assistência técnica por aqui.",
-          description: "Me conta rapidinho o que aconteceu com o aparelho.",
-        }),
-        {
-          id: "device",
-          type: "buttons",
-          title: "Qual aparelho?",
-          required: true,
-          options: [
-            { id: "d1", label: "iPhone", value: "iphone", scoreDelta: 20 },
-            { id: "d2", label: "Samsung", value: "samsung", scoreDelta: 15 },
-            { id: "d3", label: "Outro", value: "outro", scoreDelta: 10 },
-          ],
-        },
-        {
-          id: "issue",
-          type: "text",
-          title: "Qual o problema?",
-          placeholder: "Ex.: trocar tela, bateria…",
-          required: true,
-          mapTo: "custom:problema",
-          scoreDelta: 10,
-        },
-        {
-          id: "thanks",
-          type: "confirmation",
-          title: "Recebido!",
-          description: "Vamos montar o orçamento e te chamar no WhatsApp.",
-        },
-      ],
-      edges: chain(["welcome", "name", "phone", "device", "issue", "thanks"]),
-    },
-  },
-  {
     slug: "infoproduto",
     name: "Infoproduto & Cursos",
     category: "Digital",
     description: "Interesse, nível e prontidão de compra.",
-    sortOrder: 8,
+    sortOrder: 7,
     definition: {
       schemaVersion: 1,
       startNodeId: "welcome",
@@ -540,9 +496,12 @@ export async function ensureBuiltinTemplates() {
         }
       }
 
-      // Desativa o template antigo genérico se ainda existir.
+      // Desativa templates removidos do catálogo.
       await prisma.smartFormTemplate.updateMany({
-        where: { workspaceId: null, slug: "diagnostico-basico" },
+        where: {
+          workspaceId: null,
+          slug: { in: ["diagnostico-basico", "assistencia-tecnica"] },
+        },
         data: { isActive: false },
       });
     })().catch((err) => {

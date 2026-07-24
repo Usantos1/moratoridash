@@ -27,8 +27,8 @@ export function PageHeaderPremium({
           ) : null}
           <h1
             className={`font-bold tracking-tight text-foreground ${
-              dense ? "mt-1 text-lg sm:text-xl" : "mt-1 text-2xl sm:text-[1.85rem]"
-            }`}
+              dense ? "text-lg sm:text-xl" : "text-2xl sm:text-[1.85rem]"
+            } ${eyebrow ? "mt-1" : ""}`}
           >
             {title}
           </h1>

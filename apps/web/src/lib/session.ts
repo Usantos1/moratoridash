@@ -4,6 +4,7 @@ export type WorkspaceSummary = {
   id: string;
   slug: string;
   name: string;
+  logoUrl?: string | null;
   active: boolean;
   role: { id: string; slug: string; name: string } | null;
   permissions: string[];

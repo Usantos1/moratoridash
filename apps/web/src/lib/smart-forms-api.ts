@@ -9,7 +9,8 @@ async function sfFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      // Sem body (ex.: DELETE), o Fastify rejeita Content-Type json com 400.
+      ...(init?.body ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...workspaceHeaders(),
       ...(init?.headers || {}),

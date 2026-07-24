@@ -10,6 +10,7 @@ export type WorkspaceSummary = {
   id: string;
   slug: string;
   name: string;
+  logoUrl: string | null;
   active: boolean;
   role: { id: string; slug: string; name: string } | null;
   permissions: Permission[];
@@ -44,6 +45,7 @@ export async function listUserWorkspaces(userId: string, platformRole: string): 
         id: workspace.id,
         slug: workspace.slug,
         name: workspace.name,
+        logoUrl: workspace.logoUrl ?? null,
         active: workspace.active,
         role: membership?.role
           ? { id: membership.role.id, slug: membership.role.slug, name: membership.role.name }
@@ -63,6 +65,7 @@ export async function listUserWorkspaces(userId: string, platformRole: string): 
     id: membership.workspace.id,
     slug: membership.workspace.slug,
     name: membership.workspace.name,
+    logoUrl: membership.workspace.logoUrl ?? null,
     active: membership.workspace.active,
     role: membership.role
       ? { id: membership.role.id, slug: membership.role.slug, name: membership.role.name }

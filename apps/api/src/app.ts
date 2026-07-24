@@ -32,6 +32,20 @@ export async function buildApp() {
     credentials: true,
   });
 
+  /// DELETE/POST sem corpo mas com Content-Type json não deve virar 400.
+  app.addContentTypeParser(
+    "application/json",
+    { parseAs: "string" },
+    (_req, body: string, done) => {
+      if (!body || !body.trim()) return done(null, undefined);
+      try {
+        done(null, JSON.parse(body));
+      } catch (err) {
+        done(err as Error, undefined);
+      }
+    }
+  );
+
   app.decorate("prisma", prisma);
 
   await app.register(healthRoutes);

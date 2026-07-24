@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 import { smartFormsApi } from "../../lib/smart-forms-api";
 import { AdminBadge, AdminButton } from "./ui";
+import { useConfirm } from "./ConfirmDialog";
 
 type Props = {
   leadId: string | null;
@@ -68,6 +69,7 @@ function copyText(label: string, value: string) {
 }
 
 export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete }: Props) {
+  const confirm = useConfirm();
   const [lead, setLead] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -112,12 +114,21 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
       nodeId: string;
       title?: string;
       type?: string | null;
+      mapTo?: string | null;
       value: unknown;
     }>) || [];
   const custom = (lead?.customFields || {}) as Record<
     string,
     { label?: string; value?: unknown }
   >;
+  /// Evita duplicar no modal o que já veio em answers (mapTo custom:…).
+  const mappedCustomKeys = new Set(
+    answerItems
+      .map((a) => a.mapTo)
+      .filter((m): m is string => typeof m === "string" && m.startsWith("custom:"))
+      .map((m) => m.slice("custom:".length))
+  );
+  const extraCustom = Object.entries(custom).filter(([k]) => !mappedCustomKeys.has(k));
   const tags = (lead?.tags as string[]) || [];
   const displayName =
     (lead?.fullName as string) ||
@@ -126,7 +137,14 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
     "Lead";
 
   async function remove() {
-    if (!leadId || !confirm("Excluir este lead?")) return;
+    if (!leadId) return;
+    const ok = await confirm({
+      title: "Excluir este lead?",
+      description: "Essa ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await smartFormsApi.deleteLead(leadId);
       toast.success("Lead excluído");
@@ -220,13 +238,6 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
                     }
                   />
                 </div>
-                {Object.keys(custom).length > 0 && (
-                  <dl className="mt-3 space-y-2 rounded-2xl border border-border/60 bg-[#f8fafc] p-3 text-sm">
-                    {Object.entries(custom).map(([k, v]) => (
-                      <Row key={k} label={v.label || k} value={formatValue(v.value)} />
-                    ))}
-                  </dl>
-                )}
                 {tags.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {tags.map((tag) => (
@@ -234,6 +245,40 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
                     ))}
                   </div>
                 )}
+              </section>
+
+              <section>
+                <SectionTitle>
+                  Respostas ({answerItems.length + extraCustom.length})
+                </SectionTitle>
+                <div className="mt-3 divide-y divide-border/50 overflow-hidden rounded-2xl border border-border/60">
+                  {answerItems.length === 0 && extraCustom.length === 0 ? (
+                    <p className="px-4 py-5 text-sm text-muted-foreground">Sem respostas.</p>
+                  ) : (
+                    <>
+                      {answerItems.map((a) => (
+                        <div key={a.nodeId} className="bg-white px-4 py-3">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6b7280]">
+                            {a.title || a.nodeId}
+                          </div>
+                          <div className="mt-1 text-sm font-medium text-[#1d202b]">
+                            {formatValue(a.value)}
+                          </div>
+                        </div>
+                      ))}
+                      {extraCustom.map(([k, v]) => (
+                        <div key={`custom:${k}`} className="bg-white px-4 py-3">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6b7280]">
+                            {v.label || k}
+                          </div>
+                          <div className="mt-1 text-sm font-medium text-[#1d202b]">
+                            {formatValue(v.value)}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
               </section>
 
               <section>
@@ -278,26 +323,6 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
                   </div>
                 </section>
               )}
-
-              <section>
-                <SectionTitle>Respostas ({answerItems.length})</SectionTitle>
-                <div className="mt-3 divide-y divide-border/50 overflow-hidden rounded-2xl border border-border/60">
-                  {answerItems.length === 0 ? (
-                    <p className="px-4 py-5 text-sm text-muted-foreground">Sem respostas.</p>
-                  ) : (
-                    answerItems.map((a) => (
-                      <div key={a.nodeId} className="bg-white px-4 py-3">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6b7280]">
-                          {a.title || a.nodeId}
-                        </div>
-                        <div className="mt-1 text-sm font-medium text-[#1d202b]">
-                          {formatValue(a.value)}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </section>
 
               {(lead.aiSummary as { text?: string } | null)?.text ? (
                 <section>

@@ -28,7 +28,8 @@ async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      // Sem body (ex.: DELETE), o Fastify rejeita Content-Type json com 400.
+      ...(init?.body ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...workspaceHeaders(),
       ...(init?.headers || {}),
@@ -80,12 +81,18 @@ export const adminApi = {
       id: string;
       slug: string;
       name: string;
+      logoUrl: string | null;
       active: boolean;
       createdAt: string;
       _count: { memberships: number; smartForms: number; leads: number };
     }>(`/api/workspaces/${id}`),
   updateWorkspace: (id: string, body: Record<string, unknown>) =>
     adminFetch(`/api/workspaces/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  uploadWorkspaceLogo: (id: string, dataUrl: string) =>
+    adminFetch<{ url: string; workspace: WorkspaceSummary }>(`/api/workspaces/${id}/logo`, {
+      method: "POST",
+      body: JSON.stringify({ dataUrl }),
+    }),
   roles: (workspaceId: string) =>
     adminFetch<{
       items: Array<{

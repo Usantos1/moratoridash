@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import {
   Bell,
   Check,
@@ -17,6 +17,7 @@ import { MENU_GROUPS, PRIMARY_NAV, filterNav } from "../../lib/navigation";
 import { useSession } from "../../lib/session-context";
 import { assetSrc } from "../../lib/asset-url";
 import { ProfileModal } from "../admin/ProfileModal";
+import { CommandSearchModal } from "./CommandSearchModal";
 
 type Props = {
   onLogout: () => void;
@@ -26,18 +27,33 @@ const pillBase =
   "inline-flex h-11 items-center gap-2 rounded-full border border-[#d8dde6] bg-white px-4 text-sm font-medium text-[#1d202b] shadow-[0_1px_0_rgba(16,24,40,0.04)] transition hover:border-primary/35 hover:bg-[#f8fafc]";
 
 export function AppTopbar({ onLogout }: Props) {
-  const navigate = useNavigate();
   const { user, workspace, workspaces, can, switchWorkspace } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [wsOpen, setWsOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setMenuOpen(false);
+        setLangOpen(false);
+        setWsOpen(false);
+        setUserOpen(false);
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   useEffect(() => {
@@ -72,7 +88,6 @@ export function AppTopbar({ onLogout }: Props) {
     [can]
   );
 
-  const workspaceInitial = (workspace?.name || "M")[0].toUpperCase();
   const userInitial = (user.name || user.email || "M")[0].toUpperCase();
   const avatarSrc = assetSrc(user.avatarUrl);
   /// "Configurações" leva ao workspace; branding/tracking agora é por formulário.
@@ -187,9 +202,16 @@ export function AppTopbar({ onLogout }: Props) {
 
           <button
             type="button"
-            className="hidden h-11 w-11 items-center justify-center rounded-full border border-[#d8dde6] bg-white text-brand-600 shadow-[0_1px_0_rgba(16,24,40,0.04)] hover:bg-[#f8fafc] sm:inline-flex"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#d8dde6] bg-white text-brand-600 shadow-[0_1px_0_rgba(16,24,40,0.04)] hover:bg-[#f8fafc]"
             aria-label="Buscar"
-            onClick={() => navigate("/admin")}
+            title="Buscar (Ctrl+K)"
+            onClick={() => {
+              setMenuOpen(false);
+              setLangOpen(false);
+              setWsOpen(false);
+              setUserOpen(false);
+              setSearchOpen(true);
+            }}
           >
             <Search className="h-4 w-4" strokeWidth={2} />
           </button>
@@ -209,9 +231,7 @@ export function AppTopbar({ onLogout }: Props) {
                 setWsOpen((v) => !v);
               }}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-extrabold text-primary">
-                {workspaceInitial}
-              </span>
+              <WorkspaceMark name={workspace?.name ?? "M"} logoUrl={workspace?.logoUrl} />
               <span className="min-w-0 leading-tight">
                 <span className="block truncate text-[13px] font-bold text-[#1d202b]">
                   {workspace?.name ?? "Sem workspace"}
@@ -248,9 +268,7 @@ export function AppTopbar({ onLogout }: Props) {
                             if (item.id !== workspace?.id) await switchWorkspace(item.id);
                           }}
                         >
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-extrabold text-primary">
-                            {item.name[0].toUpperCase()}
-                          </span>
+                          <WorkspaceMark name={item.name} logoUrl={item.logoUrl} />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-[#1d202b]">{item.name}</span>
                             <span className="block truncate text-[11px] text-[#6b7280]">
@@ -428,6 +446,29 @@ export function AppTopbar({ onLogout }: Props) {
       </div>
 
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
+      <CommandSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
+  );
+}
+
+function WorkspaceMark({
+  name,
+  logoUrl,
+}: {
+  name: string;
+  logoUrl?: string | null;
+}) {
+  const src = assetSrc(logoUrl);
+  if (src) {
+    return (
+      <span className="flex h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-border/60 bg-white">
+        <img src={src} alt="" className="h-full w-full object-contain p-0.5" />
+      </span>
+    );
+  }
+  return (
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-extrabold text-primary">
+      {(name || "M")[0].toUpperCase()}
+    </span>
   );
 }

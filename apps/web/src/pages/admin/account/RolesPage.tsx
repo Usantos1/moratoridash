@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { adminApi } from "../../../lib/admin-api";
 import { useSession } from "../../../lib/session-context";
+import { useConfirm } from "../../../components/admin/ConfirmDialog";
 import {
   AdminBadge,
   AdminButton,
@@ -16,6 +17,7 @@ type PermissionGroup = Awaited<ReturnType<typeof adminApi.permissionCatalog>>["g
 
 export function RolesPage() {
   const { workspace, can } = useSession();
+  const confirm = useConfirm();
   const [roles, setRoles] = useState<Role[]>([]);
   const [groups, setGroups] = useState<PermissionGroup[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -89,7 +91,13 @@ export function RolesPage() {
 
   async function deleteRole(role: Role) {
     if (!workspace) return;
-    if (!window.confirm(`Excluir o cargo ${role.name}?`)) return;
+    const ok = await confirm({
+      title: "Excluir este cargo?",
+      description: `O cargo “${role.name}” será removido permanentemente.`,
+      confirmLabel: "Excluir",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await adminApi.deleteRole(workspace.id, role.id);
       setSelectedId(null);

@@ -13,6 +13,7 @@ import { smartFormsApi } from "../../../lib/smart-forms-api";
 import type { SmartFormRecord, SmartFormStatus } from "../../../lib/smart-forms/types";
 import { FormsModuleNav } from "../../../components/admin/FormsModuleNav";
 import { AdminBadge, AdminButton, AdminInput } from "../../../components/admin/ui";
+import { useConfirm } from "../../../components/admin/ConfirmDialog";
 import { useCan } from "../../../lib/session-context";
 
 const FILTERS: Array<{ id: "ALL" | SmartFormStatus; label: string }> = [
@@ -49,6 +50,7 @@ function fmtDate(iso: string) {
 export function SmartFormsListPage() {
   const navigate = useNavigate();
   const can = useCan();
+  const confirm = useConfirm();
   const canWrite = can("forms.write");
   const canDelete = can("forms.delete");
   const [items, setItems] = useState<SmartFormRecord[]>([]);
@@ -105,7 +107,13 @@ export function SmartFormsListPage() {
   }
 
   async function remove(id: string) {
-    if (!confirm("Arquivar este formulário?")) return;
+    const ok = await confirm({
+      title: "Arquivar este formulário?",
+      description: "Ele sai da lista ativa. Você pode filtrar por Arquivado depois.",
+      confirmLabel: "Arquivar",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await smartFormsApi.remove(id);
       toast.success("Arquivado");

@@ -10,7 +10,6 @@ import {
   Scale,
   Sparkles,
   Stethoscope,
-  Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -38,7 +37,6 @@ const ICON_BY_SLUG: Record<string, LucideIcon> = {
   estetica: Sparkles,
   "academia-fitness": Dumbbell,
   consultoria: Building2,
-  "assistencia-tecnica": Wrench,
   infoproduto: GraduationCap,
 };
 

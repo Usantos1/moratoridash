@@ -3,6 +3,7 @@ import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { getAdminToken, setAdminToken } from "../../lib/admin-api";
 import { SessionProvider } from "../../lib/session-context";
 import { AppShell } from "../../components/shell/AppShell";
+import { ConfirmProvider } from "../../components/admin/ConfirmDialog";
 
 function LoadingScreen({ message }: { message: string }) {
   return (
@@ -35,9 +36,11 @@ export function AdminLayout() {
       onUnauthenticated={logout}
       fallback={<LoadingScreen message="Abrindo o painel…" />}
     >
-      <AppShell onLogout={logout}>
-        <Outlet />
-      </AppShell>
+      <ConfirmProvider>
+        <AppShell onLogout={logout}>
+          <Outlet />
+        </AppShell>
+      </ConfirmProvider>
     </SessionProvider>
   );
 }

@@ -15,6 +15,7 @@ import {
   slugifyWorkspace,
 } from "../lib/workspaces";
 import { adminPreHandler, requirePermission, workspacePreHandler } from "../plugins/require-admin";
+import { publicUploadUrl, saveBase64Image } from "../smart-forms/assets";
 
 const workspaceCreateSchema = z.object({
   name: z.string().min(2).max(160),
@@ -25,6 +26,7 @@ const workspaceUpdateSchema = z.object({
   name: z.string().min(2).max(160).optional(),
   slug: z.string().min(2).max(60).optional(),
   active: z.boolean().optional(),
+  logoUrl: z.string().max(2000).nullable().optional(),
   settings: z.record(z.unknown()).optional(),
 });
 
@@ -131,6 +133,7 @@ export const workspaceRoutes: FastifyPluginAsync = async (app) => {
             name: parsed.data.name,
             slug,
             active: parsed.data.active,
+            logoUrl: parsed.data.logoUrl,
             settings: parsed.data.settings as never,
           },
         });
@@ -140,6 +143,38 @@ export const workspaceRoutes: FastifyPluginAsync = async (app) => {
           return reply.status(409).send({ error: "Slug já em uso" });
         }
         throw error;
+      }
+    },
+  );
+
+  app.post(
+    "/workspaces/:id/logo",
+    { preHandler: requirePermission("workspace.manage") },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      if (!(await assertWorkspaceAccess(request, id))) {
+        return reply.status(404).send({ error: "Workspace não encontrado" });
+      }
+      const parsed = z
+        .object({ dataUrl: z.string().min(32).max(8_000_000) })
+        .safeParse(request.body);
+      if (!parsed.success) return reply.status(400).send({ error: "Imagem inválida" });
+
+      try {
+        const saved = await saveBase64Image({
+          dataUrl: parsed.data.dataUrl,
+          maxBytes: 4 * 1024 * 1024,
+        });
+        const url = publicUploadUrl(saved.filename);
+        const workspace = await prisma.workspace.update({
+          where: { id },
+          data: { logoUrl: url },
+        });
+        return reply.status(201).send({ url, workspace });
+      } catch (e) {
+        return reply.status(400).send({
+          error: e instanceof Error ? e.message : "Upload inválido",
+        });
       }
     },
   );
