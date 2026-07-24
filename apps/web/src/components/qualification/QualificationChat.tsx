@@ -612,8 +612,8 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
 
   return (
     <div
-      className={`flex flex-col overflow-hidden bg-[#efeae2] ${
-        mode === "modal" ? "h-[min(92vh,820px)] max-w-2xl rounded-3xl" : "h-[100dvh] w-full"
+      className={`flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#efeae2] ${
+        mode === "modal" ? "" : ""
       }`}
     >
       <header className="flex items-center gap-3 bg-[#075e54] px-4 py-3 text-white">
