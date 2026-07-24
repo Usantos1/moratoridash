@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { QualificationChat } from "../components/qualification/QualificationChat";
 
 export function DiagnosticoPage() {
@@ -9,17 +8,7 @@ export function DiagnosticoPage() {
         <div className="absolute left-1/2 top-0 h-[40vh] w-[70vw] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(182,242,108,0.14),transparent_70%)] blur-2xl" />
       </div>
 
-      <div className="relative z-10 flex w-full flex-col items-center px-0 sm:px-4 sm:py-6">
-        <div className="mb-4 hidden w-[min(100%,390px)] items-center justify-between sm:flex">
-          <Link to="/" className="font-display text-sm font-bold tracking-tight text-white/90">
-            Muratori
-          </Link>
-          <span className="text-xs uppercase tracking-[0.2em] text-[var(--leaf)]/80">
-            Diagnóstico
-          </span>
-        </div>
-
-        {/* Moldura estilo celular */}
+      <div className="relative z-10 flex w-full items-center justify-center px-0 sm:px-4 sm:py-6">
         <div
           className="
             flex h-[100dvh] w-full flex-col overflow-hidden bg-[#efeae2]
