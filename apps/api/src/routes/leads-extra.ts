@@ -258,4 +258,21 @@ export const leadsExtraRoutes: FastifyPluginAsync = async (app) => {
         : null,
     };
   });
+
+  /** Fluxo publicado (público) */
+  app.get("/config/flow", async () => {
+    const flow = await prisma.diagnosticFlow.findFirst({
+      where: { name: "default", publishedAt: { not: null } },
+      orderBy: { version: "desc" },
+      select: { id: true, version: true, definition: true, publishedAt: true },
+    });
+    if (!flow) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { AGENCY_FLOW_V1 } = require("@muratori/database") as {
+        AGENCY_FLOW_V1: unknown;
+      };
+      return { version: 1, definition: AGENCY_FLOW_V1, publishedAt: null };
+    }
+    return flow;
+  });
 };

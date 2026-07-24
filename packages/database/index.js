@@ -19,5 +19,6 @@ module.exports = {
   prisma,
   PrismaClient,
   default: prisma,
+  AGENCY_FLOW_V1: require("./presets/agency-flow-v1").AGENCY_FLOW_V1,
   ...require("@prisma/client"),
 };

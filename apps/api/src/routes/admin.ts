@@ -306,4 +306,49 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     });
     return result;
   });
+
+  app.get("/admin/flows", async () => {
+    return prisma.diagnosticFlow.findMany({
+      orderBy: [{ name: "asc" }, { version: "desc" }],
+    });
+  });
+
+  app.get("/admin/flows/published", async () => {
+    const flow = await prisma.diagnosticFlow.findFirst({
+      where: { name: "default", publishedAt: { not: null } },
+      orderBy: { version: "desc" },
+    });
+    return flow ?? { definition: null };
+  });
+
+  app.post("/admin/flows", async (request, reply) => {
+    const body = request.body as { name?: string; definition?: unknown; publish?: boolean };
+    if (!body.definition || typeof body.definition !== "object") {
+      return reply.status(400).send({ error: "definition JSON obrigatória" });
+    }
+    const name = body.name || "default";
+    const latest = await prisma.diagnosticFlow.findFirst({
+      where: { name },
+      orderBy: { version: "desc" },
+    });
+    const version = (latest?.version ?? 0) + 1;
+    const created = await prisma.diagnosticFlow.create({
+      data: {
+        name,
+        version,
+        definition: body.definition as Prisma.InputJsonValue,
+        publishedAt: body.publish ? new Date() : null,
+      },
+    });
+    return reply.status(201).send(created);
+  });
+
+  app.post("/admin/flows/:id/publish", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const flow = await prisma.diagnosticFlow.update({
+      where: { id },
+      data: { publishedAt: new Date() },
+    });
+    return flow;
+  });
 };

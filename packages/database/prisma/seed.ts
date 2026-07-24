@@ -1,5 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 import { randomBytes, scryptSync } from "node:crypto";
+import { createRequire } from "node:module";
+
+const require = createRequire(__filename);
+const { AGENCY_FLOW_V1 } = require("../presets/agency-flow-v1") as {
+  AGENCY_FLOW_V1: object;
+};
 
 const prisma = new PrismaClient();
 
@@ -116,6 +122,18 @@ async function main() {
           revenueLevels: ["de_10_25", "baixo", "ate_25k"],
         },
         active: true,
+      },
+    });
+  }
+
+  const flowCount = await prisma.diagnosticFlow.count({ where: { name: "default" } });
+  if (flowCount === 0) {
+    await prisma.diagnosticFlow.create({
+      data: {
+        name: "default",
+        version: 1,
+        definition: AGENCY_FLOW_V1,
+        publishedAt: new Date(),
       },
     });
   }

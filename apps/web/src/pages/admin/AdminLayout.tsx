@@ -56,6 +56,9 @@ export function AdminLayout() {
               <NavLink to="/admin/whatsapp" className={linkClass}>
                 WhatsApp
               </NavLink>
+              <NavLink to="/admin/flows" className={linkClass}>
+                Fluxo
+              </NavLink>
               <NavLink to="/admin/deliveries" className={linkClass}>
                 Entregas
               </NavLink>

@@ -69,4 +69,9 @@ export const adminApi = {
     ),
   retryDelivery: (id: string) =>
     adminFetch(`/api/admin/deliveries/${id}/retry`, { method: "POST" }),
+  flows: () => adminFetch<Array<Record<string, unknown>>>("/api/admin/flows"),
+  saveFlow: (body: { definition: unknown; publish?: boolean; name?: string }) =>
+    adminFetch("/api/admin/flows", { method: "POST", body: JSON.stringify(body) }),
+  publishFlow: (id: string) =>
+    adminFetch(`/api/admin/flows/${id}/publish`, { method: "POST" }),
 };

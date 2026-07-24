@@ -9,6 +9,7 @@ import { AdminLeadDetailPage } from "./pages/admin/AdminLeadDetailPage";
 import { AdminPagesPage } from "./pages/admin/AdminPagesPage";
 import { AdminWhatsappPage } from "./pages/admin/AdminWhatsappPage";
 import { AdminDeliveriesPage } from "./pages/admin/AdminDeliveriesPage";
+import { AdminFlowsPage } from "./pages/admin/AdminFlowsPage";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="leads/:id" element={<AdminLeadDetailPage />} />
           <Route path="pages" element={<AdminPagesPage />} />
           <Route path="whatsapp" element={<AdminWhatsappPage />} />
+          <Route path="flows" element={<AdminFlowsPage />} />
           <Route path="deliveries" element={<AdminDeliveriesPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
