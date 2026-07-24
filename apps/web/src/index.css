@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+:root {
+  --ink: #070b0a;
+  --ink-2: #0e1614;
+  --moss: #1c3b32;
+  --leaf: #b6f26c;
+  --leaf-dim: #8bc34a;
+  --fog: rgba(236, 245, 238, 0.78);
+  --line: rgba(182, 242, 108, 0.18);
+  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+}
+
 html,
 body,
 #root {
@@ -8,6 +20,76 @@ body,
 
 body {
   margin: 0;
-  font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
+  background: var(--ink);
+  color: #f3f7f4;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+@keyframes muratori-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes muratori-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes muratori-grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-2%, 2%);
+  }
+}
+
+.anim-rise {
+  animation: muratori-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.anim-rise-delay-1 {
+  animation-delay: 0.12s;
+}
+
+.anim-rise-delay-2 {
+  animation-delay: 0.24s;
+}
+
+.anim-rise-delay-3 {
+  animation-delay: 0.36s;
+}
+
+.anim-glow {
+  animation: muratori-glow 7s ease-in-out infinite;
+}
+
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: muratori-grain 1.2s steps(2) infinite;
+  mix-blend-mode: soft-light;
 }
