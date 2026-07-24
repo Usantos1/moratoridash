@@ -27,32 +27,15 @@ export function AdminLoginPage() {
   }
 
   return (
-    <div className="grain relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[var(--ink)] px-4">
-      <div className="pointer-events-none absolute inset-0">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(100% 70% at 50% 0%, rgba(28,59,50,0.85) 0%, transparent 55%), linear-gradient(165deg, #070b0a 0%, #0e1614 50%, #08110e 100%)",
-          }}
-        />
-        <div className="anim-glow absolute left-1/2 top-[-20%] h-[55vh] w-[55vh] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(182,242,108,0.2),transparent_68%)] blur-2xl" />
-      </div>
-
+    <div className="flex min-h-dvh items-center justify-center bg-[#f1f3f6] px-4 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,hsl(var(--primary)/0.12),transparent_52%)]">
       <form
         onSubmit={onSubmit}
-        className="anim-rise relative w-full max-w-md border border-white/[0.08] bg-[#0c1412]/90 p-8 shadow-[0_40px_80px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-10"
+        className="w-full max-w-md rounded-[28px] border border-border/70 bg-card p-8 shadow-[var(--shadow-surface)] sm:p-10"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--leaf)]/50 to-transparent" />
-
-        <p className="font-display text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--leaf)]">
-          Muratori
-        </p>
-        <h1 className="font-display mt-3 text-4xl font-extrabold tracking-tight text-white">
-          DASH
-        </h1>
-        <p className="mt-3 text-sm leading-relaxed text-white/55">
-          Entre no painel da instalação para leads, marca e fluxo do diagnóstico.
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">Muratori</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">Dash</h1>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Entre no painel da instalação — formulários inteligentes, leads e builder.
         </p>
 
         <div className="mt-8 space-y-4">
@@ -66,7 +49,6 @@ export function AdminLoginPage() {
               placeholder="time@suaagencia.com"
             />
           </AdminField>
-
           <AdminField label="Senha">
             <AdminInput
               value={password}
@@ -79,16 +61,12 @@ export function AdminLoginPage() {
           </AdminField>
         </div>
 
-        <AdminButton
-          type="submit"
-          disabled={loading}
-          className="mt-8 w-full !py-3"
-        >
+        <AdminButton type="submit" disabled={loading} className="mt-8 w-full !py-3">
           {loading ? "Entrando…" : "Entrar no painel"}
         </AdminButton>
 
-        <p className="mt-6 text-center text-xs text-white/35">
-          <Link to="/" className="text-white/55 underline-offset-2 hover:text-[var(--leaf)] hover:underline">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          <Link to="/" className="font-medium text-foreground underline-offset-2 hover:text-primary hover:underline">
             Voltar ao site
           </Link>
         </p>

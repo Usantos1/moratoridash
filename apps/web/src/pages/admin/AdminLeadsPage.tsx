@@ -95,10 +95,10 @@ export function AdminLeadsPage() {
         <AdminButton onClick={() => void load()}>Filtrar</AdminButton>
       </div>
 
-      <div className="overflow-hidden border border-white/[0.08] bg-[#0c1412]/80">
+      <div className="overflow-hidden rounded-[var(--radius)] border border-border/70 bg-card shadow-[var(--shadow-surface-sm)]">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-white/[0.06] bg-white/[0.03] text-[11px] uppercase tracking-[0.14em] text-white/40">
+            <thead className="border-b border-border/60 bg-muted/40 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
               <tr>
                 <th className="px-4 py-3.5 font-semibold">Lead</th>
                 <th className="px-4 py-3.5 font-semibold">Agência</th>
@@ -110,14 +110,14 @@ export function AdminLeadsPage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-white/40">
+                  <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
                     Carregando leads…
                   </td>
                 </tr>
               )}
               {!loading && items.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-white/40">
+                  <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
                     Nenhum lead ainda. Abra /diagnostico para gerar o primeiro.
                   </td>
                 </tr>
@@ -125,21 +125,21 @@ export function AdminLeadsPage() {
               {items.map((lead) => (
                 <tr
                   key={lead.id}
-                  className="border-t border-white/[0.04] transition hover:bg-[var(--leaf)]/[0.04]"
+                  className="border-t border-border/40 transition hover:bg-primary/[0.04]"
                 >
                   <td className="px-4 py-3.5">
                     <Link
                       to={`/admin/leads/${lead.id}`}
-                      className="font-semibold text-white hover:text-[var(--leaf)]"
+                      className="font-semibold text-foreground hover:text-primary"
                     >
                       {lead.name}
                     </Link>
-                    <div className="mt-0.5 text-xs text-white/40">{lead.email}</div>
-                    <div className="text-xs text-white/40">{lead.phone}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{lead.email}</div>
+                    <div className="text-xs text-muted-foreground">{lead.phone}</div>
                   </td>
                   <td className="px-4 py-3.5">
-                    <div className="text-white/90">{lead.companyName}</div>
-                    <div className="text-xs text-white/40">{lead.revenueLevel || "—"}</div>
+                    <div className="text-foreground">{lead.companyName}</div>
+                    <div className="text-xs text-muted-foreground">{lead.revenueLevel || "—"}</div>
                   </td>
                   <td className="px-4 py-3.5">
                     {lead.isQualified ? (
@@ -150,11 +150,11 @@ export function AdminLeadsPage() {
                       <AdminBadge>Andamento</AdminBadge>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 text-xs text-white/50">
+                  <td className="px-4 py-3.5 text-xs text-muted-foreground">
                     {lead.utmSource || "—"}
                     {lead.utmCampaign ? ` / ${lead.utmCampaign}` : ""}
                   </td>
-                  <td className="px-4 py-3.5 text-xs text-white/50">
+                  <td className="px-4 py-3.5 text-xs text-muted-foreground">
                     {new Date(lead.createdAt).toLocaleString("pt-BR")}
                   </td>
                 </tr>

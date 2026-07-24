@@ -134,8 +134,8 @@ export function FlowVisualEditor({ value, onChange, selectedKey, onSelectKey }: 
                   <div
                     className={`flex items-stretch gap-1 border ${
                       active
-                        ? "border-[var(--leaf)]/50 bg-[var(--leaf)]/10"
-                        : "border-transparent hover:border-white/10 hover:bg-white/[0.03]"
+                        ? "border-primary/50 bg-primary/10"
+                        : "border-transparent hover:border-border hover:bg-white/[0.03]"
                     }`}
                   >
                     <button
@@ -144,19 +144,19 @@ export function FlowVisualEditor({ value, onChange, selectedKey, onSelectKey }: 
                       onClick={() => onSelectKey(step.key)}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-white/30">{i + 1}</span>
-                        <span className="truncate text-sm font-semibold text-white">
+                        <span className="font-mono text-[10px] text-muted-foreground">{i + 1}</span>
+                        <span className="truncate text-sm font-semibold text-foreground">
                           {STEP_LABELS[step.key] || step.key}
                         </span>
                       </div>
-                      <div className="mt-0.5 truncate text-[11px] text-white/35">
+                      <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
                         {STEP_TYPES.find((t) => t.value === step.type)?.label || step.type}
                       </div>
                     </button>
                     <div className="flex flex-col border-l border-white/[0.06]">
                       <button
                         type="button"
-                        className="px-2 py-1 text-xs text-white/40 hover:text-white disabled:opacity-20"
+                        className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-20"
                         disabled={i === 0}
                         onClick={() => moveStep(step.key, -1)}
                         aria-label="Subir"
@@ -165,7 +165,7 @@ export function FlowVisualEditor({ value, onChange, selectedKey, onSelectKey }: 
                       </button>
                       <button
                         type="button"
-                        className="px-2 py-1 text-xs text-white/40 hover:text-white disabled:opacity-20"
+                        className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-20"
                         disabled={i === steps.length - 1}
                         onClick={() => moveStep(step.key, 1)}
                         aria-label="Descer"
@@ -242,7 +242,7 @@ export function FlowVisualEditor({ value, onChange, selectedKey, onSelectKey }: 
       <div>
         {!selected ? (
           <AdminPanel className="flex min-h-[420px] items-center justify-center">
-            <p className="text-sm text-white/45">Selecione um passo à esquerda para editar.</p>
+            <p className="text-sm text-muted-foreground">Selecione um passo à esquerda para editar.</p>
           </AdminPanel>
         ) : (
           <AdminPanel
@@ -297,12 +297,12 @@ export function FlowVisualEditor({ value, onChange, selectedKey, onSelectKey }: 
               </AdminField>
             </div>
 
-            <label className="mt-4 flex items-center gap-2 text-sm text-white/70">
+            <label className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
               <input
                 type="checkbox"
                 checked={selected.required !== false}
                 onChange={(e) => updateStep(selected.key, { required: e.target.checked })}
-                className="accent-[var(--leaf)]"
+                className="accent-primary"
               />
               Obrigatório
             </label>

@@ -81,7 +81,7 @@ export function AdminWhatsappPage() {
         </AdminPanel>
       </form>
 
-      <p className="text-xs text-white/35">{list.length} configuração(ões) no histórico</p>
+      <p className="text-xs text-muted-foreground">{list.length} configuração(ões) no histórico</p>
     </div>
   );
 }

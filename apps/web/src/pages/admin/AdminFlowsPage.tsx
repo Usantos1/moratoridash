@@ -105,13 +105,13 @@ export function AdminFlowsPage() {
         title="Fluxo do diagnóstico"
         description="Edite os passos do chat visualmente. O público lê a versão publicada em tempo real."
         actions={
-          <div className="flex overflow-hidden border border-white/10">
+          <div className="flex overflow-hidden border border-border">
             <button
               type="button"
               className={`px-4 py-2 text-xs font-bold uppercase tracking-wide transition ${
                 mode === "visual"
-                  ? "bg-[var(--leaf)] text-[#0a140f]"
-                  : "bg-transparent text-white/50 hover:text-white"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-transparent text-muted-foreground hover:text-foreground"
               }`}
               onClick={() => switchMode("visual")}
             >
@@ -121,8 +121,8 @@ export function AdminFlowsPage() {
               type="button"
               className={`px-4 py-2 text-xs font-bold uppercase tracking-wide transition ${
                 mode === "json"
-                  ? "bg-[var(--leaf)] text-[#0a140f]"
-                  : "bg-transparent text-white/50 hover:text-white"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-transparent text-muted-foreground hover:text-foreground"
               }`}
               onClick={() => switchMode("json")}
             >
@@ -146,12 +146,12 @@ export function AdminFlowsPage() {
             />
           ) : mode === "visual" && !definition ? (
             <AdminPanel>
-              <p className="text-sm text-white/45">Carregando fluxo…</p>
+              <p className="text-sm text-muted-foreground">Carregando fluxo…</p>
             </AdminPanel>
           ) : (
             <AdminPanel className="!p-0 overflow-hidden">
               <AdminTextarea
-                className="min-h-[560px] resize-y rounded-none border-0 bg-black/40 p-5 font-mono text-xs leading-relaxed focus:border-0"
+                className="min-h-[560px] resize-y rounded-none border-0 bg-muted/60 p-5 font-mono text-xs leading-relaxed focus:border-0"
                 value={json}
                 onChange={(e) => setJson(e.target.value)}
                 spellCheck={false}
@@ -199,7 +199,7 @@ export function AdminFlowsPage() {
                 >
                   <button
                     type="button"
-                    className="text-left text-sm hover:text-[var(--leaf)]"
+                    className="text-left text-sm hover:text-primary"
                     onClick={() => {
                       applyDefinition(normalizeFlowDefinition(f.definition));
                       setMode("visual");
@@ -217,7 +217,7 @@ export function AdminFlowsPage() {
                   {!f.publishedAt && (
                     <button
                       type="button"
-                      className="text-xs font-bold text-[var(--leaf)]"
+                      className="text-xs font-bold text-primary"
                       onClick={async () => {
                         await adminApi.publishFlow(String(f.id));
                         toast.success("Publicado");
@@ -232,7 +232,7 @@ export function AdminFlowsPage() {
             </ul>
           </AdminPanel>
 
-          <p className="text-[11px] leading-relaxed text-white/35">
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
             Dica: altere o texto de um passo, publique e abra /diagnostico — a mudança vale na hora.
           </p>
         </div>

@@ -22,7 +22,7 @@ export function AdminLeadDetailPage() {
   }, [id]);
 
   if (!lead) {
-    return <div className="anim-rise text-white/45">Carregando lead…</div>;
+    return <div className="anim-rise text-muted-foreground">Carregando lead…</div>;
   }
 
   const logs = (lead.deliveryLogs as Array<Record<string, unknown>>) || [];
@@ -32,7 +32,7 @@ export function AdminLeadDetailPage() {
       <div>
         <Link
           to="/admin"
-          className="text-xs font-semibold uppercase tracking-[0.14em] text-white/40 hover:text-[var(--leaf)]"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground hover:text-primary"
         >
           ← Voltar aos leads
         </Link>
@@ -65,29 +65,29 @@ export function AdminLeadDetailPage() {
         ].map(([k, v]) => (
           <div
             key={String(k)}
-            className="border border-white/[0.08] bg-[#0c1412]/90 px-4 py-3.5"
+            className="rounded-[var(--radius)] border border-border/70 bg-card px-4 py-3.5 shadow-[var(--shadow-surface-sm)]"
           >
-            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {String(k)}
             </div>
-            <div className="mt-1.5 break-all text-sm text-white/90">{String(v ?? "—")}</div>
+            <div className="mt-1.5 break-all text-sm text-foreground">{String(v ?? "—")}</div>
           </div>
         ))}
       </div>
 
       <AdminPanel title="Nichos">
-        <p className="text-sm text-white/70">
+        <p className="text-sm text-muted-foreground">
           {Array.isArray(lead.niches) ? (lead.niches as string[]).join(", ") : "—"}
         </p>
       </AdminPanel>
 
       <AdminPanel title="Entregas">
         <div className="space-y-2">
-          {logs.length === 0 && <p className="text-sm text-white/45">Nenhuma entrega registrada.</p>}
+          {logs.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma entrega registrada.</p>}
           {logs.map((log) => (
             <div
               key={String(log.id)}
-              className="flex flex-wrap items-center justify-between gap-2 border border-white/[0.06] bg-black/20 px-4 py-3 text-sm"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-[calc(var(--radius)-2px)] border border-border/60 bg-muted/30 px-4 py-3 text-sm"
             >
               <span>
                 {String(log.destination)} · {String(log.eventName)}
@@ -102,7 +102,7 @@ export function AdminLeadDetailPage() {
       </AdminPanel>
 
       <div>
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Atualizar status
         </p>
         <div className="flex flex-wrap gap-2">

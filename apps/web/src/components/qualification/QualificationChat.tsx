@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { toast } from "sonner";
 import {
   ATTENDANT_OPTIONS,
@@ -53,6 +53,7 @@ import {
 } from "../../lib/qualification/validation";
 import { DiagnosisCard } from "./DiagnosisCard";
 import { installTrackingTags, trackDiagnosticEvent } from "../../lib/tracking";
+import { darkenHex, resolveChatPrimary } from "../../lib/qualification/chat-theme";
 
 type Props = {
   mode?: "page" | "modal";
@@ -63,8 +64,8 @@ type Props = {
 const DEFAULT_CONFIG: PageConfig = {
   brandName: "Muratori",
   assistantName: "Muratori · IA",
-  primaryColor: "#075e54",
-  secondaryColor: "#128c7e",
+  primaryColor: "#128C7E",
+  secondaryColor: "#0D655B",
   logoUrl: null,
   checkoutUrl: "https://pay.hotmart.com/ADAPTAR",
   whatsappNumber: null,
@@ -675,20 +676,22 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
       ? new Date(alreadyDone.completedAt).toLocaleString("pt-BR")
       : "recentemente";
     return (
-      <div className="flex h-full min-h-[480px] items-center justify-center bg-[#efeae2] p-6">
-        <div className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-lg">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-700">
+      <div className="flex h-full min-h-[480px] items-center justify-center bg-[var(--sf-chat-bg-light)] p-6 font-[family-name:var(--sf-font)]">
+        <div className="w-full max-w-md rounded-[28px] bg-white p-8 text-center shadow-[var(--sf-shadow-bubble)]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--sf-primary)]/15 text-3xl text-[var(--sf-primary)]">
             ✓
           </div>
-          <h2 className="text-xl font-bold text-slate-900">
+          <h2 className="text-[18px] font-semibold tracking-tight text-[var(--sf-bubble-text)]">
             {alreadyDone.name}, já recebemos os dados da sua agência!
           </h2>
-          <p className="mt-2 text-sm text-slate-600">Conclusão registrada em {when}.</p>
+          <p className="mt-2 text-[13.5px] text-[var(--sf-bubble-text-secondary)]">
+            Conclusão registrada em {when}.
+          </p>
           <div className="mt-6 flex flex-col gap-2">
             <button
               type="button"
-              className="rounded-full px-4 py-3 font-semibold text-white"
-              style={{ backgroundColor: config.primaryColor }}
+              className="rounded-full px-4 py-3 text-[15px] font-semibold text-white shadow-[var(--sf-shadow-cta)]"
+              style={{ backgroundColor: resolveChatPrimary(config.primaryColor) }}
               onClick={() => {
                 const text = `Olá! Sou ${alreadyDone.name}, da agência ${alreadyDone.companyName || ""}. Já fiz o diagnóstico no site e quero continuar a conversa.`;
                 window.open(
@@ -700,7 +703,11 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
               Falar no WhatsApp
             </button>
             {onClose && (
-              <button type="button" className="rounded-full px-4 py-3 text-slate-600" onClick={onClose}>
+              <button
+                type="button"
+                className="rounded-full px-4 py-3 text-[15px] text-[var(--sf-bubble-text-secondary)]"
+                onClick={onClose}
+              >
                 Fechar
               </button>
             )}
@@ -712,18 +719,24 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
 
   const textSteps: ChatStep[] = ["name", "email", "phone", "company", "attendants", "clients"];
   const showInput = showChoices && textSteps.includes(step);
+  const chatPrimary = resolveChatPrimary(config.primaryColor);
+  const chatPrimaryDark = darkenHex(chatPrimary, 0.28);
+  const lastBotId = [...messages].reverse().find((m) => m.role === "bot")?.id;
 
   return (
     <div
-      className={`flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#efeae2] ${
-        mode === "modal" ? "" : ""
-      }`}
+      className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[var(--sf-chat-bg-light)] font-[family-name:var(--sf-font)]"
+      style={
+        {
+          "--sf-primary": chatPrimary,
+          "--sf-primary-dark": chatPrimaryDark,
+        } as CSSProperties
+      }
     >
-      <header
-        className="flex items-center gap-3 px-4 py-3 text-white"
-        style={{ backgroundColor: config.primaryColor }}
-      >
-        <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-emerald-300 bg-white text-sm font-bold text-emerald-800">
+      <header className="sf-header">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-sm font-bold ring-2 ring-white/30"
+          style={{ color: chatPrimary }}
+        >
           {config.logoUrl ? (
             <img src={config.logoUrl} alt="" className="h-full w-full object-cover" />
           ) : (
@@ -731,40 +744,60 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold">{config.assistantName}</div>
-          <div className="text-xs text-emerald-100">{statusText}</div>
+          <div className="truncate text-[16px] font-semibold tracking-tight text-white">
+            {config.assistantName}
+          </div>
+          <div className="text-[12px] text-white/65">{statusText}</div>
         </div>
-        <div className="hidden text-right text-xs sm:block">
-          <div className="font-semibold">{progress}%</div>
-          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-emerald-900/40">
-            <div className="h-full bg-emerald-200 transition-all" style={{ width: `${progress}%` }} />
+        <div className="text-right">
+          <div className="text-[11px] font-semibold text-white/90">{progress}%</div>
+          <div
+            className="mt-1 h-1.5 w-[4.5rem] overflow-hidden rounded-full"
+            style={{ background: "var(--sf-progress-track)" }}
+          >
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${progress}%`,
+                background: "var(--sf-progress-fill)",
+                boxShadow: "0 0 8px rgba(255,255,255,0.45)",
+              }}
+            />
           </div>
         </div>
       </header>
 
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-3 py-4">
+      <div ref={scrollRef} className="relative flex-1 space-y-3 overflow-y-auto px-3 py-4">
+        <div className="flex justify-center">
+          <span className="sf-date-chip">Hoje</span>
+        </div>
+
         {messages.map((m) => {
           if (m.role === "report" && m.report) {
             return (
-              <div key={m.id} ref={reportTopRef}>
+              <div key={m.id} ref={reportTopRef} className="ml-9">
                 <DiagnosisCard report={m.report} brandName={config.brandName} />
                 <div ref={reportEndRef} className="h-1" />
               </div>
             );
           }
           const isLead = m.role === "lead";
+          const showAvatar = !isLead && m.id === lastBotId;
           return (
             <div key={m.id} className={`flex items-end gap-2 ${isLead ? "justify-end" : "justify-start"}`}>
               {!isLead && (
-                <div className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold text-emerald-800">
+                <div
+                  className={`mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${
+                    showAvatar ? "" : "invisible"
+                  }`}
+                  style={{ background: chatPrimary }}
+                >
                   IA
                 </div>
               )}
               <div
-                className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                  isLead
-                    ? "rounded-br-md bg-[#d9fdd3] text-slate-900"
-                    : "rounded-bl-md bg-white text-slate-800"
+                className={`whitespace-pre-wrap px-3 py-2 text-[15px] font-medium leading-[1.45] ${
+                  isLead ? "sf-bubble-user" : "sf-bubble-bot"
                 }`}
               >
                 {m.text}
@@ -775,19 +808,22 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
 
         {typing && (
           <div className="flex items-end gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[10px] font-bold text-emerald-800">
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white"
+              style={{ background: chatPrimary }}
+            >
               IA
             </div>
-            <div className="flex gap-1 rounded-2xl rounded-bl-md bg-white px-3 py-3 shadow-sm">
-              <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-500 [animation-delay:-0.2s]" />
-              <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-500 [animation-delay:-0.1s]" />
-              <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-500" />
+            <div className="sf-bubble-bot flex gap-1 px-3 py-3">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--sf-typing-dot)] [animation-delay:-0.2s]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--sf-typing-dot)] [animation-delay:-0.1s]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--sf-typing-dot)]" />
             </div>
           </div>
         )}
 
         {showChoices && step === "niches" && (
-          <div className="space-y-3 rounded-2xl bg-white/70 p-3">
+          <div className="ml-9 max-w-[min(90%,22rem)] space-y-3">
             <div className="flex flex-wrap gap-2">
               {nicheOptions.map((n) => {
                 const on = pendingNiches.includes(n);
@@ -800,11 +836,12 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
                         on ? prev.filter((x) => x !== n) : [...prev, n]
                       )
                     }
-                    className={`rounded-full border-2 px-3 py-1.5 text-sm font-bold transition ${
+                    className={`rounded-2xl px-3 py-2 text-[13.5px] font-semibold transition active:scale-[0.98] ${
                       on
-                        ? "border-emerald-600 bg-emerald-600 text-white"
-                        : "border-emerald-500 bg-emerald-50 text-emerald-800 hover:bg-emerald-600 hover:text-white"
+                        ? "text-white"
+                        : "sf-option"
                     }`}
+                    style={on ? { background: chatPrimary } : undefined}
                   >
                     {n}
                   </button>
@@ -817,7 +854,8 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
               onClick={() =>
                 advance(pendingNiches.join(", "), { niches: pendingNiches }, "niches")
               }
-              className="w-full rounded-full bg-orange-500 px-4 py-3 font-bold text-white disabled:opacity-40"
+              className="w-full rounded-2xl px-4 py-3 text-[15px] font-semibold text-white shadow-[var(--sf-shadow-cta)] disabled:opacity-40"
+              style={{ background: chatPrimary }}
             >
               Continuar ({pendingNiches.length})
             </button>
@@ -825,13 +863,13 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
         )}
 
         {showChoices && step === "attendants" && (
-          <div className="flex flex-wrap gap-2">
+          <div className="ml-9 flex max-w-[min(90%,22rem)] flex-wrap gap-2">
             {attendantChips.map((o) => (
               <button
                 key={o}
                 type="button"
                 onClick={() => advance(o, { number_of_attendants: o.replace("+", "") }, "attendants")}
-                className="rounded-full border-2 border-emerald-500 bg-emerald-50 px-3 py-1.5 text-sm font-bold text-emerald-800 hover:bg-emerald-600 hover:text-white"
+                className="sf-option"
               >
                 {o}
               </button>
@@ -840,7 +878,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
         )}
 
         {showChoices && step === "clients" && (
-          <div className="flex flex-wrap gap-2">
+          <div className="ml-9 flex max-w-[min(90%,22rem)] flex-wrap gap-2">
             {clientChips.map((o) => (
               <button
                 key={o}
@@ -848,7 +886,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
                 onClick={() =>
                   advance(`${o.replace("+", "")}/dia`, { clients_per_day: o.replace("+", "") }, "clients")
                 }
-                className="rounded-full border-2 border-emerald-500 bg-emerald-50 px-3 py-1.5 text-sm font-bold text-emerald-800 hover:bg-emerald-600 hover:text-white"
+                className="sf-option"
               >
                 {o}/dia
               </button>
@@ -857,17 +895,15 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
         )}
 
         {showChoices && step === "revenue" && (
-          <div className="space-y-2">
+          <div className="ml-9 max-w-[min(90%,22rem)] space-y-2">
             {revenueCards.map((o) => (
               <button
                 key={o.value}
                 type="button"
                 onClick={() => advance(o.label, { revenue_level: o.value }, "revenue")}
-                className="flex w-full items-center gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50 px-3 py-3 text-left font-bold text-emerald-800 hover:bg-emerald-600 hover:text-white"
+                className="sf-option flex w-full items-center gap-3"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg">
-                  {o.emoji || "•"}
-                </span>
+                <span className="text-lg">{o.emoji || "•"}</span>
                 {o.label}
               </button>
             ))}
@@ -875,17 +911,15 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
         )}
 
         {showChoices && step === "response" && (
-          <div className="space-y-2">
+          <div className="ml-9 max-w-[min(90%,22rem)] space-y-2">
             {responseCards.map((o) => (
               <button
                 key={o.value}
                 type="button"
                 onClick={() => advance(o.label, { response_time: o.value }, "response")}
-                className="flex w-full items-center gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50 px-3 py-3 text-left font-bold text-emerald-800 hover:bg-emerald-600 hover:text-white"
+                className="sf-option flex w-full items-center gap-3"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg">
-                  {o.emoji || "•"}
-                </span>
+                <span className="text-lg">{o.emoji || "•"}</span>
                 {o.label}
               </button>
             ))}
@@ -893,28 +927,31 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
         )}
 
         {showChoices && step === "result" && !shouldShowOfferFromFlow(flow, form) && (
-          <button
-            type="button"
-            onClick={handleWhatsappCta}
-            className="w-full rounded-full bg-[#25d366] px-4 py-3 font-bold text-white shadow"
-          >
-            {firstName(form.name)}, concluir no WhatsApp
-          </button>
+          <div className="ml-9 max-w-[min(90%,22rem)]">
+            <button
+              type="button"
+              onClick={handleWhatsappCta}
+              className="w-full rounded-2xl bg-[#25d366] px-4 py-3 text-[15px] font-semibold text-white shadow-[var(--sf-shadow-cta)]"
+            >
+              {firstName(form.name)}, concluir no WhatsApp
+            </button>
+          </div>
         )}
 
         {showChoices && step === "offer_ask" && (
-          <div className="flex flex-col gap-2">
+          <div className="ml-9 flex max-w-[min(90%,22rem)] flex-col gap-2">
             <button
               type="button"
               onClick={handleOfferYes}
-              className="rounded-full bg-orange-500 px-4 py-3 font-bold text-white"
+              className="rounded-2xl px-4 py-3 text-[15px] font-semibold text-white shadow-[var(--sf-shadow-cta)]"
+              style={{ background: chatPrimary }}
             >
               Sim, quero conhecer o plano
             </button>
             <button
               type="button"
               onClick={handleOfferNo}
-              className="rounded-full border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700"
+              className="sf-option text-center"
             >
               Agora não
             </button>
@@ -922,24 +959,30 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
         )}
 
         {showChoices && step === "offer_detail" && config.offer && (
-          <div className="rounded-2xl border-2 border-emerald-500 bg-white p-4 shadow">
-            <div className="mb-2 inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
-              PLANO INDICADO PRA SUA AGÊNCIA
+          <div className="ml-9 max-w-[min(90%,22rem)] rounded-2xl border border-[#E9EDEF] bg-white p-4 shadow-[var(--sf-shadow-option)]">
+            <div
+              className="mb-2 inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white"
+              style={{ background: chatPrimary }}
+            >
+              Plano indicado
             </div>
-            <h3 className="text-lg font-bold text-slate-900">{config.offer.name}</h3>
-            <p className="mt-1 text-2xl font-extrabold text-emerald-700">{config.offer.priceLabel}</p>
-            <ul className="mt-3 space-y-1 text-sm text-slate-700">
+            <h3 className="text-[16px] font-semibold text-[var(--sf-bubble-text)]">{config.offer.name}</h3>
+            <p className="mt-1 text-2xl font-bold" style={{ color: chatPrimary }}>
+              {config.offer.priceLabel}
+            </p>
+            <ul className="mt-3 space-y-1 text-[13.5px] text-[var(--sf-bubble-text-secondary)]">
               {config.offer.features.map((f) => (
                 <li key={f}>✓ {f}</li>
               ))}
             </ul>
             {config.offer.note && (
-              <p className="mt-3 text-xs text-slate-500">{config.offer.note}</p>
+              <p className="mt-3 text-[12px] text-[var(--sf-bubble-meta)]">{config.offer.note}</p>
             )}
             <button
               type="button"
               onClick={handleCheckout}
-              className="mt-4 w-full rounded-full bg-orange-500 px-4 py-3 font-bold text-white"
+              className="mt-4 w-full rounded-2xl px-4 py-3 text-[15px] font-semibold text-white shadow-[var(--sf-shadow-cta)]"
+              style={{ background: chatPrimary }}
             >
               Quero contratar agora
             </button>
@@ -948,7 +991,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
       </div>
 
       {showInput && (
-        <div className="flex items-center gap-2 bg-[#f0f2f5] px-3 py-2">
+        <div className="sf-composer flex items-center gap-2">
           {onClose && (
             <button
               type="button"
@@ -956,7 +999,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
                 persistDraft();
                 onClose();
               }}
-              className="rounded-full px-3 py-2 text-sm font-semibold text-slate-600"
+              className="rounded-full px-2 py-2 text-[12px] font-semibold text-[var(--sf-bubble-text-secondary)]"
             >
               Voltar
             </button>
@@ -979,13 +1022,12 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
                   ? "nome@agencia.com"
                   : "Digite sua resposta..."
             }
-            className="flex-1 rounded-full border-0 bg-white px-4 py-2.5 text-sm outline-none ring-1 ring-slate-200 focus:ring-emerald-500"
+            className="sf-input"
           />
           <button
             type="button"
             onClick={() => void handleTextSubmit()}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white"
-            style={{ backgroundColor: config.primaryColor }}
+            className="sf-send"
             aria-label="Enviar"
           >
             ➤

@@ -48,7 +48,7 @@ export function AdminPagesPage() {
 
       <div className="space-y-4">
         {pages.length === 0 && (
-          <p className="text-sm text-white/45">Nenhuma página configurada ainda.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma página configurada ainda.</p>
         )}
         {pages.map((page) => (
           <AdminPanel key={page.id}>
@@ -62,7 +62,7 @@ export function AdminPagesPage() {
                     <AdminBadge>Inativa</AdminBadge>
                   )}
                 </div>
-                <p className="mt-1 text-sm text-white/45">
+                <p className="mt-1 text-sm text-muted-foreground">
                   /{page.slug}
                   {page.domain ? ` · ${page.domain}` : ""}
                 </p>

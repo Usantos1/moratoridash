@@ -21,6 +21,7 @@ export default function App() {
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminLeadsPage />} />
+          <Route path="leads" element={<AdminLeadsPage />} />
           <Route path="leads/:id" element={<AdminLeadDetailPage />} />
           <Route path="marca" element={<AdminOnboardingPage />} />
           <Route path="pages" element={<AdminPagesPage />} />

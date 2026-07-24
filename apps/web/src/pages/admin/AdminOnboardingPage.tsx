@@ -35,8 +35,8 @@ type Tracking = {
 const emptyBranding: Branding = {
   brandName: "",
   assistantName: "",
-  primaryColor: "#075e54",
-  secondaryColor: "#128c7e",
+  primaryColor: "#128C7E",
+  secondaryColor: "#0D655B",
   logoUrl: "",
 };
 
@@ -115,9 +115,9 @@ export function AdminOnboardingPage() {
             <div className="flex gap-2">
               <input
                 type="color"
-                value={/^#[0-9a-f]{6}$/i.test(branding.primaryColor) ? branding.primaryColor : "#075e54"}
+                value={/^#[0-9a-f]{6}$/i.test(branding.primaryColor) ? branding.primaryColor : "#128C7E"}
                 onChange={(e) => setBranding((b) => ({ ...b, primaryColor: e.target.value }))}
-                className="h-11 w-12 border border-white/10 bg-black/20"
+                className="h-11 w-12 border border-border bg-muted/40"
               />
               <AdminInput
                 value={branding.primaryColor}
@@ -131,7 +131,7 @@ export function AdminOnboardingPage() {
                 type="color"
                 value={/^#[0-9a-f]{6}$/i.test(branding.secondaryColor) ? branding.secondaryColor : "#128c7e"}
                 onChange={(e) => setBranding((b) => ({ ...b, secondaryColor: e.target.value }))}
-                className="h-11 w-12 border border-white/10 bg-black/20"
+                className="h-11 w-12 border border-border bg-muted/40"
               />
               <AdminInput
                 value={branding.secondaryColor}
@@ -148,7 +148,7 @@ export function AdminOnboardingPage() {
           </AdminField>
         </div>
 
-        <div className="mt-5 flex items-center gap-3 border border-white/10 bg-black/25 p-3">
+        <div className="mt-5 flex items-center gap-3 border border-border bg-muted/50 p-3">
           <div
             className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/25 bg-white text-sm font-bold"
             style={{ color: branding.primaryColor }}

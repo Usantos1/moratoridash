@@ -26,18 +26,11 @@ export function QualificationModal({ open, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
       <button
         type="button"
-        className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
         aria-label="Fechar"
         onClick={onClose}
       />
-      <div
-        className="
-          relative z-10 w-full overflow-hidden bg-[#efeae2] shadow-2xl
-          h-[min(100dvh,844px)]
-          sm:h-[min(844px,90dvh)] sm:w-[390px] sm:rounded-[2rem]
-          sm:border sm:border-white/10
-        "
-      >
+      <div className="sf-phone relative z-10 sm:h-[min(860px,92dvh)]">
         <QualificationChat mode="modal" onClose={onClose} />
       </div>
     </div>

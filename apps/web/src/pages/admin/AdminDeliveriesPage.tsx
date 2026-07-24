@@ -54,7 +54,7 @@ export function AdminDeliveriesPage() {
 
       <div className="space-y-2">
         {items.length === 0 && (
-          <p className="text-sm text-white/45">Nenhuma entrega neste filtro.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma entrega neste filtro.</p>
         )}
         {items.map((item) => {
           const lead = item.lead as Record<string, unknown> | undefined;
@@ -62,10 +62,10 @@ export function AdminDeliveriesPage() {
             <AdminPanel key={String(item.id)} className="!py-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-white">
+                  <div className="text-sm font-semibold text-foreground">
                     {String(item.destination)} · {String(item.eventName)}
                   </div>
-                  <div className="mt-1 text-xs text-white/45">
+                  <div className="mt-1 text-xs text-muted-foreground">
                     {lead ? `${lead.name} · ${lead.email}` : String(item.leadId)}
                   </div>
                   {item.lastError ? (
