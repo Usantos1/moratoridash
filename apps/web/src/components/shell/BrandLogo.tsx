@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-/** Wordmark estilo Ativa: marca + DASH na mesma linha */
+/** Wordmark Ativa: marca em azul + DASH em laranja — sem círculo */
 export function BrandLogo({
   className = "",
   to = "/admin",
@@ -11,17 +11,13 @@ export function BrandLogo({
   return (
     <Link
       to={to}
-      className={`inline-flex items-center gap-2 whitespace-nowrap ${className}`}
+      className={`inline-flex items-baseline gap-1.5 whitespace-nowrap select-none ${className}`}
     >
-      <span
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-primary-foreground shadow-sm"
-        aria-hidden
-      >
-        M
+      <span className="text-[17px] font-extrabold tracking-tight text-brand-600">
+        MURATORI
       </span>
-      <span className="hidden text-[15px] font-bold tracking-tight sm:inline">
-        <span className="text-brand-600">MURATORI</span>{" "}
-        <span className="text-primary">DASH</span>
+      <span className="text-[17px] font-extrabold tracking-tight text-primary">
+        DASH
       </span>
     </Link>
   );

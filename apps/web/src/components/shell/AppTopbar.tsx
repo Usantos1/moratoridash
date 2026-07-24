@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
+  Bell,
   ChevronDown,
+  ChevronsUpDown,
   ClipboardList,
+  Globe2,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Menu,
   MessageCircle,
   Moon,
@@ -20,11 +24,10 @@ type Props = {
   onLogout: () => void;
 };
 
-/** Pills primárias — espelha AppBar Ativa (h-11 rounded-full) */
 const PRIMARY_NAV = [
   { to: "/admin", end: true, label: "Dashboard", icon: LayoutDashboard },
-  { to: "/admin/flows", label: "Formulários", icon: Workflow },
-  { to: "/admin/leads", label: "Leads", icon: ClipboardList },
+  { to: "/admin/pages", label: "Painel Forms", icon: Megaphone },
+  { to: "/admin/flows", label: "Muratori IA", icon: Globe2 },
 ] as const;
 
 const MENU_ITEMS = [
@@ -47,9 +50,13 @@ const MENU_ITEMS = [
   },
 ] as const;
 
+const pillBase =
+  "inline-flex h-11 items-center gap-2 rounded-full border border-[#d8dde6] bg-white px-4 text-sm font-medium text-[#1d202b] shadow-[0_1px_0_rgba(16,24,40,0.04)] transition hover:border-primary/35 hover:bg-[#f8fafc]";
+
 export function AppTopbar({ user, onLogout }: Props) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -58,13 +65,16 @@ export function AppTopbar({ user, onLogout }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen && !langOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false);
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        setLangOpen(false);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [menuOpen]);
+  }, [menuOpen, langOpen]);
 
   const clock = useMemo(
     () =>
@@ -77,159 +87,233 @@ export function AppTopbar({ user, onLogout }: Props) {
 
   return (
     <header
-      className="fixed inset-x-0 top-0 z-40 w-full border-b border-brand-100/70 bg-background/95 shadow-[0_1px_0_hsl(216_100%_93%/0.8)] backdrop-blur-xl"
+      className="fixed inset-x-0 top-0 z-40 w-full border-b border-[#e8ecf2] bg-white"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="mx-auto flex h-[4.5rem] max-w-[1400px] items-center gap-2 px-3 sm:px-4 md:gap-3 md:px-5">
-        <BrandLogo />
+      <div className="flex h-[4.5rem] w-full items-center gap-2 px-3 sm:px-4 md:gap-2.5 md:px-5">
+        {/* —— Esquerda: logo + pills + menu + search —— */}
+        <div className="flex min-w-0 items-center gap-2 md:gap-2.5">
+          <BrandLogo />
 
-        <nav className="ml-1 hidden items-center gap-1.5 lg:flex">
-          {PRIMARY_NAV.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={"end" in item ? item.end : false}
-                className={({ isActive }) =>
-                  `inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition ${
-                    isActive
-                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                      : "border-border/80 bg-card text-foreground hover:border-primary/35 hover:bg-accent/50"
-                  }`
-                }
-              >
-                <Icon className="h-4 w-4 shrink-0 opacity-90" strokeWidth={2} />
-                {item.label}
-              </NavLink>
-            );
-          })}
-        </nav>
+          <nav className="ml-1 hidden items-center gap-2 lg:flex">
+            {PRIMARY_NAV.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={"end" in item ? item.end : false}
+                  className={({ isActive }) =>
+                    `inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition ${
+                      isActive
+                        ? "border-primary bg-primary text-white shadow-sm"
+                        : "border-[#d8dde6] bg-white text-[#1d202b] shadow-[0_1px_0_rgba(16,24,40,0.04)] hover:border-primary/35 hover:bg-[#f8fafc]"
+                    }`
+                  }
+                >
+                  <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  {item.label}
+                </NavLink>
+              );
+            })}
+          </nav>
 
-        <div className="relative ml-auto flex items-center gap-1.5 md:gap-2">
+          <div className="relative">
+            <button
+              type="button"
+              className={`${pillBase} relative pl-3.5 pr-2.5`}
+              onClick={() => {
+                setLangOpen(false);
+                setMenuOpen((v) => !v);
+              }}
+            >
+              <Menu className="h-4 w-4 text-brand-600" strokeWidth={2} />
+              <span>Menu</span>
+              <ChevronDown className="h-4 w-4 text-[#6b7280]" />
+              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#ef4444] px-1 text-[10px] font-bold leading-none text-white shadow-sm">
+                10
+              </span>
+            </button>
+
+            {menuOpen && (
+              <>
+                <button
+                  type="button"
+                  className="fixed inset-0 z-40 bg-transparent"
+                  aria-label="Fechar"
+                  onClick={() => setMenuOpen(false)}
+                />
+                <div className="absolute left-0 top-[calc(100%+0.55rem)] z-50 max-h-[72vh] w-[min(360px,calc(100vw-2rem))] overflow-y-auto rounded-[28px] border border-[#e5e7eb] bg-white p-3 shadow-[0_18px_50px_rgba(16,24,40,0.18)]">
+                  <div className="mb-2 border-b border-[#eef0f4] px-3 pb-3">
+                    <div className="text-[15px] font-semibold text-[#1d202b]">
+                      {user.name || "Admin"}
+                    </div>
+                    <div className="truncate text-xs text-[#6b7280]">{user.email}</div>
+                  </div>
+                  {MENU_ITEMS.map((group) => (
+                    <div key={group.group} className="mb-2">
+                      <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
+                        {group.group}
+                      </div>
+                      <ul className="space-y-0.5">
+                        {group.items.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <li key={item.to + item.label}>
+                              <NavLink
+                                to={item.to}
+                                end={item.to === "/admin"}
+                                onClick={() => setMenuOpen(false)}
+                                className={({ isActive }) =>
+                                  `flex items-center gap-3 rounded-2xl border-l-2 px-3 py-3 transition ${
+                                    isActive
+                                      ? "border-l-primary bg-primary/10"
+                                      : "border-l-transparent hover:border-l-brand-600 hover:bg-[#f3f4f6]"
+                                  }`
+                                }
+                              >
+                                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ebf3ff] text-brand-600">
+                                  <Icon className="h-4 w-4" />
+                                </span>
+                                <span className="min-w-0">
+                                  <span className="block text-[15px] font-semibold text-[#1d202b]">
+                                    {item.label}
+                                  </span>
+                                  <span className="block text-xs leading-5 text-[#6b7280]">
+                                    {item.desc}
+                                  </span>
+                                </span>
+                              </NavLink>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  ))}
+                  <div className="mt-1 border-t border-[#eef0f4] pt-2">
+                    <Link
+                      to="/"
+                      onClick={() => setMenuOpen(false)}
+                      className="block rounded-2xl px-3 py-3 text-sm font-medium text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1d202b]"
+                    >
+                      Ver site público
+                    </Link>
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2 rounded-2xl px-3 py-3 text-sm font-semibold text-[#ef4444] hover:bg-red-50"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onLogout();
+                      }}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sair
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
           <button
             type="button"
-            className="inline-flex h-11 items-center gap-1.5 rounded-full border border-brand-200/80 bg-white pl-3.5 pr-2.5 text-sm font-medium text-foreground shadow-sm hover:bg-brand-50/60"
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            <Menu className="h-4 w-4 text-brand-600" strokeWidth={2} />
-            <span className="hidden sm:inline">Menu</span>
-            <ChevronDown
-              className={`h-4 w-4 text-muted-foreground transition ${menuOpen ? "rotate-180" : ""}`}
-            />
-          </button>
-
-          <button
-            type="button"
-            className="hidden h-11 w-11 items-center justify-center rounded-full border border-brand-200/80 bg-white text-brand-600 shadow-sm hover:bg-brand-50/60 sm:inline-flex"
+            className="hidden h-11 w-11 items-center justify-center rounded-full border border-[#d8dde6] bg-white text-brand-600 shadow-[0_1px_0_rgba(16,24,40,0.04)] hover:bg-[#f8fafc] sm:inline-flex"
             aria-label="Buscar"
             onClick={() => navigate("/admin")}
           >
             <Search className="h-4 w-4" strokeWidth={2} />
           </button>
+        </div>
 
-          <div className="hidden h-9 items-center rounded-full border border-border/80 bg-muted/35 px-2.5 font-mono text-xs font-semibold tabular-nums text-foreground lg:inline-flex">
+        {/* —— Direita: workspace + relógio + idioma + ícones + avatar —— */}
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            className="hidden h-11 max-w-[200px] items-center gap-2 rounded-full border border-primary/45 bg-white px-3 text-left shadow-[0_1px_0_rgba(16,24,40,0.04)] xl:inline-flex"
+            title="Workspace"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-extrabold text-primary">
+              M
+            </span>
+            <span className="min-w-0 leading-tight">
+              <span className="block truncate text-[13px] font-bold text-[#1d202b]">
+                Muratori
+              </span>
+              <span className="block truncate text-[11px] font-semibold text-primary">
+                Workspace ativo
+              </span>
+            </span>
+            <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-primary" />
+          </button>
+
+          <div className="hidden h-9 items-center rounded-full border border-[#d8dde6] bg-[#f3f4f6]/70 px-3 font-mono text-xs font-semibold tabular-nums text-[#1d202b] lg:inline-flex">
             {clock}
+          </div>
+
+          <div className="relative hidden lg:block">
+            <button
+              type="button"
+              className={`${pillBase} gap-2 px-3`}
+              onClick={() => {
+                setMenuOpen(false);
+                setLangOpen((v) => !v);
+              }}
+            >
+              <span className="text-base leading-none" aria-hidden>
+                🇧🇷
+              </span>
+              <span>Português</span>
+              <ChevronDown className="h-4 w-4 text-[#6b7280]" />
+            </button>
+            {langOpen && (
+              <>
+                <button
+                  type="button"
+                  className="fixed inset-0 z-40"
+                  aria-label="Fechar"
+                  onClick={() => setLangOpen(false)}
+                />
+                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-44 rounded-2xl border border-[#e5e7eb] bg-white p-2 shadow-lg">
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-[#1d202b] hover:bg-[#f3f4f6]"
+                    onClick={() => setLangOpen(false)}
+                  >
+                    🇧🇷 Português
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           <button
             type="button"
-            className="hidden h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted/70 hover:text-foreground lg:inline-flex"
+            className="hidden h-10 w-10 items-center justify-center rounded-full text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1d202b] lg:inline-flex"
             aria-label="Tema"
-            title="Tema claro"
           >
             <Moon className="h-4 w-4" strokeWidth={2} />
           </button>
 
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-sm font-bold text-brand-600 ring-1 ring-border/60 transition hover:ring-primary/30"
+            className="relative hidden h-10 w-10 items-center justify-center rounded-full text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1d202b] lg:inline-flex"
+            aria-label="Notificações"
+          >
+            <Bell className="h-4 w-4" strokeWidth={2} />
+            <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
+          </button>
+
+          <button
+            type="button"
+            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#ebf3ff] text-sm font-bold text-brand-600 ring-1 ring-[#d8dde6] hover:ring-primary/40"
             title={user.email}
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={() => {
+              setLangOpen(false);
+              setMenuOpen((v) => !v);
+            }}
           >
             {(user.name || user.email || "M")[0].toUpperCase()}
           </button>
-
-          {menuOpen && (
-            <>
-              <button
-                type="button"
-                className="fixed inset-0 z-40 cursor-default bg-black/10"
-                aria-label="Fechar menu"
-                onClick={() => setMenuOpen(false)}
-              />
-              <div className="absolute right-0 top-[calc(100%+0.6rem)] z-50 max-h-[72vh] w-[min(360px,calc(100vw-2rem))] overflow-y-auto rounded-[28px] border border-border/70 bg-popover p-3 shadow-[0_18px_50px_rgba(16,24,40,0.18)]">
-                <div className="mb-2 border-b border-border/50 px-3 pb-3">
-                  <div className="text-[15px] font-semibold text-foreground">
-                    {user.name || "Admin"}
-                  </div>
-                  <div className="truncate text-xs text-muted-foreground">{user.email}</div>
-                </div>
-
-                {MENU_ITEMS.map((group) => (
-                  <div key={group.group} className="mb-2">
-                    <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      {group.group}
-                    </div>
-                    <ul className="space-y-0.5">
-                      {group.items.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <li key={item.to + item.label}>
-                            <NavLink
-                              to={item.to}
-                              end={item.to === "/admin"}
-                              onClick={() => setMenuOpen(false)}
-                              className={({ isActive }) =>
-                                `flex items-center gap-3 rounded-2xl border-l-2 px-3 py-3 transition ${
-                                  isActive
-                                    ? "border-l-primary bg-primary/10"
-                                    : "border-l-transparent hover:border-l-brand-600 hover:bg-muted/70"
-                                }`
-                              }
-                            >
-                              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
-                                <Icon className="h-4 w-4" />
-                              </span>
-                              <span className="min-w-0">
-                                <span className="block text-[15px] font-semibold text-foreground">
-                                  {item.label}
-                                </span>
-                                <span className="block text-xs leading-5 text-muted-foreground">
-                                  {item.desc}
-                                </span>
-                              </span>
-                            </NavLink>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                ))}
-
-                <div className="mt-1 border-t border-border/60 pt-2">
-                  <Link
-                    to="/"
-                    onClick={() => setMenuOpen(false)}
-                    className="block rounded-2xl px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                  >
-                    Ver site público
-                  </Link>
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 rounded-2xl px-3 py-3 text-sm font-semibold text-destructive hover:bg-destructive/10"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onLogout();
-                    }}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sair
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
         </div>
       </div>
     </header>

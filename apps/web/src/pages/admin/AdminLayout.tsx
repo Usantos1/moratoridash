@@ -30,7 +30,7 @@ export function AdminLayout() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-[#f1f3f6] text-muted-foreground">
         <div className="text-center">
-          <div className="text-[15px] font-bold tracking-tight">
+          <div className="text-[17px] font-extrabold tracking-tight">
             <span className="text-brand-600">MURATORI</span>{" "}
             <span className="text-primary">DASH</span>
           </div>
