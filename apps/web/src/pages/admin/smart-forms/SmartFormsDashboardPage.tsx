@@ -83,10 +83,21 @@ function fmtRelative(iso: string | null) {
 
 function tempTone(t: string | null): "danger" | "warn" | "neutral" | "live" {
   const v = (t || "").toUpperCase();
-  if (v === "HOT" || v === "QUENTE") return "danger";
+  if (v === "HOT" || v === "VERY_HOT" || v === "QUENTE") return "danger";
   if (v === "WARM" || v === "MORNO") return "warn";
   if (v === "COLD" || v === "FRIO") return "neutral";
   return "live";
+}
+
+function tempLabel(t: string | null): string {
+  const map: Record<string, string> = {
+    COLD: "Frio",
+    WARM: "Morno",
+    HOT: "Quente",
+    VERY_HOT: "Muito quente",
+  };
+  const key = (t || "").toUpperCase();
+  return map[key] || t || "—";
 }
 
 const PERIODS = [
@@ -484,7 +495,7 @@ export function SmartFormsDashboardPage() {
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     {l.temperature && (
                       <AdminBadge tone={tempTone(l.temperature)}>
-                        {l.temperature}
+                        {tempLabel(l.temperature)}
                       </AdminBadge>
                     )}
                     <span className="text-[11px] text-muted-foreground">
