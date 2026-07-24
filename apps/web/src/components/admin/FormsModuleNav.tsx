@@ -1,21 +1,18 @@
 import { NavLink } from "react-router-dom";
-
-const ITEMS = [
-  { to: "/admin/forms/dashboard", end: true, label: "Dashboard" },
-  { to: "/admin/forms", end: true, label: "Formulários" },
-  { to: "/admin/forms/templates", label: "Templates" },
-  { to: "/admin/forms/leads", label: "Leads" },
-  { to: "/admin/forms/config", label: "Configurações" },
-] as const;
+import { FORMS_MODULE_NAV, filterNav } from "../../lib/navigation";
+import { useCan } from "../../lib/session-context";
 
 export function FormsModuleNav({ className = "" }: { className?: string }) {
+  const can = useCan();
+  const items = filterNav(FORMS_MODULE_NAV, can);
+
   return (
     <nav className={`flex flex-wrap items-center gap-2 ${className}`}>
-      {ITEMS.map((item) => (
+      {items.map((item) => (
         <NavLink
           key={item.to + item.label}
           to={item.to}
-          end={"end" in item ? item.end : false}
+          end={item.end ?? false}
           className={({ isActive }) =>
             `rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
               isActive

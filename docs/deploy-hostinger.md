@@ -111,6 +111,23 @@ npm run db:migrate:deploy
 npm run db:seed
 ```
 
+### Migration de workspaces (multi-tenant)
+
+A migration `20260724200000_workspaces_rbac` transforma a instalação em multi-tenant sem perder
+dados: cria o workspace `muratori`, os cargos padrão (Owner, Administrador, Editor, Comercial,
+Leitor), vincula os usuários existentes como Owner e faz backfill de `workspace_id` em todos os
+dados (Smart Forms, leads, settings, páginas, fluxos, ofertas e domínios).
+
+Os usuários que estavam com `role` `owner`/`admin` passam a `superadmin` da plataforma — eles
+enxergam todos os workspaces. Novos usuários criados pelo painel nascem como `member` e só acessam
+os workspaces onde têm membership.
+
+Depois do deploy, valide o isolamento com o smoke test (API precisa estar no ar):
+
+```bash
+node scripts/smoke-workspaces.mjs
+```
+
 ## 8. Build + PM2
 
 ```bash

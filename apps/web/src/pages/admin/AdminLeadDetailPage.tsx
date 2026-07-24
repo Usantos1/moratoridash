@@ -31,12 +31,13 @@ export function AdminLeadDetailPage() {
     <div className="space-y-8">
       <div>
         <Link
-          to="/admin"
+          to="/admin/legacy/leads"
           className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground hover:text-primary"
         >
           ← Voltar aos leads
         </Link>
         <AdminPageHeader
+          eyebrow="Legado"
           title={String(lead.name)}
           description={String(lead.companyName)}
           actions={

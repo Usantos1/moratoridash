@@ -4,8 +4,10 @@ import { toast } from "sonner";
 import { smartFormsApi } from "../../../lib/smart-forms-api";
 import { FormsModuleNav } from "../../../components/admin/FormsModuleNav";
 import { AdminButton } from "../../../components/admin/ui";
+import { useSession } from "../../../lib/session-context";
 
 export function SmartFormsDashboardPage() {
+  const { workspace, can } = useSession();
   const [totals, setTotals] = useState({
     visitors: 0,
     started: 0,
@@ -17,13 +19,17 @@ export function SmartFormsDashboardPage() {
   const [formsTotal, setFormsTotal] = useState(0);
   const [leadsTotal, setLeadsTotal] = useState(0);
 
+  const canReadForms = can("forms.read");
+  const canReadLeads = can("leads.read");
+
   useEffect(() => {
+    if (!canReadForms) return;
     void (async () => {
       try {
         const [dash, forms, leads] = await Promise.all([
           smartFormsApi.dashboard(),
           smartFormsApi.list({ pageSize: "1" }),
-          smartFormsApi.leads({ pageSize: "1" }),
+          canReadLeads ? smartFormsApi.leads({ pageSize: "1" }) : Promise.resolve({ total: 0 }),
         ]);
         setTotals({
           visitors: Number(dash.totals.visitors || 0),
@@ -39,7 +45,7 @@ export function SmartFormsDashboardPage() {
         toast.error(e instanceof Error ? e.message : "Erro no dashboard");
       }
     })();
-  }, []);
+  }, [canReadForms, canReadLeads, workspace?.id]);
 
   const conv =
     totals.started > 0 ? Math.round((totals.completed / totals.started) * 100) : 0;
@@ -61,14 +67,17 @@ export function SmartFormsDashboardPage() {
             Dashboard
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Visão geral dos formulários inteligentes (últimos 30 dias).
+            {workspace ? `${workspace.name} · ` : ""}visão geral dos formulários inteligentes
+            (últimos 30 dias).
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <FormsModuleNav />
-          <Link to="/admin/forms">
-            <AdminButton>Meus formulários</AdminButton>
-          </Link>
+          {canReadForms && (
+            <Link to="/admin/forms">
+              <AdminButton>Meus formulários</AdminButton>
+            </Link>
+          )}
         </div>
       </div>
 

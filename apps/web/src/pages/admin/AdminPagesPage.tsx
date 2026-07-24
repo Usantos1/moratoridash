@@ -42,6 +42,7 @@ export function AdminPagesPage() {
   return (
     <div className="space-y-8">
       <AdminPageHeader
+        eyebrow="Legado"
         title="Páginas de diagnóstico"
         description="Domínio, marca, checkout e pixels — alterações sem redeploy."
       />

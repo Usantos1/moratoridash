@@ -13,7 +13,6 @@ import {
   validateNodeAnswer,
 } from "./engine";
 import {
-  DEFAULT_ORG_ID,
   emptyDefinition,
   isTerminal,
   newSessionToken,
@@ -59,14 +58,14 @@ export async function uniquePublicSlug(base: string) {
   }
 }
 
-export async function uniqueOrgSlug(organizationId: string, base: string) {
+export async function uniqueWorkspaceSlug(workspaceId: string, base: string) {
   let candidate = slugify(base) || `form-${Date.now().toString(36)}`;
   if (candidate.length < 2) candidate = `f-${Date.now().toString(36)}`;
   let n = 0;
   while (true) {
     const trySlug = n === 0 ? candidate.slice(0, 80) : `${candidate.slice(0, 70)}-${n}`;
     const exists = await prisma.smartForm.findFirst({
-      where: { organizationId, slug: trySlug, deletedAt: null },
+      where: { workspaceId, slug: trySlug, deletedAt: null },
       select: { id: true },
     });
     if (!exists) return trySlug;
@@ -622,7 +621,6 @@ export {
   coerceDefinition,
   parseDefinition,
   emptyDefinition,
-  DEFAULT_ORG_ID,
   publicMeta,
   loadPublishedDefinition,
   findPublishedByPublicSlug,

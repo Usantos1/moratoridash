@@ -2,13 +2,12 @@ import type { FastifyPluginAsync } from "fastify";
 import type { Prisma } from "@muratori/database";
 import { prisma } from "@muratori/database";
 import { z } from "zod";
-import { adminPreHandler } from "../plugins/require-admin";
+import { currentWorkspaceId, requirePermission } from "../plugins/require-admin";
 import { coerceDefinition, parseDefinition } from "./definition";
 import { emptyDefinition } from "./types";
 import {
-  DEFAULT_ORG_ID,
   isValidSlug,
-  uniqueOrgSlug,
+  uniqueWorkspaceSlug,
   uniquePublicSlug,
 } from "./service";
 import { publicUploadUrl, readUpload, saveBase64Image } from "./assets";
@@ -21,9 +20,7 @@ const slugSchema = z
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 
 export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
-  app.addHook("preHandler", adminPreHandler);
-
-  app.get("/forms", async (request) => {
+  app.get("/forms", { preHandler: requirePermission("forms.read") }, async (request) => {
     const q = request.query as {
       status?: string;
       q?: string;
@@ -33,7 +30,7 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     const page = Math.max(1, Number(q.page || 1));
     const pageSize = Math.min(100, Math.max(1, Number(q.pageSize || 20)));
     const where: Prisma.SmartFormWhereInput = {
-      organizationId: DEFAULT_ORG_ID,
+      workspaceId: currentWorkspaceId(request),
       deletedAt: null,
     };
     if (q.status && ["DRAFT", "PUBLISHED", "ARCHIVED"].includes(q.status)) {
@@ -70,7 +67,8 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     return { items, total, page, pageSize, pages: Math.ceil(total / pageSize) };
   });
 
-  app.post("/forms", async (request, reply) => {
+  app.post("/forms", { preHandler: requirePermission("forms.write") }, async (request, reply) => {
+    const workspaceId = currentWorkspaceId(request);
     const body = z
       .object({
         name: z.string().min(2).max(160),
@@ -89,7 +87,7 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
         where: {
           id: body.templateId,
           isActive: true,
-          OR: [{ organizationId: null }, { organizationId: DEFAULT_ORG_ID }],
+          OR: [{ workspaceId: null }, { workspaceId }],
         },
       });
       if (tpl) {
@@ -102,19 +100,19 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
 
     const slug = body.slug
       ? body.slug
-      : await uniqueOrgSlug(DEFAULT_ORG_ID, body.name);
+      : await uniqueWorkspaceSlug(workspaceId, body.name);
     if (!isValidSlug(slug)) {
       return reply.status(400).send({ error: "Slug inválido" });
     }
     const clash = await prisma.smartForm.findFirst({
-      where: { organizationId: DEFAULT_ORG_ID, slug, deletedAt: null },
+      where: { workspaceId, slug, deletedAt: null },
     });
     if (clash) return reply.status(409).send({ error: "Slug já existe" });
 
     const publicSlug = await uniquePublicSlug(slug);
     const form = await prisma.smartForm.create({
       data: {
-        organizationId: DEFAULT_ORG_ID,
+        workspaceId,
         name: body.name,
         slug,
         publicSlug,
@@ -128,18 +126,18 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(form);
   });
 
-  app.get("/forms/dashboard", async (request) => {
+  app.get("/forms/dashboard", { preHandler: requirePermission("forms.read") }, async (request) => {
+    const workspaceId = currentWorkspaceId(request);
     const q = request.query as { formId?: string; from?: string; to?: string };
     const from = q.from ? new Date(q.from) : new Date(Date.now() - 30 * 86400000);
     const to = q.to ? new Date(q.to) : new Date();
-    const formFilter = q.formId
-      ? { formId: q.formId }
-      : {
-          form: {
-            organizationId: DEFAULT_ORG_ID,
-            deletedAt: null,
-          },
-        };
+    const formFilter = {
+      form: {
+        workspaceId,
+        deletedAt: null,
+        ...(q.formId ? { id: q.formId } : {}),
+      },
+    };
 
     const rows = await prisma.smartFormAnalyticsDaily.findMany({
       where: {
@@ -172,18 +170,19 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     return { from, to, totals, series: rows };
   });
 
-  app.get("/forms/templates", async () => {
+  app.get("/forms/templates", { preHandler: requirePermission("forms.read") }, async (request) => {
+    const workspaceId = currentWorkspaceId(request);
     const items = await prisma.smartFormTemplate.findMany({
       where: {
         isActive: true,
-        OR: [{ organizationId: null }, { organizationId: DEFAULT_ORG_ID }],
+        OR: [{ workspaceId: null }, { workspaceId }],
       },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
     return { items };
   });
 
-  app.get("/forms/leads", async (request) => {
+  app.get("/forms/leads", { preHandler: requirePermission("leads.read") }, async (request) => {
     const q = request.query as {
       formId?: string;
       q?: string;
@@ -194,7 +193,7 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     const page = Math.max(1, Number(q.page || 1));
     const pageSize = Math.min(100, Math.max(1, Number(q.pageSize || 30)));
     const where: Prisma.SmartFormLeadWhereInput = {
-      form: { organizationId: DEFAULT_ORG_ID, deletedAt: null },
+      form: { workspaceId: currentWorkspaceId(request), deletedAt: null },
     };
     if (q.formId) where.formId = q.formId;
     if (q.temperature) {
@@ -227,10 +226,13 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     return { items, total, page, pageSize, pages: Math.ceil(total / pageSize) };
   });
 
-  app.get("/forms/leads/export", async (request, reply) => {
+  app.get(
+    "/forms/leads/export",
+    { preHandler: requirePermission("leads.export") },
+    async (request, reply) => {
     const q = request.query as { formId?: string };
     const where: Prisma.SmartFormLeadWhereInput = {
-      form: { organizationId: DEFAULT_ORG_ID, deletedAt: null },
+      form: { workspaceId: currentWorkspaceId(request), deletedAt: null },
     };
     if (q.formId) where.formId = q.formId;
     const leads = await prisma.smartFormLead.findMany({
@@ -280,14 +282,18 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     reply.header("Content-Type", "text/csv; charset=utf-8");
     reply.header("Content-Disposition", 'attachment; filename="smart-form-leads.csv"');
     return lines.join("\n");
-  });
+    },
+  );
 
-  app.get("/forms/leads/:leadId", async (request, reply) => {
+  app.get(
+    "/forms/leads/:leadId",
+    { preHandler: requirePermission("leads.read") },
+    async (request, reply) => {
     const { leadId } = request.params as { leadId: string };
     const lead = await prisma.smartFormLead.findFirst({
       where: {
         id: leadId,
-        form: { organizationId: DEFAULT_ORG_ID, deletedAt: null },
+        form: { workspaceId: currentWorkspaceId(request), deletedAt: null },
       },
       include: {
         events: { orderBy: { createdAt: "asc" } },
@@ -303,71 +309,106 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
       value,
     }));
     return { ...lead, answerItems };
-  });
+    },
+  );
 
-  app.delete("/forms/leads/:leadId", async (request, reply) => {
-    const { leadId } = request.params as { leadId: string };
-    const lead = await prisma.smartFormLead.findFirst({
-      where: {
-        id: leadId,
-        form: { organizationId: DEFAULT_ORG_ID, deletedAt: null },
-      },
-    });
-    if (!lead) return reply.status(404).send({ error: "Lead não encontrado" });
-    await prisma.smartFormLead.delete({ where: { id: leadId } });
-    return { ok: true };
-  });
+  app.delete(
+    "/forms/leads/:leadId",
+    { preHandler: requirePermission("leads.delete") },
+    async (request, reply) => {
+      const { leadId } = request.params as { leadId: string };
+      const lead = await prisma.smartFormLead.findFirst({
+        where: {
+          id: leadId,
+          form: { workspaceId: currentWorkspaceId(request), deletedAt: null },
+        },
+      });
+      if (!lead) return reply.status(404).send({ error: "Lead não encontrado" });
+      await prisma.smartFormLead.delete({ where: { id: leadId } });
+      return { ok: true };
+    },
+  );
 
-  app.get("/forms/domains", async () => {
+  app.get("/forms/domains", { preHandler: requirePermission("domains.manage") }, async (request) => {
     const items = await prisma.smartFormDomain.findMany({
+      where: { workspaceId: currentWorkspaceId(request) },
       orderBy: { createdAt: "desc" },
       include: { form: { select: { id: true, name: true, publicSlug: true } } },
     });
     return { items };
   });
 
-  app.post("/forms/domains", async (request, reply) => {
-    const body = z
-      .object({
-        hostname: z.string().min(3).max(255),
-        formId: z.string().optional(),
-      })
-      .parse(request.body);
-    const hostname = body.hostname.toLowerCase().trim();
-    try {
-      const domain = await prisma.smartFormDomain.create({
-        data: {
-          hostname,
-          formId: body.formId,
-          status: "pending_dns",
-        },
+  app.post(
+    "/forms/domains",
+    { preHandler: requirePermission("domains.manage") },
+    async (request, reply) => {
+      const workspaceId = currentWorkspaceId(request);
+      const body = z
+        .object({
+          hostname: z.string().min(3).max(255),
+          formId: z.string().optional(),
+        })
+        .parse(request.body);
+      const hostname = body.hostname.toLowerCase().trim();
+
+      if (body.formId) {
+        const form = await prisma.smartForm.findFirst({
+          where: { id: body.formId, workspaceId, deletedAt: null },
+          select: { id: true },
+        });
+        if (!form) return reply.status(404).send({ error: "Formulário não encontrado" });
+      }
+
+      try {
+        const domain = await prisma.smartFormDomain.create({
+          data: {
+            workspaceId,
+            hostname,
+            formId: body.formId,
+            status: "pending_dns",
+          },
+        });
+        return reply.status(201).send(domain);
+      } catch {
+        return reply.status(409).send({ error: "Hostname já cadastrado" });
+      }
+    },
+  );
+
+  app.delete(
+    "/forms/domains/:id",
+    { preHandler: requirePermission("domains.manage") },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const domain = await prisma.smartFormDomain.findFirst({
+        where: { id, workspaceId: currentWorkspaceId(request) },
       });
-      return reply.status(201).send(domain);
-    } catch {
-      return reply.status(409).send({ error: "Hostname já cadastrado" });
-    }
-  });
+      if (!domain) return reply.status(404).send({ error: "Domínio não encontrado" });
+      await prisma.smartFormDomain.delete({ where: { id } }).catch(() => null);
+      return { ok: true };
+    },
+  );
 
-  app.delete("/forms/domains/:id", async (request, reply) => {
-    const { id } = request.params as { id: string };
-    await prisma.smartFormDomain.delete({ where: { id } }).catch(() => null);
-    return { ok: true };
-  });
+  app.post(
+    "/forms/domains/:id/verify",
+    { preHandler: requirePermission("domains.manage") },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const domain = await prisma.smartFormDomain.findFirst({
+        where: { id, workspaceId: currentWorkspaceId(request) },
+      });
+      if (!domain) return reply.status(404).send({ error: "Domínio não encontrado" });
 
-  app.post("/forms/domains/:id/verify", async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const domain = await prisma.smartFormDomain.findUnique({ where: { id } });
-    if (!domain) return reply.status(404).send({ error: "Domínio não encontrado" });
+      const result = await verifyHostnameDns(domain.hostname);
+      const updated = await prisma.smartFormDomain.update({
+        where: { id },
+        data: { status: result.status },
+      });
+      return { domain: updated, ...result };
+    },
+  );
 
-    const result = await verifyHostnameDns(domain.hostname);
-    const updated = await prisma.smartFormDomain.update({
-      where: { id },
-      data: { status: result.status },
-    });
-    return { domain: updated, ...result };
-  });
-
-  app.post("/forms/assets", async (request, reply) => {
+  app.post("/forms/assets", { preHandler: requirePermission("forms.write") }, async (request, reply) => {
     const body = z
       .object({
         dataUrl: z.string().min(32).max(12_000_000),
@@ -395,10 +436,10 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     }
   });
 
-  app.get("/forms/:id", async (request, reply) => {
+  app.get("/forms/:id", { preHandler: requirePermission("forms.read") }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const form = await prisma.smartForm.findFirst({
-      where: { id, organizationId: DEFAULT_ORG_ID, deletedAt: null },
+      where: { id, workspaceId: currentWorkspaceId(request), deletedAt: null },
       include: {
         publishedVersion: true,
         versions: { orderBy: { versionNumber: "desc" }, take: 10 },
@@ -408,7 +449,8 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     return form;
   });
 
-  app.patch("/forms/:id", async (request, reply) => {
+  app.patch("/forms/:id", { preHandler: requirePermission("forms.write") }, async (request, reply) => {
+    const workspaceId = currentWorkspaceId(request);
     const { id } = request.params as { id: string };
     const body = z
       .object({
@@ -428,14 +470,14 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
       .parse(request.body);
 
     const form = await prisma.smartForm.findFirst({
-      where: { id, organizationId: DEFAULT_ORG_ID, deletedAt: null },
+      where: { id, workspaceId, deletedAt: null },
     });
     if (!form) return reply.status(404).send({ error: "Formulário não encontrado" });
 
     if (body.slug && body.slug !== form.slug) {
       const clash = await prisma.smartForm.findFirst({
         where: {
-          organizationId: DEFAULT_ORG_ID,
+          workspaceId,
           slug: body.slug,
           deletedAt: null,
           NOT: { id },
@@ -474,12 +516,15 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     return updated;
   });
 
-  app.post("/forms/:id/publish", async (request, reply) => {
+  app.post(
+    "/forms/:id/publish",
+    { preHandler: requirePermission("forms.publish") },
+    async (request, reply) => {
     const { id } = request.params as { id: string };
     const body = z.object({ note: z.string().max(240).optional() }).parse(request.body ?? {});
 
     const form = await prisma.smartForm.findFirst({
-      where: { id, organizationId: DEFAULT_ORG_ID, deletedAt: null },
+      where: { id, workspaceId: currentWorkspaceId(request), deletedAt: null },
     });
     if (!form) return reply.status(404).send({ error: "Formulário não encontrado" });
 
@@ -520,20 +565,25 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
     });
 
     return updated;
-  });
+    },
+  );
 
-  app.post("/forms/:id/duplicate", async (request, reply) => {
+  app.post(
+    "/forms/:id/duplicate",
+    { preHandler: requirePermission("forms.write") },
+    async (request, reply) => {
+    const workspaceId = currentWorkspaceId(request);
     const { id } = request.params as { id: string };
     const form = await prisma.smartForm.findFirst({
-      where: { id, organizationId: DEFAULT_ORG_ID, deletedAt: null },
+      where: { id, workspaceId, deletedAt: null },
     });
     if (!form) return reply.status(404).send({ error: "Formulário não encontrado" });
 
-    const slug = await uniqueOrgSlug(DEFAULT_ORG_ID, `${form.slug}-copia`);
+    const slug = await uniqueWorkspaceSlug(workspaceId, `${form.slug}-copia`);
     const publicSlug = await uniquePublicSlug(slug);
     const copy = await prisma.smartForm.create({
       data: {
-        organizationId: DEFAULT_ORG_ID,
+        workspaceId,
         name: `${form.name} (cópia)`,
         slug,
         publicSlug,
@@ -552,22 +602,27 @@ export const smartFormsAdminRoutes: FastifyPluginAsync = async (app) => {
       },
     });
     return reply.status(201).send(copy);
-  });
+    },
+  );
 
-  app.delete("/forms/:id", async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const form = await prisma.smartForm.findFirst({
-      where: { id, organizationId: DEFAULT_ORG_ID, deletedAt: null },
-    });
-    if (!form) return reply.status(404).send({ error: "Formulário não encontrado" });
-    await prisma.smartForm.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-        status: "ARCHIVED",
-        updatedByUserId: request.admin?.sub ?? null,
-      },
-    });
-    return { ok: true };
-  });
+  app.delete(
+    "/forms/:id",
+    { preHandler: requirePermission("forms.delete") },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const form = await prisma.smartForm.findFirst({
+        where: { id, workspaceId: currentWorkspaceId(request), deletedAt: null },
+      });
+      if (!form) return reply.status(404).send({ error: "Formulário não encontrado" });
+      await prisma.smartForm.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+          status: "ARCHIVED",
+          updatedByUserId: request.admin?.sub ?? null,
+        },
+      });
+      return { ok: true };
+    },
+  );
 };

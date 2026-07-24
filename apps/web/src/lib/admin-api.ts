@@ -1,3 +1,10 @@
+import {
+  setActiveWorkspaceId,
+  workspaceHeaders,
+  type SessionPayload,
+  type WorkspaceSummary,
+} from "./session";
+
 const TOKEN_KEY = "muratori_admin_token";
 
 const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
@@ -7,8 +14,12 @@ export function getAdminToken() {
 }
 
 export function setAdminToken(token: string | null) {
-  if (!token) localStorage.removeItem(TOKEN_KEY);
-  else localStorage.setItem(TOKEN_KEY, token);
+  if (!token) {
+    localStorage.removeItem(TOKEN_KEY);
+    setActiveWorkspaceId(null);
+  } else {
+    localStorage.setItem(TOKEN_KEY, token);
+  }
 }
 
 async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -18,6 +29,7 @@ async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...workspaceHeaders(),
       ...(init?.headers || {}),
     },
   });
@@ -32,11 +44,86 @@ async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const adminApi = {
   login: (email: string, password: string) =>
-    adminFetch<{ token: string; user: { id: string; email: string; name: string | null; role: string } }>(
-      "/api/auth/login",
-      { method: "POST", body: JSON.stringify({ email, password }) }
+    adminFetch<SessionPayload & { token: string }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+  me: () => adminFetch<SessionPayload>("/api/auth/me"),
+  workspaces: () => adminFetch<{ items: WorkspaceSummary[] }>("/api/workspaces"),
+  permissionCatalog: () =>
+    adminFetch<{ groups: Array<{ label: string; items: Array<{ key: string; label: string }> }> }>(
+      "/api/workspaces/permissions"
     ),
-  me: () => adminFetch<{ user: { id: string; email: string; name: string | null; role: string } }>("/api/auth/me"),
+  createWorkspace: (body: { name: string; slug?: string }) =>
+    adminFetch<WorkspaceSummary>("/api/workspaces", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  workspace: (id: string) =>
+    adminFetch<{
+      id: string;
+      slug: string;
+      name: string;
+      active: boolean;
+      createdAt: string;
+      _count: { memberships: number; smartForms: number; leads: number };
+    }>(`/api/workspaces/${id}`),
+  updateWorkspace: (id: string, body: Record<string, unknown>) =>
+    adminFetch(`/api/workspaces/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  roles: (workspaceId: string) =>
+    adminFetch<{
+      items: Array<{
+        id: string;
+        slug: string;
+        name: string;
+        description: string | null;
+        permissions: string[];
+        isSystem: boolean;
+        _count: { memberships: number };
+      }>;
+    }>(`/api/workspaces/${workspaceId}/roles`),
+  createRole: (workspaceId: string, body: Record<string, unknown>) =>
+    adminFetch(`/api/workspaces/${workspaceId}/roles`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  updateRole: (workspaceId: string, roleId: string, body: Record<string, unknown>) =>
+    adminFetch(`/api/workspaces/${workspaceId}/roles/${roleId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+  deleteRole: (workspaceId: string, roleId: string) =>
+    adminFetch(`/api/workspaces/${workspaceId}/roles/${roleId}`, { method: "DELETE" }),
+  members: (workspaceId: string) =>
+    adminFetch<{
+      items: Array<{
+        id: string;
+        active: boolean;
+        createdAt: string;
+        user: { id: string; name: string | null; email: string; role: string; active: boolean };
+        role: { id: string; name: string; slug: string } | null;
+      }>;
+    }>(`/api/workspaces/${workspaceId}/members`),
+  addMember: (
+    workspaceId: string,
+    body: { email: string; name?: string; password?: string; roleId?: string | null }
+  ) =>
+    adminFetch<{ temporaryPassword: string | null }>(`/api/workspaces/${workspaceId}/members`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  updateMember: (workspaceId: string, membershipId: string, body: Record<string, unknown>) =>
+    adminFetch(`/api/workspaces/${workspaceId}/members/${membershipId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+  resetMemberPassword: (workspaceId: string, membershipId: string) =>
+    adminFetch<{ temporaryPassword: string }>(
+      `/api/workspaces/${workspaceId}/members/${membershipId}/reset-password`,
+      { method: "POST" }
+    ),
+  removeMember: (workspaceId: string, membershipId: string) =>
+    adminFetch(`/api/workspaces/${workspaceId}/members/${membershipId}`, { method: "DELETE" }),
   stats: () =>
     adminFetch<{ total: number; completed: number; qualified: number; today: number }>("/api/admin/stats"),
   leads: (params: Record<string, string>) => {

@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { prisma } from "@muratori/database";
 import type { Prisma } from "@muratori/database";
-import { adminPreHandler } from "../plugins/require-admin";
+import { currentWorkspaceId, requirePermission } from "../plugins/require-admin";
 
 const pageSchema = z.object({
   name: z.string().min(2),
@@ -45,15 +45,19 @@ const leadStatusSchema = z.object({
 });
 
 export const adminRoutes: FastifyPluginAsync = async (app) => {
-  app.addHook("preHandler", adminPreHandler);
+  const readLeads = { preHandler: requirePermission("leads.read") };
+  const readLegacy = { preHandler: requirePermission("legacy.access") };
+  const writeSettings = { preHandler: requirePermission("settings.write") };
 
-  app.get("/admin/stats", async () => {
+  app.get("/admin/stats", readLeads, async (request) => {
+    const workspaceId = currentWorkspaceId(request);
     const [total, completed, qualified, today] = await Promise.all([
-      prisma.qualificationLead.count(),
-      prisma.qualificationLead.count({ where: { completedAt: { not: null } } }),
-      prisma.qualificationLead.count({ where: { isQualified: true } }),
+      prisma.qualificationLead.count({ where: { workspaceId } }),
+      prisma.qualificationLead.count({ where: { workspaceId, completedAt: { not: null } } }),
+      prisma.qualificationLead.count({ where: { workspaceId, isQualified: true } }),
       prisma.qualificationLead.count({
         where: {
+          workspaceId,
           createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
         },
       }),
@@ -61,7 +65,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return { total, completed, qualified, today };
   });
 
-  app.get("/admin/leads", async (request) => {
+  app.get("/admin/leads", readLeads, async (request) => {
     const q = request.query as {
       page?: string;
       q?: string;
@@ -72,8 +76,10 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const take = 30;
     const skip = (page - 1) * take;
 
-    const where: Record<string, unknown> = {};
-    if (q.status) where.status = q.status;
+    const where: Prisma.QualificationLeadWhereInput = {
+      workspaceId: currentWorkspaceId(request),
+    };
+    if (q.status) where.status = q.status as Prisma.QualificationLeadWhereInput["status"];
     if (q.qualified === "true") where.isQualified = true;
     if (q.qualified === "false") where.isQualified = false;
     if (q.q) {
@@ -119,32 +125,39 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return { items, total, page, pages: Math.ceil(total / take) };
   });
 
-  app.get("/admin/leads/:id", async (request, reply) => {
+  app.get("/admin/leads/:id", readLeads, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const lead = await prisma.qualificationLead.findUnique({
-      where: { id },
+    const lead = await prisma.qualificationLead.findFirst({
+      where: { id, workspaceId: currentWorkspaceId(request) },
       include: { deliveryLogs: { orderBy: { createdAt: "desc" } } },
     });
     if (!lead) return reply.status(404).send({ error: "Lead não encontrado" });
     return lead;
   });
 
-  app.patch("/admin/leads/:id/status", async (request, reply) => {
+  app.patch("/admin/leads/:id/status", readLeads, async (request, reply) => {
     const { id } = request.params as { id: string };
     const parsed = leadStatusSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: "Status inválido" });
-    const lead = await prisma.qualificationLead.update({
+    const existing = await prisma.qualificationLead.findFirst({
+      where: { id, workspaceId: currentWorkspaceId(request) },
+      select: { id: true },
+    });
+    if (!existing) return reply.status(404).send({ error: "Lead não encontrado" });
+    return prisma.qualificationLead.update({
       where: { id },
       data: { status: parsed.data.status },
     });
-    return lead;
   });
 
-  app.get("/admin/pages", async () => {
-    return prisma.diagnosticPageConfig.findMany({ orderBy: { updatedAt: "desc" } });
+  app.get("/admin/pages", readLegacy, async (request) => {
+    return prisma.diagnosticPageConfig.findMany({
+      where: { workspaceId: currentWorkspaceId(request) },
+      orderBy: { updatedAt: "desc" },
+    });
   });
 
-  app.post("/admin/pages", async (request, reply) => {
+  app.post("/admin/pages", readLegacy, async (request, reply) => {
     const parsed = pageSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ error: "Dados inválidos", details: parsed.error.flatten() });
@@ -153,6 +166,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       const page = await prisma.diagnosticPageConfig.create({
         data: {
           ...parsed.data,
+          workspaceId: currentWorkspaceId(request),
           domain: parsed.data.domain || null,
           qualificationRule: (parsed.data.qualificationRule as Prisma.InputJsonValue) ?? undefined,
         },
@@ -167,12 +181,17 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     }
   });
 
-  app.patch("/admin/pages/:id", async (request, reply) => {
+  app.patch("/admin/pages/:id", readLegacy, async (request, reply) => {
     const { id } = request.params as { id: string };
     const parsed = pageSchema.partial().safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ error: "Dados inválidos", details: parsed.error.flatten() });
     }
+    const existing = await prisma.diagnosticPageConfig.findFirst({
+      where: { id, workspaceId: currentWorkspaceId(request) },
+      select: { id: true },
+    });
+    if (!existing) return reply.status(404).send({ error: "Página não encontrada" });
     try {
       return await prisma.diagnosticPageConfig.update({
         where: { id },
@@ -191,12 +210,14 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     }
   });
 
-  app.post("/admin/pages/:id/duplicate", async (request, reply) => {
+  app.post("/admin/pages/:id/duplicate", readLegacy, async (request, reply) => {
+    const workspaceId = currentWorkspaceId(request);
     const { id } = request.params as { id: string };
-    const page = await prisma.diagnosticPageConfig.findUnique({ where: { id } });
+    const page = await prisma.diagnosticPageConfig.findFirst({ where: { id, workspaceId } });
     if (!page) return reply.status(404).send({ error: "Página não encontrada" });
     const copy = await prisma.diagnosticPageConfig.create({
       data: {
+        workspaceId,
         name: `${page.name} (cópia)`,
         slug: `${page.slug}-copia-${Date.now().toString(36)}`,
         domain: null,
@@ -220,20 +241,28 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(copy);
   });
 
-  app.get("/admin/whatsapp-config", async () => {
-    return prisma.leadWhatsappConfig.findMany({ orderBy: { updatedAt: "desc" } });
+  app.get("/admin/whatsapp-config", writeSettings, async (request) => {
+    return prisma.leadWhatsappConfig.findMany({
+      where: { workspaceId: currentWorkspaceId(request) },
+      orderBy: { updatedAt: "desc" },
+    });
   });
 
-  app.post("/admin/whatsapp-config", async (request, reply) => {
+  app.post("/admin/whatsapp-config", writeSettings, async (request, reply) => {
+    const workspaceId = currentWorkspaceId(request);
     const parsed = whatsappSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: "Dados inválidos" });
 
     if (parsed.data.active !== false) {
-      await prisma.leadWhatsappConfig.updateMany({ data: { active: false } });
+      await prisma.leadWhatsappConfig.updateMany({
+        where: { workspaceId },
+        data: { active: false },
+      });
     }
 
     const created = await prisma.leadWhatsappConfig.create({
       data: {
+        workspaceId,
         whatsappNumber: parsed.data.whatsappNumber,
         whatsappMessageTemplate: parsed.data.whatsappMessageTemplate,
         active: parsed.data.active ?? true,
@@ -242,15 +271,19 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(created);
   });
 
-  app.get("/admin/offers", async () => {
-    return prisma.diagnosticOffer.findMany({ orderBy: { createdAt: "desc" } });
+  app.get("/admin/offers", readLegacy, async (request) => {
+    return prisma.diagnosticOffer.findMany({
+      where: { workspaceId: currentWorkspaceId(request) },
+      orderBy: { createdAt: "desc" },
+    });
   });
 
-  app.post("/admin/offers", async (request, reply) => {
+  app.post("/admin/offers", readLegacy, async (request, reply) => {
     const parsed = offerSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: "Dados inválidos" });
     const offer = await prisma.diagnosticOffer.create({
       data: {
+        workspaceId: currentWorkspaceId(request),
         name: parsed.data.name,
         price: parsed.data.price,
         features: parsed.data.features,
@@ -262,10 +295,15 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(offer);
   });
 
-  app.patch("/admin/offers/:id", async (request, reply) => {
+  app.patch("/admin/offers/:id", readLegacy, async (request, reply) => {
     const { id } = request.params as { id: string };
     const parsed = offerSchema.partial().safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: "Dados inválidos" });
+    const existing = await prisma.diagnosticOffer.findFirst({
+      where: { id, workspaceId: currentWorkspaceId(request) },
+      select: { id: true },
+    });
+    if (!existing) return reply.status(404).send({ error: "Oferta não encontrada" });
     return prisma.diagnosticOffer.update({
       where: { id },
       data: {
@@ -276,10 +314,13 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     });
   });
 
-  app.get("/admin/deliveries", async (request) => {
+  app.get("/admin/deliveries", readLegacy, async (request) => {
     const q = request.query as { status?: string };
     return prisma.deliveryLog.findMany({
-      where: q.status ? { status: q.status as "pending" | "sent" | "failed" | "ignored" } : undefined,
+      where: {
+        lead: { workspaceId: currentWorkspaceId(request) },
+        status: q.status ? (q.status as "pending" | "sent" | "failed" | "ignored") : undefined,
+      },
       orderBy: { updatedAt: "desc" },
       take: 100,
       include: {
@@ -288,9 +329,11 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     });
   });
 
-  app.post("/admin/deliveries/:id/retry", async (request, reply) => {
+  app.post("/admin/deliveries/:id/retry", readLegacy, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const log = await prisma.deliveryLog.findUnique({ where: { id } });
+    const log = await prisma.deliveryLog.findFirst({
+      where: { id, lead: { workspaceId: currentWorkspaceId(request) } },
+    });
     if (!log) return reply.status(404).send({ error: "Não encontrado" });
 
     await prisma.deliveryLog.update({
@@ -307,33 +350,40 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return result;
   });
 
-  app.get("/admin/flows", async () => {
+  app.get("/admin/flows", readLegacy, async (request) => {
     return prisma.diagnosticFlow.findMany({
+      where: { workspaceId: currentWorkspaceId(request) },
       orderBy: [{ name: "asc" }, { version: "desc" }],
     });
   });
 
-  app.get("/admin/flows/published", async () => {
+  app.get("/admin/flows/published", readLegacy, async (request) => {
     const flow = await prisma.diagnosticFlow.findFirst({
-      where: { name: "default", publishedAt: { not: null } },
+      where: {
+        workspaceId: currentWorkspaceId(request),
+        name: "default",
+        publishedAt: { not: null },
+      },
       orderBy: { version: "desc" },
     });
     return flow ?? { definition: null };
   });
 
-  app.post("/admin/flows", async (request, reply) => {
+  app.post("/admin/flows", readLegacy, async (request, reply) => {
+    const workspaceId = currentWorkspaceId(request);
     const body = request.body as { name?: string; definition?: unknown; publish?: boolean };
     if (!body.definition || typeof body.definition !== "object") {
       return reply.status(400).send({ error: "definition JSON obrigatória" });
     }
     const name = body.name || "default";
     const latest = await prisma.diagnosticFlow.findFirst({
-      where: { name },
+      where: { workspaceId, name },
       orderBy: { version: "desc" },
     });
     const version = (latest?.version ?? 0) + 1;
     const created = await prisma.diagnosticFlow.create({
       data: {
+        workspaceId,
         name,
         version,
         definition: body.definition as Prisma.InputJsonValue,
@@ -343,12 +393,16 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(created);
   });
 
-  app.post("/admin/flows/:id/publish", async (request, reply) => {
+  app.post("/admin/flows/:id/publish", readLegacy, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const flow = await prisma.diagnosticFlow.update({
+    const existing = await prisma.diagnosticFlow.findFirst({
+      where: { id, workspaceId: currentWorkspaceId(request) },
+      select: { id: true },
+    });
+    if (!existing) return reply.status(404).send({ error: "Fluxo não encontrado" });
+    return prisma.diagnosticFlow.update({
       where: { id },
       data: { publishedAt: new Date() },
     });
-    return flow;
   });
 };

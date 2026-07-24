@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { prisma } from "@muratori/database";
 import { signAdminToken, verifyAdminToken, verifyPassword } from "../lib/auth";
+import { isSuperAdmin, listUserWorkspaces } from "../lib/workspaces";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -22,10 +23,14 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(401).send({ error: "E-mail ou senha inválidos" });
     }
 
+    const workspaces = await listUserWorkspaces(user.id, user.role);
+    const activeWorkspace = workspaces[0] ?? null;
+
     const token = await signAdminToken({
       sub: user.id,
       email: user.email,
       role: user.role,
+      workspaceId: activeWorkspace?.id ?? null,
     });
 
     return {
@@ -35,7 +40,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         email: user.email,
         name: user.name,
         role: user.role,
+        isSuperAdmin: isSuperAdmin(user.role),
       },
+      workspaces,
+      activeWorkspaceId: activeWorkspace?.id ?? null,
+      permissions: activeWorkspace?.permissions ?? [],
     };
   });
 
@@ -53,7 +62,22 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       if (!user || !user.active) {
         return reply.status(401).send({ error: "Usuário inativo" });
       }
-      return { user };
+
+      const workspaces = await listUserWorkspaces(user.id, user.role);
+      const requested = request.headers["x-workspace-id"];
+      const requestedId = typeof requested === "string" ? requested.trim() : "";
+      const activeWorkspace =
+        workspaces.find((item) => item.id === requestedId) ??
+        workspaces.find((item) => item.id === payload.workspaceId) ??
+        workspaces[0] ??
+        null;
+
+      return {
+        user: { ...user, isSuperAdmin: isSuperAdmin(user.role) },
+        workspaces,
+        activeWorkspaceId: activeWorkspace?.id ?? null,
+        permissions: activeWorkspace?.permissions ?? [],
+      };
     } catch {
       return reply.status(401).send({ error: "Sessão inválida" });
     }

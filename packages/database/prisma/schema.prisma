@@ -11,7 +11,77 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
-// Admin / autenticação do painel (single-tenant por instalação)
+// Multi-tenant: workspaces (clientes), membros, cargos e permissões
+// ---------------------------------------------------------------------------
+
+/// Cliente/tenant. Todo dado operacional pendura aqui.
+model Workspace {
+  id        String   @id @default(cuid())
+  slug      String   @unique @db.VarChar(80)
+  name      String   @db.VarChar(160)
+  active    Boolean  @default(true)
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  memberships    WorkspaceMembership[]
+  roles          WorkspaceRole[]
+  smartForms     SmartForm[]
+  smartTemplates SmartFormTemplate[]
+  settingsRows   Settings[]
+  leads          QualificationLead[]
+  whatsappConfig LeadWhatsappConfig[]
+  pageConfigs    DiagnosticPageConfig[]
+  flows          DiagnosticFlow[]
+  offers         DiagnosticOffer[]
+
+  @@index([active])
+  @@map("workspaces")
+}
+
+/// Cargo customizável por workspace. `permissions` guarda as chaves granulares.
+model WorkspaceRole {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  slug        String   @db.VarChar(60)
+  name        String   @db.VarChar(80)
+  description String?  @db.VarChar(240)
+  permissions String[] @default([])
+  isSystem    Boolean  @default(false) @map("is_system")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  workspace   Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  memberships WorkspaceMembership[]
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, sortOrder])
+  @@map("workspace_roles")
+}
+
+/// Usuário ↔ workspace. Um usuário pode participar de vários workspaces.
+model WorkspaceMembership {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  userId      String   @map("user_id") @db.Uuid
+  roleId      String?  @map("role_id")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      AdminUser      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      WorkspaceRole? @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@index([workspaceId, active])
+  @@map("workspace_memberships")
+}
+
+// ---------------------------------------------------------------------------
+// Admin / autenticação do painel (usuário global + membership por workspace)
 // ---------------------------------------------------------------------------
 
 model AdminUser {
@@ -19,25 +89,32 @@ model AdminUser {
   email        String   @unique
   passwordHash String   @map("password_hash")
   name         String?
-  role         String   @default("owner")
+  /// Papel na plataforma: "superadmin" acessa todos os workspaces.
+  role         String   @default("member")
   active       Boolean  @default(true)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  memberships WorkspaceMembership[]
+
   @@map("admin_users")
 }
 
-/// Configuração única da instalação (branding, tracking, WhatsApp, etc.)
+/// Configuração por workspace (branding, tracking, WhatsApp, etc.)
 model Settings {
-  id        String   @id @default(uuid()) @db.Uuid
-  branding  Json     @default("{}")
-  tracking  Json     @default("{}")
-  whatsapp  Json     @default("{}")
-  business  Json     @default("{}")
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String   @map("workspace_id")
+  branding    Json     @default("{}")
+  tracking    Json     @default("{}")
+  whatsapp    Json     @default("{}")
+  business    Json     @default("{}")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId])
   @@map("settings")
 }
 
@@ -68,7 +145,8 @@ enum DeliveryStatus {
 }
 
 model QualificationLead {
-  id     String @id @default(uuid()) @db.Uuid
+  id          String @id @default(uuid()) @db.Uuid
+  workspaceId String @map("workspace_id")
 
   // Contato (colunas próprias para índice / dedupe / CAPI)
   name        String
@@ -125,9 +203,11 @@ model QualificationLead {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  workspace    Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   pageConfig   DiagnosticPageConfig? @relation(fields: [pageConfigId], references: [id])
   deliveryLogs DeliveryLog[]
 
+  @@index([workspaceId, createdAt(sort: Desc)])
   @@index([status])
   @@index([createdAt(sort: Desc)])
   @@index([email])
@@ -140,20 +220,24 @@ model QualificationLead {
 
 model LeadWhatsappConfig {
   id                      String   @id @default(uuid()) @db.Uuid
+  workspaceId             String   @map("workspace_id")
   whatsappNumber          String   @map("whatsapp_number")
   whatsappMessageTemplate String   @map("whatsapp_message_template") @db.Text
   active                  Boolean  @default(true)
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")
 
-  @@index([active])
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, active])
   @@map("lead_whatsapp_config")
 }
 
 model DiagnosticPageConfig {
   id                       String   @id @default(uuid()) @db.Uuid
+  workspaceId              String   @map("workspace_id")
   name                     String
-  slug                     String   @unique
+  slug                     String
   domain                   String?  @unique
   active                   Boolean  @default(true)
   brandName                String?  @map("brand_name")
@@ -175,14 +259,17 @@ model DiagnosticPageConfig {
   createdAt                DateTime @default(now()) @map("created_at")
   updatedAt                DateTime @updatedAt @map("updated_at")
 
-  leads QualificationLead[]
+  workspace Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  leads     QualificationLead[]
 
-  @@index([active])
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, active])
   @@map("diagnostic_page_config")
 }
 
 model DiagnosticFlow {
   id          String    @id @default(uuid()) @db.Uuid
+  workspaceId String    @map("workspace_id")
   version     Int
   name        String    @default("default")
   definition  Json
@@ -190,12 +277,15 @@ model DiagnosticFlow {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  @@unique([name, version])
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, name, version])
   @@map("diagnostic_flows")
 }
 
 model DiagnosticOffer {
   id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String   @map("workspace_id")
   name        String
   price       Decimal  @db.Decimal(10, 2)
   currency    String   @default("BRL")
@@ -206,6 +296,9 @@ model DiagnosticOffer {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, active])
   @@map("diagnostic_offers")
 }
 
@@ -262,7 +355,7 @@ enum SmartFormDomainStatus {
 
 model SmartForm {
   id                 String          @id @default(cuid())
-  organizationId     String          @default("muratori") @map("organization_id")
+  workspaceId        String          @map("workspace_id")
   name               String          @db.VarChar(160)
   slug               String          @db.VarChar(80)
   publicSlug         String          @unique @map("public_slug") @db.VarChar(80)
@@ -284,6 +377,7 @@ model SmartForm {
   updatedAt          DateTime        @updatedAt @map("updated_at")
   deletedAt          DateTime?       @map("deleted_at")
 
+  workspace        Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   publishedVersion SmartFormVersion?  @relation("PublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
   versions         SmartFormVersion[] @relation("FormVersions")
   sessions         SmartFormSession[]
@@ -291,8 +385,8 @@ model SmartForm {
   domains          SmartFormDomain[]
   analyticsDaily   SmartFormAnalyticsDaily[]
 
-  @@unique([organizationId, slug])
-  @@index([organizationId, status, deletedAt])
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, status, deletedAt])
   @@map("smart_forms")
 }
 
@@ -417,7 +511,8 @@ model SmartFormLeadEvent {
 
 model SmartFormTemplate {
   id             String   @id @default(cuid())
-  organizationId String?  @map("organization_id")
+  /// null = template global disponível para todos os workspaces
+  workspaceId    String?  @map("workspace_id")
   name           String   @db.VarChar(160)
   slug           String   @db.VarChar(80)
   category       String?  @db.VarChar(80)
@@ -428,21 +523,25 @@ model SmartFormTemplate {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  @@unique([organizationId, slug])
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, slug])
   @@index([isActive, sortOrder])
   @@map("smart_form_templates")
 }
 
 model SmartFormDomain {
-  id        String                @id @default(cuid())
-  hostname  String                @unique @db.VarChar(255)
-  status    SmartFormDomainStatus @default(pending_dns)
-  formId    String?               @map("form_id")
-  createdAt DateTime              @default(now()) @map("created_at")
-  updatedAt DateTime              @updatedAt @map("updated_at")
+  id          String                @id @default(cuid())
+  workspaceId String                @map("workspace_id")
+  hostname    String                @unique @db.VarChar(255)
+  status      SmartFormDomainStatus @default(pending_dns)
+  formId      String?               @map("form_id")
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
 
   form SmartForm? @relation(fields: [formId], references: [id], onDelete: SetNull)
 
+  @@index([workspaceId])
   @@index([formId])
   @@map("smart_form_domains")
 }

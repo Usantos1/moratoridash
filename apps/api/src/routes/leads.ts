@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { prisma, type Prisma } from "@muratori/database";
+import { resolveLegacyWorkspaceId } from "../lib/workspaces";
 
 const upsertLeadSchema = z.object({
   id: z.string().uuid().optional(),
@@ -45,6 +46,8 @@ const upsertLeadSchema = z.object({
 const checkCompletedSchema = z.object({
   email: z.string().optional(),
   phone: z.string().optional(),
+  hostname: z.string().optional(),
+  slug: z.string().optional(),
 });
 
 function digitsOnly(value: string): string {
@@ -66,8 +69,15 @@ export const leadsRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: "Informe email ou phone" });
     }
 
+    const workspaceId = await resolveLegacyWorkspaceId({
+      hostname: query.data.hostname,
+      slug: query.data.slug,
+    });
+    if (!workspaceId) return { completed: false };
+
     const lead = await prisma.qualificationLead.findFirst({
       where: {
+        workspaceId,
         completedAt: { not: null },
         OR: [
           ...(email ? [{ email: { equals: email, mode: "insensitive" as const } }] : []),
@@ -116,8 +126,29 @@ export const leadsRoutes: FastifyPluginAsync = async (app) => {
 
     const data = parsed.data;
     const email = data.email.trim().toLowerCase();
+    const workspaceId = await resolveLegacyWorkspaceId({
+      hostname: data.hostname,
+      slug: data.sourcePage,
+    });
+    if (!workspaceId) {
+      return reply.status(503).send({ error: "Nenhum workspace configurado" });
+    }
+
+    if (data.pageConfigId) {
+      const page = await prisma.diagnosticPageConfig.findFirst({
+        where: { id: data.pageConfigId, workspaceId },
+        select: { id: true },
+      });
+      if (!page) return reply.status(400).send({ error: "Página inválida" });
+    }
 
     if (data.id) {
+      const existing = await prisma.qualificationLead.findFirst({
+        where: { id: data.id, workspaceId },
+        select: { id: true },
+      });
+      if (!existing) return reply.status(404).send({ error: "Lead não encontrado" });
+
       const updated = await prisma.qualificationLead.update({
         where: { id: data.id },
         data: {
@@ -141,6 +172,7 @@ export const leadsRoutes: FastifyPluginAsync = async (app) => {
 
     const created = await prisma.qualificationLead.create({
       data: {
+        workspaceId,
         name: data.name,
         email,
         phone: data.phone,

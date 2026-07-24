@@ -8,6 +8,7 @@ import { leadsRoutes } from "./routes/leads";
 import { leadsExtraRoutes } from "./routes/leads-extra";
 import { authRoutes } from "./routes/auth";
 import { adminRoutes } from "./routes/admin";
+import { workspaceRoutes } from "./routes/workspaces";
 import { settingsAdminRoutes, settingsPublicRoutes } from "./routes/settings";
 import { smartFormsAdminRoutes } from "./smart-forms/admin-routes";
 import { smartFormsPublicRoutes } from "./smart-forms/public-routes";
@@ -35,6 +36,7 @@ export async function buildApp() {
   await app.register(leadsRoutes, { prefix: "/api" });
   await app.register(leadsExtraRoutes, { prefix: "/api" });
   await app.register(settingsPublicRoutes, { prefix: "/api" });
+  await app.register(workspaceRoutes, { prefix: "/api" });
   await app.register(adminRoutes, { prefix: "/api" });
   await app.register(settingsAdminRoutes, { prefix: "/api" });
   await app.register(smartFormsAdminRoutes, { prefix: "/api" });

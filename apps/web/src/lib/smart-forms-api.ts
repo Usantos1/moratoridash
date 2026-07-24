@@ -1,4 +1,5 @@
 import { getAdminToken } from "./admin-api";
+import { getActiveWorkspaceId, workspaceHeaders } from "./session";
 import type { FormSettings, SmartFormDefinition, SmartFormRecord } from "./smart-forms/types";
 
 const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
@@ -10,6 +11,7 @@ async function sfFetch<T>(path: string, init?: RequestInit): Promise<T> {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...workspaceHeaders(),
       ...(init?.headers || {}),
     },
   });
@@ -94,8 +96,12 @@ export const smartFormsApi = {
   deleteLead: (id: string) =>
     sfFetch<{ ok: boolean }>(`/api/forms/leads/${id}`, { method: "DELETE" }),
   exportLeadsUrl: (formId?: string) => {
-    const q = formId ? `?formId=${encodeURIComponent(formId)}` : "";
-    return `${API_BASE}/api/forms/leads/export${q}`;
+    const params = new URLSearchParams();
+    if (formId) params.set("formId", formId);
+    const workspaceId = getActiveWorkspaceId();
+    if (workspaceId) params.set("workspaceId", workspaceId);
+    const q = params.toString();
+    return `${API_BASE}/api/forms/leads/export${q ? `?${q}` : ""}`;
   },
   dashboard: (params: Record<string, string> = {}) => {
     const q = new URLSearchParams(params);

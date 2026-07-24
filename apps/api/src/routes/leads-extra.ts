@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@muratori/database";
 import { sendInternalAlert } from "../services/notify";
 import { enqueueDelivery } from "../services/delivery";
+import { resolveLegacyWorkspaceId } from "../lib/workspaces";
 
 const completeSchema = z.object({
   id: z.string().uuid(),
@@ -44,6 +45,7 @@ export const leadsExtraRoutes: FastifyPluginAsync = async (app) => {
     const phone = digitsOnly(lead.phone);
     const duplicate = await prisma.qualificationLead.findFirst({
       where: {
+        workspaceId: lead.workspaceId,
         completedAt: { not: null },
         id: { not: lead.id },
         OR: [
@@ -161,15 +163,22 @@ export const leadsExtraRoutes: FastifyPluginAsync = async (app) => {
   });
 
   /** Config pública do WhatsApp */
-  app.get("/config/whatsapp", async () => {
-    const config = await prisma.leadWhatsappConfig.findFirst({
-      where: { active: true },
-      orderBy: { updatedAt: "desc" },
-      select: {
-        whatsappNumber: true,
-        whatsappMessageTemplate: true,
-      },
+  app.get("/config/whatsapp", async (request) => {
+    const query = request.query as { hostname?: string; slug?: string };
+    const workspaceId = await resolveLegacyWorkspaceId({
+      hostname: query.hostname,
+      slug: query.slug,
     });
+    const config = workspaceId
+      ? await prisma.leadWhatsappConfig.findFirst({
+          where: { workspaceId, active: true },
+          orderBy: { updatedAt: "desc" },
+          select: {
+            whatsappNumber: true,
+            whatsappMessageTemplate: true,
+          },
+        })
+      : null;
 
     if (!config) {
       return {
@@ -228,7 +237,7 @@ export const leadsExtraRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const offer = await prisma.diagnosticOffer.findFirst({
-      where: { active: true },
+      where: { workspaceId: page.workspaceId, active: true },
       orderBy: { createdAt: "asc" },
     });
 
@@ -260,12 +269,19 @@ export const leadsExtraRoutes: FastifyPluginAsync = async (app) => {
   });
 
   /** Fluxo publicado (público) */
-  app.get("/config/flow", async () => {
-    const flow = await prisma.diagnosticFlow.findFirst({
-      where: { name: "default", publishedAt: { not: null } },
-      orderBy: { version: "desc" },
-      select: { id: true, version: true, definition: true, publishedAt: true },
+  app.get("/config/flow", async (request) => {
+    const query = request.query as { hostname?: string; slug?: string };
+    const workspaceId = await resolveLegacyWorkspaceId({
+      hostname: query.hostname,
+      slug: query.slug,
     });
+    const flow = workspaceId
+      ? await prisma.diagnosticFlow.findFirst({
+          where: { workspaceId, name: "default", publishedAt: { not: null } },
+          orderBy: { version: "desc" },
+          select: { id: true, version: true, definition: true, publishedAt: true },
+        })
+      : null;
     if (!flow) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { AGENCY_FLOW_V1 } = require("@muratori/database") as {

@@ -2,63 +2,31 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   Bell,
+  Check,
   ChevronDown,
   ChevronsUpDown,
-  ClipboardList,
-  Globe2,
-  LayoutDashboard,
   LogOut,
-  Megaphone,
   Menu,
-  MessageCircle,
   Moon,
-  Palette,
   Search,
-  Settings2,
-  Workflow,
 } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
+import { MENU_GROUPS, PRIMARY_NAV, filterNav } from "../../lib/navigation";
+import { useSession } from "../../lib/session-context";
 
 type Props = {
-  user: { email: string; name: string | null };
   onLogout: () => void;
 };
-
-const PRIMARY_NAV = [
-  { to: "/admin/forms/dashboard", end: true, label: "Dashboard", icon: LayoutDashboard },
-  { to: "/admin/forms", label: "Painel Forms", icon: Megaphone },
-  { to: "/admin/flows", label: "Muratori IA", icon: Globe2 },
-] as const;
-
-const MENU_ITEMS = [
-  {
-    group: "Formulário inteligente",
-    items: [
-      { to: "/admin/forms", label: "Formulários", desc: "Lista e métricas", icon: ClipboardList },
-      { to: "/admin/forms/templates", label: "Templates", desc: "Fluxos prontos", icon: Workflow },
-      { to: "/admin/forms/leads", label: "Leads", desc: "Capturas Smart Forms", icon: ClipboardList },
-      { to: "/admin/forms/config", label: "Configurações", desc: "Checklist do módulo", icon: Settings2 },
-      { to: "/admin/flows", label: "Builder legado", desc: "Fluxo diagnóstico antigo", icon: Workflow },
-    ],
-  },
-  {
-    group: "Instalação",
-    items: [
-      { to: "/admin/marca", label: "Marca", desc: "Identidade e tracking", icon: Palette },
-      { to: "/admin/whatsapp", label: "WhatsApp", desc: "Número e template", icon: MessageCircle },
-      { to: "/admin/deliveries", label: "Entregas", desc: "Meta, GA4, webhooks", icon: Settings2 },
-      { to: "/admin/pages", label: "Páginas", desc: "Slugs legado", icon: ClipboardList },
-    ],
-  },
-] as const;
 
 const pillBase =
   "inline-flex h-11 items-center gap-2 rounded-full border border-[#d8dde6] bg-white px-4 text-sm font-medium text-[#1d202b] shadow-[0_1px_0_rgba(16,24,40,0.04)] transition hover:border-primary/35 hover:bg-[#f8fafc]";
 
-export function AppTopbar({ user, onLogout }: Props) {
+export function AppTopbar({ onLogout }: Props) {
   const navigate = useNavigate();
+  const { user, workspace, workspaces, can, switchWorkspace } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [wsOpen, setWsOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -67,16 +35,17 @@ export function AppTopbar({ user, onLogout }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!menuOpen && !langOpen) return;
+    if (!menuOpen && !langOpen && !wsOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setMenuOpen(false);
         setLangOpen(false);
+        setWsOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [menuOpen, langOpen]);
+  }, [menuOpen, langOpen, wsOpen]);
 
   const clock = useMemo(
     () =>
@@ -86,6 +55,17 @@ export function AppTopbar({ user, onLogout }: Props) {
       }),
     [now]
   );
+
+  const primaryNav = useMemo(() => filterNav(PRIMARY_NAV, can), [can]);
+  const menuGroups = useMemo(
+    () =>
+      MENU_GROUPS.map((group) => ({ ...group, items: filterNav(group.items, can) })).filter(
+        (group) => group.items.length > 0
+      ),
+    [can]
+  );
+
+  const workspaceInitial = (workspace?.name || "M")[0].toUpperCase();
 
   return (
     <header
@@ -98,13 +78,13 @@ export function AppTopbar({ user, onLogout }: Props) {
           <BrandLogo />
 
           <nav className="ml-1 hidden items-center gap-2 lg:flex">
-            {PRIMARY_NAV.map((item) => {
+            {primaryNav.map((item) => {
               const Icon = item.icon;
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={"end" in item ? item.end : false}
+                  end={item.end ?? false}
                   className={({ isActive }) =>
                     `inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition ${
                       isActive
@@ -126,15 +106,13 @@ export function AppTopbar({ user, onLogout }: Props) {
               className={`${pillBase} relative pl-3.5 pr-2.5`}
               onClick={() => {
                 setLangOpen(false);
+                setWsOpen(false);
                 setMenuOpen((v) => !v);
               }}
             >
               <Menu className="h-4 w-4 text-brand-600" strokeWidth={2} />
               <span>Menu</span>
               <ChevronDown className="h-4 w-4 text-[#6b7280]" />
-              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#ef4444] px-1 text-[10px] font-bold leading-none text-white shadow-sm">
-                10
-              </span>
             </button>
 
             {menuOpen && (
@@ -151,8 +129,13 @@ export function AppTopbar({ user, onLogout }: Props) {
                       {user.name || "Admin"}
                     </div>
                     <div className="truncate text-xs text-[#6b7280]">{user.email}</div>
+                    {workspace?.role && (
+                      <div className="mt-1 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                        {workspace.role.name}
+                      </div>
+                    )}
                   </div>
-                  {MENU_ITEMS.map((group) => (
+                  {menuGroups.map((group) => (
                     <div key={group.group} className="mb-2">
                       <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
                         {group.group}
@@ -164,7 +147,7 @@ export function AppTopbar({ user, onLogout }: Props) {
                             <li key={item.to + item.label}>
                               <NavLink
                                 to={item.to}
-                                end={item.to === "/admin"}
+                                end={item.end ?? false}
                                 onClick={() => setMenuOpen(false)}
                                 className={({ isActive }) =>
                                   `flex items-center gap-3 rounded-2xl border-l-2 px-3 py-3 transition ${
@@ -229,24 +212,87 @@ export function AppTopbar({ user, onLogout }: Props) {
 
         {/* —— Direita: workspace + relógio + idioma + ícones + avatar —— */}
         <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            className="hidden h-11 max-w-[200px] items-center gap-2 rounded-full border border-primary/45 bg-white px-3 text-left shadow-[0_1px_0_rgba(16,24,40,0.04)] xl:inline-flex"
-            title="Workspace"
-          >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-extrabold text-primary">
-              M
-            </span>
-            <span className="min-w-0 leading-tight">
-              <span className="block truncate text-[13px] font-bold text-[#1d202b]">
-                Muratori
+          <div className="relative hidden xl:block">
+            <button
+              type="button"
+              className="h-11 max-w-[220px] items-center gap-2 rounded-full border border-primary/45 bg-white px-3 text-left shadow-[0_1px_0_rgba(16,24,40,0.04)] inline-flex"
+              title="Trocar workspace"
+              onClick={() => {
+                setMenuOpen(false);
+                setLangOpen(false);
+                setWsOpen((v) => !v);
+              }}
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-extrabold text-primary">
+                {workspaceInitial}
               </span>
-              <span className="block truncate text-[11px] font-semibold text-primary">
-                Workspace ativo
+              <span className="min-w-0 leading-tight">
+                <span className="block truncate text-[13px] font-bold text-[#1d202b]">
+                  {workspace?.name ?? "Sem workspace"}
+                </span>
+                <span className="block truncate text-[11px] font-semibold text-primary">
+                  {workspace?.role?.name ?? "Workspace ativo"}
+                </span>
               </span>
-            </span>
-            <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-primary" />
-          </button>
+              <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-primary" />
+            </button>
+
+            {wsOpen && (
+              <>
+                <button
+                  type="button"
+                  className="fixed inset-0 z-40"
+                  aria-label="Fechar"
+                  onClick={() => setWsOpen(false)}
+                />
+                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-72 rounded-2xl border border-[#e5e7eb] bg-white p-2 shadow-lg">
+                  <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
+                    Workspaces
+                  </div>
+                  <ul className="max-h-72 space-y-0.5 overflow-y-auto">
+                    {workspaces.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition hover:bg-[#f3f4f6] ${
+                            item.id === workspace?.id ? "bg-primary/10 font-semibold" : ""
+                          }`}
+                          onClick={async () => {
+                            setWsOpen(false);
+                            if (item.id !== workspace?.id) await switchWorkspace(item.id);
+                          }}
+                        >
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-extrabold text-primary">
+                            {item.name[0].toUpperCase()}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[#1d202b]">{item.name}</span>
+                            <span className="block truncate text-[11px] text-[#6b7280]">
+                              {item.role?.name ?? "Sem cargo"} · {item.slug}
+                            </span>
+                          </span>
+                          {item.id === workspace?.id && (
+                            <Check className="h-4 w-4 shrink-0 text-primary" />
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {user.role === "superadmin" && (
+                    <div className="mt-1 border-t border-[#eef0f4] pt-1">
+                      <Link
+                        to="/admin/workspace"
+                        onClick={() => setWsOpen(false)}
+                        className="block rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-[#f3f4f6]"
+                      >
+                        Gerenciar workspaces
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
 
           <div className="hidden h-9 items-center rounded-full border border-[#d8dde6] bg-[#f3f4f6]/70 px-3 font-mono text-xs font-semibold tabular-nums text-[#1d202b] lg:inline-flex">
             {clock}
@@ -258,6 +304,7 @@ export function AppTopbar({ user, onLogout }: Props) {
               className={`${pillBase} gap-2 px-3`}
               onClick={() => {
                 setMenuOpen(false);
+                setWsOpen(false);
                 setLangOpen((v) => !v);
               }}
             >
@@ -311,6 +358,7 @@ export function AppTopbar({ user, onLogout }: Props) {
             title={user.email}
             onClick={() => {
               setLangOpen(false);
+              setWsOpen(false);
               setMenuOpen((v) => !v);
             }}
           >

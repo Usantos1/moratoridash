@@ -29,11 +29,17 @@ export function verifyPassword(password: string, stored: string): boolean {
 export type AdminTokenPayload = {
   sub: string;
   email: string;
+  /// Papel na plataforma ("superadmin" ou "member"); permissões vêm do workspace.
   role: string;
+  workspaceId?: string | null;
 };
 
 export async function signAdminToken(payload: AdminTokenPayload): Promise<string> {
-  return new SignJWT({ email: payload.email, role: payload.role })
+  return new SignJWT({
+    email: payload.email,
+    role: payload.role,
+    workspaceId: payload.workspaceId ?? null,
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
     .setIssuedAt()
@@ -46,7 +52,8 @@ export async function verifyAdminToken(token: string): Promise<AdminTokenPayload
   return {
     sub: String(payload.sub || ""),
     email: String(payload.email || ""),
-    role: String(payload.role || "owner"),
+    role: String(payload.role || "member"),
+    workspaceId: payload.workspaceId ? String(payload.workspaceId) : null,
   };
 }
 

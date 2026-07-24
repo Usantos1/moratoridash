@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { adminApi, setAdminToken } from "../../lib/admin-api";
+import { setActiveWorkspaceId } from "../../lib/session";
 import { AdminButton, AdminField, AdminInput } from "../../components/admin/ui";
 
 export function AdminLoginPage() {
@@ -17,6 +18,7 @@ export function AdminLoginPage() {
     try {
       const res = await adminApi.login(email, password);
       setAdminToken(res.token);
+      setActiveWorkspaceId(res.activeWorkspaceId);
       toast.success("Bem-vindo ao Muratori Dash");
       navigate("/admin");
     } catch (err) {

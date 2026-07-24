@@ -77,7 +77,8 @@ export function AdminFlowsPage() {
   return (
     <div className="space-y-5">
       <PageHeaderPremium
-        eyebrow="Formulário inteligente"
+        eyebrow="Legado"
+        showModuleNav={false}
         title={title}
         description="Monte o fluxo conversacional bloco a bloco."
         actions={

@@ -19,6 +19,10 @@ import { SmartConfigPage } from "./pages/admin/smart-forms/SmartConfigPage";
 import { SmartFormBuilderPage } from "./pages/admin/smart-forms/SmartFormBuilderPage";
 import { SmartFormsDashboardPage } from "./pages/admin/smart-forms/SmartFormsDashboardPage";
 import { SmartLeadDetailPage } from "./pages/admin/smart-forms/SmartLeadDetailPage";
+import { WorkspacePage } from "./pages/admin/account/WorkspacePage";
+import { UsersPage } from "./pages/admin/account/UsersPage";
+import { RolesPage } from "./pages/admin/account/RolesPage";
+import { RequirePermission } from "./components/admin/RequirePermission";
 
 export default function App() {
   return (
@@ -30,20 +34,143 @@ export default function App() {
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<SmartFormsDashboardPage />} />
-          <Route path="leads" element={<AdminLeadsPage />} />
-          <Route path="leads/:id" element={<AdminLeadDetailPage />} />
-          <Route path="marca" element={<AdminOnboardingPage />} />
-          <Route path="pages" element={<AdminPagesPage />} />
-          <Route path="whatsapp" element={<AdminWhatsappPage />} />
-          <Route path="flows" element={<AdminFlowsPage />} />
-          <Route path="deliveries" element={<AdminDeliveriesPage />} />
-          <Route path="forms" element={<SmartFormsListPage />} />
-          <Route path="forms/dashboard" element={<SmartFormsDashboardPage />} />
-          <Route path="forms/templates" element={<SmartTemplatesPage />} />
-          <Route path="forms/leads" element={<SmartLeadsPage />} />
-          <Route path="forms/leads/:leadId" element={<SmartLeadDetailPage />} />
-          <Route path="forms/config" element={<SmartConfigPage />} />
-          <Route path="forms/:id" element={<SmartFormBuilderPage />} />
+
+          {/* Smart Forms */}
+          <Route
+            path="forms"
+            element={
+              <RequirePermission permission="forms.read">
+                <SmartFormsListPage />
+              </RequirePermission>
+            }
+          />
+          <Route path="forms/dashboard" element={<Navigate to="/admin" replace />} />
+          <Route
+            path="forms/templates"
+            element={
+              <RequirePermission permission="forms.read">
+                <SmartTemplatesPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="forms/leads"
+            element={
+              <RequirePermission permission="leads.read">
+                <SmartLeadsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="forms/leads/:leadId"
+            element={
+              <RequirePermission permission="leads.read">
+                <SmartLeadDetailPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="forms/config"
+            element={
+              <RequirePermission permission="settings.read">
+                <SmartConfigPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="forms/:id"
+            element={
+              <RequirePermission permission="forms.write">
+                <SmartFormBuilderPage />
+              </RequirePermission>
+            }
+          />
+
+          {/* Conta */}
+          <Route path="workspace" element={<WorkspacePage />} />
+          <Route
+            path="users"
+            element={
+              <RequirePermission permission="users.manage">
+                <UsersPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="roles"
+            element={
+              <RequirePermission permission="roles.manage">
+                <RolesPage />
+              </RequirePermission>
+            }
+          />
+
+          {/* Instalação */}
+          <Route
+            path="marca"
+            element={
+              <RequirePermission permission="settings.write">
+                <AdminOnboardingPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="whatsapp"
+            element={
+              <RequirePermission permission="settings.write">
+                <AdminWhatsappPage />
+              </RequirePermission>
+            }
+          />
+
+          {/* Legado */}
+          <Route
+            path="legacy/leads"
+            element={
+              <RequirePermission permission="leads.read">
+                <AdminLeadsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="legacy/leads/:id"
+            element={
+              <RequirePermission permission="leads.read">
+                <AdminLeadDetailPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="legacy/pages"
+            element={
+              <RequirePermission permission="legacy.access">
+                <AdminPagesPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="legacy/flows"
+            element={
+              <RequirePermission permission="legacy.access">
+                <AdminFlowsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="legacy/deliveries"
+            element={
+              <RequirePermission permission="legacy.access">
+                <AdminDeliveriesPage />
+              </RequirePermission>
+            }
+          />
+
+          {/* Redirects dos caminhos antigos */}
+          <Route path="leads" element={<Navigate to="/admin/legacy/leads" replace />} />
+          <Route path="leads/:id" element={<Navigate to="/admin/legacy/leads" replace />} />
+          <Route path="pages" element={<Navigate to="/admin/legacy/pages" replace />} />
+          <Route path="flows" element={<Navigate to="/admin/legacy/flows" replace />} />
+          <Route path="deliveries" element={<Navigate to="/admin/legacy/deliveries" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -2,7 +2,8 @@ import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { prisma } from "@muratori/database";
 import type { Prisma } from "@muratori/database";
-import { adminPreHandler } from "../plugins/require-admin";
+import { currentWorkspaceId, requirePermission } from "../plugins/require-admin";
+import { resolveLegacyWorkspaceId } from "../lib/workspaces";
 
 const brandingSchema = z.object({
   brandName: z.string().min(1).optional(),
@@ -47,11 +48,12 @@ const DEFAULT_BRANDING = {
   logoUrl: null,
 };
 
-async function getOrCreateSettings() {
-  const existing = await prisma.settings.findFirst({ orderBy: { createdAt: "asc" } });
+async function getOrCreateSettings(workspaceId: string) {
+  const existing = await prisma.settings.findUnique({ where: { workspaceId } });
   if (existing) return existing;
   return prisma.settings.create({
     data: {
+      workspaceId,
       branding: DEFAULT_BRANDING,
       business: { segment: "agencia_marketing" },
       whatsapp: {},
@@ -62,10 +64,15 @@ async function getOrCreateSettings() {
 
 /** Leitura pública — só campos de marca (nunca tokens) */
 export const settingsPublicRoutes: FastifyPluginAsync = async (app) => {
-  app.get("/config/settings", async () => {
-    const settings = await getOrCreateSettings();
-    const branding = (settings.branding as Record<string, unknown>) || {};
-    const tracking = (settings.tracking as Record<string, unknown>) || {};
+  app.get("/config/settings", async (request) => {
+    const query = request.query as { hostname?: string; slug?: string };
+    const workspaceId = await resolveLegacyWorkspaceId({
+      hostname: query.hostname ?? (request.headers["x-forwarded-host"] as string | undefined),
+      slug: query.slug,
+    });
+    const settings = workspaceId ? await getOrCreateSettings(workspaceId) : null;
+    const branding = (settings?.branding as Record<string, unknown>) || {};
+    const tracking = (settings?.tracking as Record<string, unknown>) || {};
     return {
       brandName: branding.brandName ?? DEFAULT_BRANDING.brandName,
       assistantName: branding.assistantName ?? DEFAULT_BRANDING.assistantName,
@@ -82,19 +89,24 @@ export const settingsPublicRoutes: FastifyPluginAsync = async (app) => {
 };
 
 export const settingsAdminRoutes: FastifyPluginAsync = async (app) => {
-  app.addHook("preHandler", adminPreHandler);
+  app.get(
+    "/admin/settings",
+    { preHandler: requirePermission("settings.read") },
+    async (request) => {
+      return getOrCreateSettings(currentWorkspaceId(request));
+    },
+  );
 
-  app.get("/admin/settings", async () => {
-    return getOrCreateSettings();
-  });
-
-  app.patch("/admin/settings", async (request, reply) => {
+  app.patch(
+    "/admin/settings",
+    { preHandler: requirePermission("settings.write") },
+    async (request, reply) => {
     const parsed = settingsSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ error: "Dados inválidos", details: parsed.error.flatten() });
     }
 
-    const current = await getOrCreateSettings();
+    const current = await getOrCreateSettings(currentWorkspaceId(request));
     const merge = (base: unknown, patch: unknown) => ({
       ...((base as Record<string, unknown>) || {}),
       ...((patch as Record<string, unknown>) || {}),
@@ -117,5 +129,6 @@ export const settingsAdminRoutes: FastifyPluginAsync = async (app) => {
           : undefined,
       },
     });
-  });
+    },
+  );
 };

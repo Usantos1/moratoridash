@@ -6,6 +6,7 @@ import { getAdminToken } from "../../../lib/admin-api";
 import { smartFormsApi } from "../../../lib/smart-forms-api";
 import { FormsModuleNav } from "../../../components/admin/FormsModuleNav";
 import { AdminBadge, AdminButton, AdminInput } from "../../../components/admin/ui";
+import { useCan } from "../../../lib/session-context";
 
 function tempTone(t: string): "neutral" | "warn" | "live" | "danger" {
   if (t === "COLD") return "neutral";
@@ -35,6 +36,7 @@ function statusLabel(s: string) {
 }
 
 export function SmartLeadsPage() {
+  const can = useCan();
   const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
   const [total, setTotal] = useState(0);
   const [q, setQ] = useState("");
@@ -119,10 +121,12 @@ export function SmartLeadsPage() {
         <AdminButton variant="ghost" onClick={() => void load()} title="Atualizar">
           <RefreshCw className="h-4 w-4" />
         </AdminButton>
-        <AdminButton variant="ghost" onClick={() => void exportCsv()}>
-          <Download className="mr-1 h-4 w-4" />
-          Exportar CSV
-        </AdminButton>
+        {can("leads.export") && (
+          <AdminButton variant="ghost" onClick={() => void exportCsv()}>
+            <Download className="mr-1 h-4 w-4" />
+            Exportar CSV
+          </AdminButton>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-[var(--shadow-surface-sm)]">
@@ -201,13 +205,15 @@ export function SmartLeadsPage() {
                           : "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => void remove(String(lead.id))}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {can("leads.delete") && (
+                          <button
+                            type="button"
+                            className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => void remove(String(lead.id))}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

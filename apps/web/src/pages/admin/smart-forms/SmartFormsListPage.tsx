@@ -13,6 +13,7 @@ import { smartFormsApi } from "../../../lib/smart-forms-api";
 import type { SmartFormRecord, SmartFormStatus } from "../../../lib/smart-forms/types";
 import { FormsModuleNav } from "../../../components/admin/FormsModuleNav";
 import { AdminBadge, AdminButton, AdminInput } from "../../../components/admin/ui";
+import { useCan } from "../../../lib/session-context";
 
 const FILTERS: Array<{ id: "ALL" | SmartFormStatus; label: string }> = [
   { id: "ALL", label: "Todos" },
@@ -47,6 +48,9 @@ function fmtDate(iso: string) {
 
 export function SmartFormsListPage() {
   const navigate = useNavigate();
+  const can = useCan();
+  const canWrite = can("forms.write");
+  const canDelete = can("forms.delete");
   const [items, setItems] = useState<SmartFormRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [q, setQ] = useState("");
@@ -127,16 +131,20 @@ export function SmartFormsListPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <FormsModuleNav />
-          <Link
-            to="/admin/forms/templates"
-            className="inline-flex h-10 items-center gap-1.5 rounded-full border border-border/80 bg-card px-4 text-sm font-semibold text-foreground hover:border-primary/35"
-          >
-            Usar template
-          </Link>
-          <AdminButton disabled={creating} onClick={() => void createBlank()}>
-            <Plus className="mr-1 h-4 w-4" />
-            Novo formulário
-          </AdminButton>
+          {canWrite && (
+            <>
+              <Link
+                to="/admin/forms/templates"
+                className="inline-flex h-10 items-center gap-1.5 rounded-full border border-border/80 bg-card px-4 text-sm font-semibold text-foreground hover:border-primary/35"
+              >
+                Usar template
+              </Link>
+              <AdminButton disabled={creating} onClick={() => void createBlank()}>
+                <Plus className="mr-1 h-4 w-4" />
+                Novo formulário
+              </AdminButton>
+            </>
+          )}
         </div>
       </div>
 
@@ -176,9 +184,11 @@ export function SmartFormsListPage() {
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-white p-12 text-center">
           <p className="text-sm text-muted-foreground">Nenhum formulário ainda.</p>
-          <AdminButton className="mt-4" onClick={() => void createBlank()}>
-            Criar o primeiro
-          </AdminButton>
+          {canWrite && (
+            <AdminButton className="mt-4" onClick={() => void createBlank()}>
+              Criar o primeiro
+            </AdminButton>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -220,12 +230,14 @@ export function SmartFormsListPage() {
                   Atualizado em {fmtDate(form.updatedAt)}
                 </p>
 
-                <Link
-                  to={`/admin/forms/${form.id}`}
-                  className="mb-2 inline-flex h-10 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:brightness-110"
-                >
-                  Editar
-                </Link>
+                {canWrite && (
+                  <Link
+                    to={`/admin/forms/${form.id}`}
+                    className="mb-2 inline-flex h-10 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:brightness-110"
+                  >
+                    Editar
+                  </Link>
+                )}
 
                 <div className="flex items-center gap-1.5">
                   <IconBtn
@@ -234,12 +246,16 @@ export function SmartFormsListPage() {
                   >
                     <ExternalLink className="h-4 w-4" />
                   </IconBtn>
-                  <IconBtn title="Duplicar" onClick={() => void duplicate(form.id)}>
-                    <Copy className="h-4 w-4" />
-                  </IconBtn>
-                  <IconBtn title="Arquivar" onClick={() => void remove(form.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </IconBtn>
+                  {canWrite && (
+                    <IconBtn title="Duplicar" onClick={() => void duplicate(form.id)}>
+                      <Copy className="h-4 w-4" />
+                    </IconBtn>
+                  )}
+                  {canDelete && (
+                    <IconBtn title="Arquivar" onClick={() => void remove(form.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </IconBtn>
+                  )}
                   <IconBtn title="Mais">
                     <MoreHorizontal className="h-4 w-4" />
                   </IconBtn>

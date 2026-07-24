@@ -57,6 +57,7 @@ export function AdminLeadsPage() {
   return (
     <div className="space-y-8">
       <AdminPageHeader
+        eyebrow="Legado"
         title="Leads"
         description="Diagnósticos capturados nesta instalação — qualificação, UTM e status."
         actions={
@@ -129,7 +130,7 @@ export function AdminLeadsPage() {
                 >
                   <td className="px-4 py-3.5">
                     <Link
-                      to={`/admin/leads/${lead.id}`}
+                      to={`/admin/legacy/leads/${lead.id}`}
                       className="font-semibold text-foreground hover:text-primary"
                     >
                       {lead.name}

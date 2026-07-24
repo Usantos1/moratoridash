@@ -168,8 +168,6 @@ export function newSessionToken() {
   return randomBytes(32).toString("hex");
 }
 
-export const DEFAULT_ORG_ID = "muratori";
-
 export type FormSettings = {
   theme?: Record<string, unknown>;
   seo?: Record<string, unknown>;

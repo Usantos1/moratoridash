@@ -35,6 +35,7 @@ export function AdminDeliveriesPage() {
   return (
     <div className="space-y-8">
       <AdminPageHeader
+        eyebrow="Legado"
         title="Entregas"
         description="Pipeline idempotente (webhook, Meta, Google)."
         actions={

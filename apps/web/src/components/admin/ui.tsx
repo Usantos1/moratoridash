@@ -1,17 +1,27 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { PageHeaderPremium } from "./PageHeaderPremium";
 
-/** @deprecated use PageHeaderPremium — alias para páginas existentes */
+/** Cabeçalho das páginas fora do módulo Smart Forms (legado e instalação). */
 export function AdminPageHeader({
+  eyebrow = "Instalação",
   title,
   description,
   actions,
 }: {
+  eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
 }) {
-  return <PageHeaderPremium title={title} description={description} actions={actions} />;
+  return (
+    <PageHeaderPremium
+      eyebrow={eyebrow}
+      title={title}
+      description={description}
+      actions={actions}
+      showModuleNav={false}
+    />
+  );
 }
 
 export function AdminPanel({

@@ -12,9 +12,11 @@ import {
 import { SmartFormBuilder } from "../../../components/smart-forms/SmartFormBuilder";
 import { FormsModuleNav } from "../../../components/admin/FormsModuleNav";
 import { AdminBadge, AdminButton } from "../../../components/admin/ui";
+import { useCan } from "../../../lib/session-context";
 
 export function SmartFormBuilderPage() {
   const { id } = useParams<{ id: string }>();
+  const can = useCan();
   const [form, setForm] = useState<SmartFormRecord | null>(null);
   const [definition, setDefinition] = useState<SmartFormDefinition | null>(null);
   const [settings, setSettings] = useState<FormSettings>({});
@@ -26,7 +28,8 @@ export function SmartFormBuilderPage() {
     if (!id) return;
     const [f, dom] = await Promise.all([
       smartFormsApi.get(id),
-      smartFormsApi.domains(),
+      // Cargos sem domains.manage continuam editando o formulário.
+      can("domains.manage") ? smartFormsApi.domains() : Promise.resolve({ items: [] }),
     ]);
     setForm(f);
     setDefinition(coerceDefinition(f.draftDefinition));
@@ -123,9 +126,11 @@ export function SmartFormBuilderPage() {
           >
             Salvar
           </AdminButton>
-          <AdminButton disabled={saving} onClick={() => void save(true)}>
-            Publicar
-          </AdminButton>
+          {can("forms.publish") && (
+            <AdminButton disabled={saving} onClick={() => void save(true)}>
+              Publicar
+            </AdminButton>
+          )}
         </div>
       </div>
 
