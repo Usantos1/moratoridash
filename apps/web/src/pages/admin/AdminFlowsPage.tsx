@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { adminApi } from "../../lib/admin-api";
+import {
+  AdminBadge,
+  AdminButton,
+  AdminPageHeader,
+  AdminPanel,
+  AdminTextarea,
+} from "../../components/admin/ui";
 
 export function AdminFlowsPage() {
   const [flows, setFlows] = useState<Array<Record<string, unknown>>>([]);
@@ -10,8 +17,7 @@ export function AdminFlowsPage() {
   async function load() {
     const items = await adminApi.flows();
     setFlows(items);
-    const published =
-      items.find((f) => f.publishedAt) || items[0];
+    const published = items.find((f) => f.publishedAt) || items[0];
     if (published?.definition) {
       setJson(JSON.stringify(published.definition, null, 2));
     }
@@ -22,27 +28,26 @@ export function AdminFlowsPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold">Fluxo do diagnóstico</h1>
-        <p className="mt-1 text-sm text-white/55">
-          O chat público lê o fluxo <strong className="text-white/80">publicado</strong> em tempo real
-          (textos, opções, ordem e branching). Edite o JSON e publique para valer.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <AdminPageHeader
+        title="Fluxo do diagnóstico"
+        description="O chat público lê o fluxo publicado em tempo real (textos, opções, ordem e branching)."
+      />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-        <textarea
-          className="min-h-[480px] w-full border border-white/10 bg-black/30 p-4 font-mono text-xs text-white outline-none focus:border-[var(--leaf)]"
-          value={json}
-          onChange={(e) => setJson(e.target.value)}
-          spellCheck={false}
-        />
+        <AdminPanel className="!p-0 overflow-hidden">
+          <AdminTextarea
+            className="min-h-[520px] resize-y rounded-none border-0 bg-black/40 p-5 font-mono text-xs leading-relaxed focus:border-0"
+            value={json}
+            onChange={(e) => setJson(e.target.value)}
+            spellCheck={false}
+          />
+        </AdminPanel>
+
         <div className="space-y-3">
-          <button
-            type="button"
+          <AdminButton
             disabled={saving}
-            className="w-full bg-[var(--leaf)] py-3 text-sm font-bold text-[#0a140f] disabled:opacity-50"
+            className="w-full !py-3"
             onClick={async () => {
               setSaving(true);
               try {
@@ -58,11 +63,11 @@ export function AdminFlowsPage() {
             }}
           >
             Publicar nova versão
-          </button>
-          <button
-            type="button"
+          </AdminButton>
+          <AdminButton
+            variant="ghost"
             disabled={saving}
-            className="w-full border border-white/15 py-3 text-sm hover:border-white/40"
+            className="w-full !py-3"
             onClick={async () => {
               setSaving(true);
               try {
@@ -78,24 +83,33 @@ export function AdminFlowsPage() {
             }}
           >
             Salvar rascunho
-          </button>
+          </AdminButton>
 
-          <div className="border border-white/10 bg-[#0e1614] p-3 text-xs text-white/55">
-            <div className="font-semibold text-white/80">Versões</div>
-            <ul className="mt-2 space-y-2">
+          <AdminPanel title="Versões" className="!p-4">
+            <ul className="space-y-2">
               {flows.map((f) => (
-                <li key={String(f.id)} className="flex items-center justify-between gap-2">
+                <li
+                  key={String(f.id)}
+                  className="flex items-center justify-between gap-2 border-b border-white/[0.05] pb-2 last:border-0 last:pb-0"
+                >
                   <button
                     type="button"
-                    className="text-left hover:text-[var(--leaf)]"
+                    className="text-left text-sm hover:text-[var(--leaf)]"
                     onClick={() => setJson(JSON.stringify(f.definition, null, 2))}
                   >
-                    v{String(f.version)} {f.publishedAt ? "· live" : "· draft"}
+                    <span className="font-semibold">v{String(f.version)}</span>
+                    <span className="ml-2">
+                      {f.publishedAt ? (
+                        <AdminBadge tone="live">Live</AdminBadge>
+                      ) : (
+                        <AdminBadge>Draft</AdminBadge>
+                      )}
+                    </span>
                   </button>
                   {!f.publishedAt && (
                     <button
                       type="button"
-                      className="text-[var(--leaf)]"
+                      className="text-xs font-bold text-[var(--leaf)]"
                       onClick={async () => {
                         await adminApi.publishFlow(String(f.id));
                         toast.success("Publicado");
@@ -108,7 +122,7 @@ export function AdminFlowsPage() {
                 </li>
               ))}
             </ul>
-          </div>
+          </AdminPanel>
         </div>
       </div>
     </div>

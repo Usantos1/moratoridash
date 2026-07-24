@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { adminApi } from "../../lib/admin-api";
+import {
+  AdminBadge,
+  AdminButton,
+  AdminField,
+  AdminInput,
+  AdminPageHeader,
+  AdminPanel,
+} from "../../components/admin/ui";
 
 type Page = {
   id: string;
@@ -32,29 +40,37 @@ export function AdminPagesPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold">Páginas de diagnóstico</h1>
-        <p className="mt-1 text-sm text-white/55">
-          Domínio, marca, checkout e pixels — sem redeploy.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <AdminPageHeader
+        title="Páginas de diagnóstico"
+        description="Domínio, marca, checkout e pixels — alterações sem redeploy."
+      />
 
       <div className="space-y-4">
+        {pages.length === 0 && (
+          <p className="text-sm text-white/45">Nenhuma página configurada ainda.</p>
+        )}
         {pages.map((page) => (
-          <div key={page.id} className="border border-white/10 bg-[#0e1614] p-5">
+          <AdminPanel key={page.id}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="font-display text-xl font-bold">{page.name}</h2>
-                <p className="mt-1 text-sm text-white/50">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-display text-xl font-bold">{page.name}</h2>
+                  {page.active ? (
+                    <AdminBadge tone="live">Ativa</AdminBadge>
+                  ) : (
+                    <AdminBadge>Inativa</AdminBadge>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-white/45">
                   /{page.slug}
                   {page.domain ? ` · ${page.domain}` : ""}
                 </p>
               </div>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="border border-white/15 px-3 py-1.5 text-xs"
+                <AdminButton
+                  variant="ghost"
+                  className="!py-2 text-xs"
                   onClick={async () => {
                     await adminApi.updatePage(page.id, { active: !page.active });
                     toast.success(page.active ? "Desativada" : "Ativada");
@@ -62,10 +78,10 @@ export function AdminPagesPage() {
                   }}
                 >
                   {page.active ? "Desativar" : "Ativar"}
-                </button>
-                <button
-                  type="button"
-                  className="border border-white/15 px-3 py-1.5 text-xs"
+                </AdminButton>
+                <AdminButton
+                  variant="ghost"
+                  className="!py-2 text-xs"
                   onClick={async () => {
                     await adminApi.duplicatePage(page.id);
                     toast.success("Página duplicada");
@@ -73,12 +89,12 @@ export function AdminPagesPage() {
                   }}
                 >
                   Duplicar
-                </button>
+                </AdminButton>
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <Field
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <InlineField
                 label="Marca"
                 value={page.brandName || ""}
                 onSave={async (brandName) => {
@@ -87,7 +103,7 @@ export function AdminPagesPage() {
                   void load();
                 }}
               />
-              <Field
+              <InlineField
                 label="Checkout Hotmart"
                 value={page.checkoutUrl || ""}
                 onSave={async (checkoutUrl) => {
@@ -96,7 +112,7 @@ export function AdminPagesPage() {
                   void load();
                 }}
               />
-              <Field
+              <InlineField
                 label="WhatsApp"
                 value={page.whatsappNumber || ""}
                 onSave={async (whatsappNumber) => {
@@ -105,7 +121,7 @@ export function AdminPagesPage() {
                   void load();
                 }}
               />
-              <Field
+              <InlineField
                 label="Meta Pixel ID"
                 value={page.metaPixelId || ""}
                 onSave={async (metaPixelId) => {
@@ -114,7 +130,7 @@ export function AdminPagesPage() {
                   void load();
                 }}
               />
-              <Field
+              <InlineField
                 label="GTM ID"
                 value={page.gtmId || ""}
                 onSave={async (gtmId) => {
@@ -123,7 +139,7 @@ export function AdminPagesPage() {
                   void load();
                 }}
               />
-              <Field
+              <InlineField
                 label="Cor primária"
                 value={page.primaryColor || "#075e54"}
                 onSave={async (primaryColor) => {
@@ -133,14 +149,14 @@ export function AdminPagesPage() {
                 }}
               />
             </div>
-          </div>
+          </AdminPanel>
         ))}
       </div>
     </div>
   );
 }
 
-function Field({
+function InlineField({
   label,
   value,
   onSave,
@@ -152,22 +168,13 @@ function Field({
   const [v, setV] = useState(value);
   useEffect(() => setV(value), [value]);
   return (
-    <label className="block text-xs uppercase tracking-wide text-white/40">
-      {label}
-      <div className="mt-1 flex gap-2">
-        <input
-          className="w-full border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-[var(--leaf)]"
-          value={v}
-          onChange={(e) => setV(e.target.value)}
-        />
-        <button
-          type="button"
-          className="bg-[var(--leaf)] px-3 text-xs font-bold text-[#0a140f]"
-          onClick={() => void onSave(v)}
-        >
+    <AdminField label={label}>
+      <div className="flex gap-2">
+        <AdminInput value={v} onChange={(e) => setV(e.target.value)} />
+        <AdminButton className="shrink-0 !px-3" onClick={() => void onSave(v)}>
           OK
-        </button>
+        </AdminButton>
       </div>
-    </label>
+    </AdminField>
   );
 }

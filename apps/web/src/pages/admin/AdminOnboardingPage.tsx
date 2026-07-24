@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { adminApi } from "../../lib/admin-api";
+import {
+  AdminButton,
+  AdminField,
+  AdminInput,
+  AdminPageHeader,
+  AdminPanel,
+} from "../../components/admin/ui";
 
 type Branding = {
   brandName: string;
@@ -79,50 +86,71 @@ export function AdminOnboardingPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold">Marca e negócio</h1>
-        <p className="mt-1 text-sm text-white/55">
-          Aplica no chat em runtime — sem redeploy. Tokens secretos ficam só no servidor.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Marca e negócio"
+        description="Aplica no chat em runtime — sem redeploy. Tokens secretos ficam só no servidor."
+        actions={
+          <AdminButton disabled={saving} onClick={() => void save()}>
+            {saving ? "Salvando…" : "Salvar configuração"}
+          </AdminButton>
+        }
+      />
 
-      <section className="space-y-4 border border-white/10 bg-[#0e1614] p-5">
-        <h2 className="font-display text-xl font-bold">Marca</h2>
-        <div className="grid gap-3 md:grid-cols-2">
-          <Input
-            label="Nome da marca"
-            value={branding.brandName}
-            onChange={(brandName) => setBranding((b) => ({ ...b, brandName }))}
-          />
-          <Input
-            label="Nome do assistente"
-            value={branding.assistantName}
-            placeholder="Muratori · IA"
-            onChange={(assistantName) => setBranding((b) => ({ ...b, assistantName }))}
-          />
-          <Input
-            label="Cor primária"
-            value={branding.primaryColor}
-            type="color-text"
-            onChange={(primaryColor) => setBranding((b) => ({ ...b, primaryColor }))}
-          />
-          <Input
-            label="Cor secundária"
-            value={branding.secondaryColor}
-            type="color-text"
-            onChange={(secondaryColor) => setBranding((b) => ({ ...b, secondaryColor }))}
-          />
-          <Input
-            label="URL do logo"
-            value={branding.logoUrl}
-            placeholder="https://…/logo.png"
-            onChange={(logoUrl) => setBranding((b) => ({ ...b, logoUrl }))}
-          />
+      <AdminPanel title="Marca" subtitle="Identidade vista no header do diagnóstico">
+        <div className="grid gap-4 md:grid-cols-2">
+          <AdminField label="Nome da marca">
+            <AdminInput
+              value={branding.brandName}
+              onChange={(e) => setBranding((b) => ({ ...b, brandName: e.target.value }))}
+            />
+          </AdminField>
+          <AdminField label="Nome do assistente">
+            <AdminInput
+              value={branding.assistantName}
+              placeholder="Muratori · IA"
+              onChange={(e) => setBranding((b) => ({ ...b, assistantName: e.target.value }))}
+            />
+          </AdminField>
+          <AdminField label="Cor primária">
+            <div className="flex gap-2">
+              <input
+                type="color"
+                value={/^#[0-9a-f]{6}$/i.test(branding.primaryColor) ? branding.primaryColor : "#075e54"}
+                onChange={(e) => setBranding((b) => ({ ...b, primaryColor: e.target.value }))}
+                className="h-11 w-12 border border-white/10 bg-black/20"
+              />
+              <AdminInput
+                value={branding.primaryColor}
+                onChange={(e) => setBranding((b) => ({ ...b, primaryColor: e.target.value }))}
+              />
+            </div>
+          </AdminField>
+          <AdminField label="Cor secundária">
+            <div className="flex gap-2">
+              <input
+                type="color"
+                value={/^#[0-9a-f]{6}$/i.test(branding.secondaryColor) ? branding.secondaryColor : "#128c7e"}
+                onChange={(e) => setBranding((b) => ({ ...b, secondaryColor: e.target.value }))}
+                className="h-11 w-12 border border-white/10 bg-black/20"
+              />
+              <AdminInput
+                value={branding.secondaryColor}
+                onChange={(e) => setBranding((b) => ({ ...b, secondaryColor: e.target.value }))}
+              />
+            </div>
+          </AdminField>
+          <AdminField label="URL do logo" hint="PNG/SVG público">
+            <AdminInput
+              value={branding.logoUrl}
+              placeholder="https://…/logo.png"
+              onChange={(e) => setBranding((b) => ({ ...b, logoUrl: e.target.value }))}
+            />
+          </AdminField>
         </div>
 
-        <div className="flex items-center gap-3 border border-white/10 bg-black/20 p-3">
+        <div className="mt-5 flex items-center gap-3 border border-white/10 bg-black/25 p-3">
           <div
-            className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-white text-sm font-bold"
+            className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/25 bg-white text-sm font-bold"
             style={{ color: branding.primaryColor }}
           >
             {branding.logoUrl ? (
@@ -132,126 +160,88 @@ export function AdminOnboardingPage() {
             )}
           </div>
           <div
-            className="flex-1 px-3 py-2 text-sm font-semibold text-white"
+            className="flex-1 px-3 py-2.5 text-sm font-semibold text-white"
             style={{ backgroundColor: branding.primaryColor }}
           >
             {branding.assistantName || `${branding.brandName || "Marca"} · IA`}
           </div>
         </div>
-      </section>
+      </AdminPanel>
 
-      <section className="space-y-4 border border-white/10 bg-[#0e1614] p-5">
-        <h2 className="font-display text-xl font-bold">Negócio</h2>
-        <div className="grid gap-3 md:grid-cols-2">
-          <Input
-            label="Segmento"
-            value={business.segment}
-            onChange={(segment) => setBusiness((b) => ({ ...b, segment }))}
-          />
-          <Input
-            label="Ticket médio por conta"
-            value={business.averageTicket}
-            placeholder="R$ 2.500/mês"
-            onChange={(averageTicket) => setBusiness((b) => ({ ...b, averageTicket }))}
-          />
-          <Input
-            label="Público-alvo"
-            value={business.audience}
-            placeholder="PMEs, clínicas, e-commerces…"
-            onChange={(audience) => setBusiness((b) => ({ ...b, audience }))}
-          />
-          <Input
-            label="Descrição curta"
-            value={business.description}
-            onChange={(description) => setBusiness((b) => ({ ...b, description }))}
-          />
+      <AdminPanel title="Negócio" subtitle="Contexto da oferta e do segmento">
+        <div className="grid gap-4 md:grid-cols-2">
+          <AdminField label="Segmento">
+            <AdminInput
+              value={business.segment}
+              onChange={(e) => setBusiness((b) => ({ ...b, segment: e.target.value }))}
+            />
+          </AdminField>
+          <AdminField label="Ticket médio por conta">
+            <AdminInput
+              value={business.averageTicket}
+              placeholder="R$ 2.500/mês"
+              onChange={(e) => setBusiness((b) => ({ ...b, averageTicket: e.target.value }))}
+            />
+          </AdminField>
+          <AdminField label="Público-alvo">
+            <AdminInput
+              value={business.audience}
+              placeholder="PMEs, clínicas, e-commerces…"
+              onChange={(e) => setBusiness((b) => ({ ...b, audience: e.target.value }))}
+            />
+          </AdminField>
+          <AdminField label="Descrição curta">
+            <AdminInput
+              value={business.description}
+              onChange={(e) => setBusiness((b) => ({ ...b, description: e.target.value }))}
+            />
+          </AdminField>
         </div>
-      </section>
+      </AdminPanel>
 
-      <section className="space-y-4 border border-white/10 bg-[#0e1614] p-5">
-        <h2 className="font-display text-xl font-bold">Tracking</h2>
-        <p className="text-xs text-white/45">
-          Somente IDs públicos. Access token do Meta e API secret do GA4 ficam no `.env` do servidor.
-        </p>
-        <div className="grid gap-3 md:grid-cols-2">
-          <Input
-            label="GTM ID"
-            value={tracking.gtmId}
-            placeholder="GTM-XXXXXX"
-            onChange={(gtmId) => setTracking((t) => ({ ...t, gtmId }))}
-          />
-          <Input
-            label="GA4 Measurement ID"
-            value={tracking.ga4MeasurementId}
-            placeholder="G-XXXXXXX"
-            onChange={(ga4MeasurementId) => setTracking((t) => ({ ...t, ga4MeasurementId }))}
-          />
-          <Input
-            label="Google Ads ID"
-            value={tracking.googleAdsId}
-            placeholder="AW-XXXXXXX"
-            onChange={(googleAdsId) => setTracking((t) => ({ ...t, googleAdsId }))}
-          />
-          <Input
-            label="Google Ads label"
-            value={tracking.googleAdsConversionLabel}
-            onChange={(googleAdsConversionLabel) =>
-              setTracking((t) => ({ ...t, googleAdsConversionLabel }))
-            }
-          />
-          <Input
-            label="Meta Pixel ID"
-            value={tracking.metaPixelId}
-            placeholder="somente números"
-            onChange={(metaPixelId) => setTracking((t) => ({ ...t, metaPixelId }))}
-          />
-        </div>
-      </section>
-
-      <button
-        type="button"
-        disabled={saving}
-        onClick={() => void save()}
-        className="bg-[var(--leaf)] px-6 py-3 text-sm font-bold text-[#0a140f] disabled:opacity-50"
+      <AdminPanel
+        title="Tracking"
+        subtitle="Somente IDs públicos. Access token Meta e API secret GA4 ficam no .env do servidor."
       >
-        {saving ? "Salvando…" : "Salvar configuração"}
-      </button>
+        <div className="grid gap-4 md:grid-cols-2">
+          <AdminField label="GTM ID">
+            <AdminInput
+              value={tracking.gtmId}
+              placeholder="GTM-XXXXXX"
+              onChange={(e) => setTracking((t) => ({ ...t, gtmId: e.target.value }))}
+            />
+          </AdminField>
+          <AdminField label="GA4 Measurement ID">
+            <AdminInput
+              value={tracking.ga4MeasurementId}
+              placeholder="G-XXXXXXX"
+              onChange={(e) => setTracking((t) => ({ ...t, ga4MeasurementId: e.target.value }))}
+            />
+          </AdminField>
+          <AdminField label="Google Ads ID">
+            <AdminInput
+              value={tracking.googleAdsId}
+              placeholder="AW-XXXXXXX"
+              onChange={(e) => setTracking((t) => ({ ...t, googleAdsId: e.target.value }))}
+            />
+          </AdminField>
+          <AdminField label="Google Ads label">
+            <AdminInput
+              value={tracking.googleAdsConversionLabel}
+              onChange={(e) =>
+                setTracking((t) => ({ ...t, googleAdsConversionLabel: e.target.value }))
+              }
+            />
+          </AdminField>
+          <AdminField label="Meta Pixel ID">
+            <AdminInput
+              value={tracking.metaPixelId}
+              placeholder="somente números"
+              onChange={(e) => setTracking((t) => ({ ...t, metaPixelId: e.target.value }))}
+            />
+          </AdminField>
+        </div>
+      </AdminPanel>
     </div>
-  );
-}
-
-function Input({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  type?: "color-text";
-}) {
-  return (
-    <label className="block text-xs uppercase tracking-wide text-white/40">
-      {label}
-      <div className="mt-1 flex gap-2">
-        {type === "color-text" && (
-          <input
-            type="color"
-            value={/^#[0-9a-f]{6}$/i.test(value) ? value : "#075e54"}
-            onChange={(e) => onChange(e.target.value)}
-            className="h-10 w-12 border border-white/10 bg-black/20"
-          />
-        )}
-        <input
-          className="w-full border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-[var(--leaf)]"
-          value={value}
-          placeholder={placeholder}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </div>
-    </label>
   );
 }

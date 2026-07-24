@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { adminApi } from "../../lib/admin-api";
+import {
+  AdminBadge,
+  AdminButton,
+  AdminPageHeader,
+  AdminPanel,
+} from "../../components/admin/ui";
 
 export function AdminLeadDetailPage() {
   const { id } = useParams();
@@ -16,19 +22,31 @@ export function AdminLeadDetailPage() {
   }, [id]);
 
   if (!lead) {
-    return <div className="text-white/50">Carregando lead…</div>;
+    return <div className="anim-rise text-white/45">Carregando lead…</div>;
   }
 
   const logs = (lead.deliveryLogs as Array<Record<string, unknown>>) || [];
 
   return (
-    <div className="space-y-6">
-      <Link to="/admin" className="text-sm text-white/50 hover:text-white">
-        ← Voltar
-      </Link>
+    <div className="space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-extrabold">{String(lead.name)}</h1>
-        <p className="mt-1 text-white/55">{String(lead.companyName)}</p>
+        <Link
+          to="/admin"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-white/40 hover:text-[var(--leaf)]"
+        >
+          ← Voltar aos leads
+        </Link>
+        <AdminPageHeader
+          title={String(lead.name)}
+          description={String(lead.companyName)}
+          actions={
+            lead.isQualified ? (
+              <AdminBadge tone="success">Qualificado</AdminBadge>
+            ) : (
+              <AdminBadge>Em acompanhamento</AdminBadge>
+            )
+          }
+        />
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -45,59 +63,68 @@ export function AdminLeadDetailPage() {
           ["Campanha", lead.utmCampaign || "—"],
           ["Página", lead.sourcePage || "—"],
         ].map(([k, v]) => (
-          <div key={String(k)} className="border border-white/10 bg-[#0e1614] p-4">
-            <div className="text-xs uppercase tracking-wide text-white/40">{String(k)}</div>
-            <div className="mt-1 break-all text-sm">{String(v ?? "—")}</div>
+          <div
+            key={String(k)}
+            className="border border-white/[0.08] bg-[#0c1412]/90 px-4 py-3.5"
+          >
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">
+              {String(k)}
+            </div>
+            <div className="mt-1.5 break-all text-sm text-white/90">{String(v ?? "—")}</div>
           </div>
         ))}
       </div>
 
-      <div>
-        <h2 className="font-display text-xl font-bold">Nichos</h2>
-        <p className="mt-2 text-sm text-white/70">
+      <AdminPanel title="Nichos">
+        <p className="text-sm text-white/70">
           {Array.isArray(lead.niches) ? (lead.niches as string[]).join(", ") : "—"}
         </p>
-      </div>
+      </AdminPanel>
 
-      <div>
-        <h2 className="font-display text-xl font-bold">Entregas</h2>
-        <div className="mt-3 space-y-2">
+      <AdminPanel title="Entregas">
+        <div className="space-y-2">
           {logs.length === 0 && <p className="text-sm text-white/45">Nenhuma entrega registrada.</p>}
           {logs.map((log) => (
-            <div key={String(log.id)} className="border border-white/10 bg-[#0e1614] px-4 py-3 text-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span>
-                  {String(log.destination)} · {String(log.eventName)}
-                </span>
-                <span className="text-xs uppercase text-white/45">{String(log.status)}</span>
-              </div>
+            <div
+              key={String(log.id)}
+              className="flex flex-wrap items-center justify-between gap-2 border border-white/[0.06] bg-black/20 px-4 py-3 text-sm"
+            >
+              <span>
+                {String(log.destination)} · {String(log.eventName)}
+              </span>
+              <AdminBadge>{String(log.status)}</AdminBadge>
               {log.lastError ? (
-                <div className="mt-1 text-xs text-rose-300">{String(log.lastError)}</div>
+                <div className="w-full text-xs text-rose-300">{String(log.lastError)}</div>
               ) : null}
             </div>
           ))}
         </div>
-      </div>
+      </AdminPanel>
 
-      <div className="flex gap-2">
-        {["contacted", "qualified", "converted", "rejected"].map((status) => (
-          <button
-            key={status}
-            type="button"
-            className="border border-white/15 px-3 py-2 text-xs uppercase tracking-wide hover:border-[var(--leaf)]"
-            onClick={async () => {
-              try {
-                await adminApi.setLeadStatus(String(lead.id), status);
-                toast.success("Status atualizado");
-                setLead(await adminApi.lead(String(lead.id)));
-              } catch (e) {
-                toast.error(e instanceof Error ? e.message : "Erro");
-              }
-            }}
-          >
-            {status}
-          </button>
-        ))}
+      <div>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">
+          Atualizar status
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {["contacted", "qualified", "converted", "rejected"].map((status) => (
+            <AdminButton
+              key={status}
+              variant="ghost"
+              className="!py-2 text-xs uppercase tracking-wide"
+              onClick={async () => {
+                try {
+                  await adminApi.setLeadStatus(String(lead.id), status);
+                  toast.success("Status atualizado");
+                  setLead(await adminApi.lead(String(lead.id)));
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Erro");
+                }
+              }}
+            >
+              {status}
+            </AdminButton>
+          ))}
+        </div>
       </div>
     </div>
   );
