@@ -1,0 +1,34 @@
+{
+  "name": "@muratori/database",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./index.js"
+    }
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "push": "prisma db push",
+    "studio": "prisma studio",
+    "seed": "tsx prisma/seed.ts",
+    "build": "prisma generate",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.12.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.12.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

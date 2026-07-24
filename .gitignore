@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build
+dist/
+**/dist/
+build/
+.next/
+out/
+
+# Env & secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Prisma
+packages/database/prisma/*.db
+packages/database/prisma/*.db-journal
+
+# Logs & OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Coverage / test
+coverage/
+.turbo/

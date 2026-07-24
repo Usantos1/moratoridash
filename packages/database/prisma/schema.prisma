@@ -1,0 +1,230 @@
+// Muratori Dash — schema base (Fase 1)
+// Postgres nativo na VPS (Hostinger KVM2). Sem Supabase.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Admin / autenticação do painel (single-tenant por instalação)
+// ---------------------------------------------------------------------------
+
+model AdminUser {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String?
+  role         String   @default("owner")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
+/// Configuração única da instalação (branding, tracking, WhatsApp, etc.)
+model Settings {
+  id        String   @id @default(uuid()) @db.Uuid
+  branding  Json     @default("{}")
+  tracking  Json     @default("{}")
+  whatsapp  Json     @default("{}")
+  business  Json     @default("{}")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ---------------------------------------------------------------------------
+// Diagnóstico conversacional (preset agencia_marketing)
+// ---------------------------------------------------------------------------
+
+enum LeadStatus {
+  new
+  contacted
+  qualified
+  converted
+  rejected
+}
+
+enum ResponseTime {
+  imediato
+  minutos
+  horas
+  dias
+}
+
+enum DeliveryStatus {
+  pending
+  sent
+  failed
+  ignored
+}
+
+model QualificationLead {
+  id     String @id @default(uuid()) @db.Uuid
+
+  // Contato (colunas próprias para índice / dedupe / CAPI)
+  name        String
+  email       String
+  phone       String
+  companyName String @map("company_name")
+
+  // Qualificação (também espelhada em answers JSONB)
+  numberOfAttendants Int?          @map("number_of_attendants")
+  niches             String[]      @default([])
+  clientsPerDay      Int?          @map("clients_per_day")
+  revenueLevel       String?       @map("revenue_level")
+  responseTime       ResponseTime? @map("response_time")
+  additionalInfo     String?       @map("additional_info")
+  answers            Json          @default("{}")
+
+  // Segmento / fluxo
+  segment     String  @default("agencia_marketing")
+  flowVersion Int?    @map("flow_version")
+  pageConfigId String? @map("page_config_id") @db.Uuid
+
+  // Status comercial
+  status      LeadStatus @default(new)
+  completedAt DateTime?  @map("completed_at")
+
+  // Qualificação server-side
+  isQualified         Boolean? @map("is_qualified")
+  qualificationScore  Int?     @map("qualification_score")
+  qualificationReasons Json?   @map("qualification_reasons")
+
+  // WhatsApp tracking
+  whatsappSent      Boolean   @default(false) @map("whatsapp_sent")
+  whatsappSentAt    DateTime? @map("whatsapp_sent_at")
+  whatsappClicked   Boolean   @default(false) @map("whatsapp_clicked")
+  whatsappClickedAt DateTime? @map("whatsapp_clicked_at")
+
+  // Atribuição (first touch — não sobrescrever após o 1º save)
+  sourcePage  String? @map("source_page")
+  landingUrl  String? @map("landing_url")
+  referrer    String?
+  hostname    String?
+  utmSource   String? @map("utm_source")
+  utmMedium   String? @map("utm_medium")
+  utmCampaign String? @map("utm_campaign")
+  utmContent  String? @map("utm_content")
+  utmTerm     String? @map("utm_term")
+  gclid       String?
+  gbraid      String?
+  wbraid      String?
+  fbclid      String?
+  fbp         String?
+  fbc         String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  pageConfig   DiagnosticPageConfig? @relation(fields: [pageConfigId], references: [id])
+  deliveryLogs DeliveryLog[]
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([email])
+  @@index([phone])
+  @@index([whatsappSent])
+  @@index([completedAt])
+  @@index([segment])
+  @@map("qualification_leads")
+}
+
+model LeadWhatsappConfig {
+  id                      String   @id @default(uuid()) @db.Uuid
+  whatsappNumber          String   @map("whatsapp_number")
+  whatsappMessageTemplate String   @map("whatsapp_message_template") @db.Text
+  active                  Boolean  @default(true)
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@index([active])
+  @@map("lead_whatsapp_config")
+}
+
+model DiagnosticPageConfig {
+  id                       String   @id @default(uuid()) @db.Uuid
+  name                     String
+  slug                     String   @unique
+  domain                   String?  @unique
+  active                   Boolean  @default(true)
+  brandName                String?  @map("brand_name")
+  logoUrl                  String?  @map("logo_url")
+  primaryColor             String?  @map("primary_color")
+  secondaryColor           String?  @map("secondary_color")
+  checkoutUrl              String?  @map("checkout_url")
+  whatsappNumber           String?  @map("whatsapp_number")
+  whatsappMessageTemplate  String?  @map("whatsapp_message_template") @db.Text
+  qualificationRule        Json?    @map("qualification_rule")
+  segmentPreset            String   @default("agencia_marketing") @map("segment_preset")
+  gtmId                    String?  @map("gtm_id")
+  ga4MeasurementId         String?  @map("ga4_measurement_id")
+  googleAdsId              String?  @map("google_ads_id")
+  googleAdsConversionLabel String?  @map("google_ads_conversion_label")
+  metaPixelId              String?  @map("meta_pixel_id")
+  /// Nome do secret no servidor — NUNCA o token em si
+  metaAccessTokenSecretName String? @map("meta_access_token_secret_name")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  leads QualificationLead[]
+
+  @@index([active])
+  @@map("diagnostic_page_config")
+}
+
+model DiagnosticFlow {
+  id          String    @id @default(uuid()) @db.Uuid
+  version     Int
+  name        String    @default("default")
+  definition  Json
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name, version])
+  @@map("diagnostic_flows")
+}
+
+model DiagnosticOffer {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  price       Decimal  @db.Decimal(10, 2)
+  currency    String   @default("BRL")
+  features    Json     @default("[]")
+  checkoutUrl String   @map("checkout_url")
+  rule        Json     @default("{}")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("diagnostic_offers")
+}
+
+model DeliveryLog {
+  id         String         @id @default(uuid()) @db.Uuid
+  leadId     String         @map("lead_id") @db.Uuid
+  destination String
+  eventName  String         @map("event_name")
+  eventId    String         @map("event_id")
+  status     DeliveryStatus @default(pending)
+  attempts   Int            @default(0)
+  lastError  String?        @map("last_error")
+  response   Json?
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  lead QualificationLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, destination, eventName])
+  @@index([status])
+  @@map("delivery_logs")
+}

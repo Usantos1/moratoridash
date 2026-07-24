@@ -1,0 +1,28 @@
+{
+  "name": "muratori-dash",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Muratori Dash — sistema operacional da agência Muratori",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @muratori/api",
+    "dev:api": "npm run dev -w @muratori/api",
+    "build": "npm run build -w @muratori/api",
+    "start": "npm run start -w @muratori/api",
+    "db:generate": "npm run generate -w @muratori/database",
+    "db:migrate": "npm run migrate:dev -w @muratori/database --",
+    "db:migrate:deploy": "npm run migrate:deploy -w @muratori/database",
+    "db:push": "npm run push -w @muratori/database",
+    "db:studio": "npm run studio -w @muratori/database",
+    "db:seed": "npm run seed -w @muratori/database",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f postgres"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
