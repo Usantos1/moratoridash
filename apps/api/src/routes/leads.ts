@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { prisma } from "@muratori/database";
+import { prisma, type Prisma } from "@muratori/database";
 
 const upsertLeadSchema = z.object({
   id: z.string().uuid().optional(),
@@ -131,7 +131,7 @@ export const leadsRoutes: FastifyPluginAsync = async (app) => {
           revenueLevel: data.revenueLevel ?? undefined,
           responseTime: data.responseTime ?? undefined,
           additionalInfo: data.additionalInfo ?? undefined,
-          answers: data.answers ?? undefined,
+          answers: (data.answers as Prisma.InputJsonValue | undefined) ?? undefined,
           // Atribuição: só preenche se ainda estiver vazia (first touch)
           sourcePage: data.sourcePage ?? undefined,
         },
@@ -151,7 +151,7 @@ export const leadsRoutes: FastifyPluginAsync = async (app) => {
         revenueLevel: data.revenueLevel ?? undefined,
         responseTime: data.responseTime ?? undefined,
         additionalInfo: data.additionalInfo ?? undefined,
-        answers: data.answers ?? {},
+        answers: (data.answers as Prisma.InputJsonValue | undefined) ?? {},
         sourcePage: data.sourcePage ?? undefined,
         landingUrl: data.landingUrl ?? undefined,
         referrer: data.referrer ?? undefined,

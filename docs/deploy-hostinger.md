@@ -64,35 +64,49 @@ psql "postgresql://muratori:TROQUE_SENHA_FORTE_AQUI@127.0.0.1:5432/muratori_dash
 ```bash
 mkdir -p /var/www
 cd /var/www
-git clone SEU_REPO muratori
+git clone https://github.com/Usantos1/moratoridash.git muratori
 cd muratori
 npm install
 ```
 
 ## 6. Ambiente de produção
 
+Crie o `.env` na raiz (sem nano):
+
 ```bash
-cp .env.example .env
-nano .env
-```
+cd /var/www/muratori
 
-Ajuste no mínimo:
-
-```env
+cat > .env <<'EOF'
 NODE_ENV=production
 API_HOST=127.0.0.1
 API_PORT=3340
-CORS_ORIGIN=https://seudominio.com
-DATABASE_URL=postgresql://muratori:TROQUE_SENHA_FORTE_AQUI@127.0.0.1:5432/muratori_dash?schema=public
+CORS_ORIGIN=https://app.muratorimkt.com.br
+DATABASE_URL=postgresql://muratori:SUA_SENHA_URL_ENCODED@127.0.0.1:5432/muratori_dash?schema=public
 JWT_SECRET=gere-um-secret-longo-aleatorio-aqui
-ADMIN_EMAIL=seu@email.com
+ADMIN_EMAIL=time@muratorimkt.com.br
 ADMIN_PASSWORD=SenhaAdminForte!
+EOF
 ```
+
+> **Importante:** se a senha do Postgres tiver caracteres especiais (`&`, `;`, `@`, `#`, `%`, etc.), ela **precisa ir URL-encoded** dentro do `DATABASE_URL`.  
+> Ex.: `&` → `%26` · `;` → `%3B` · `@` → `%40` · `#` → `%23`
+>
+> **Nunca** cole senhas reais neste arquivo de documentação nem no Git.
 
 ## 7. Migrations + seed
 
+O Prisma lê o `.env` da raiz via `dotenv-cli`. Rode:
+
 ```bash
 npm run db:generate
+npm run db:migrate:deploy
+npm run db:seed
+```
+
+Se ainda der `DATABASE_URL` not found (versão antiga do repo sem dotenv-cli), force o env:
+
+```bash
+set -a && . ./.env && set +a
 npm run db:migrate:deploy
 npm run db:seed
 ```
