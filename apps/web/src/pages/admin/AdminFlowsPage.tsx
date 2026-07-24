@@ -1,38 +1,32 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { adminApi } from "../../lib/admin-api";
 import {
-  FlowVisualEditor,
+  FlowBuilderWorkspace,
   flowToJson,
   parseFlowJson,
-} from "../../components/admin/FlowVisualEditor";
+} from "../../components/admin/FlowBuilderWorkspace";
 import type { FlowDefinition } from "../../lib/qualification/flow-runtime";
 import { normalizeFlowDefinition } from "../../lib/qualification/flow-runtime";
-import {
-  AdminBadge,
-  AdminButton,
-  AdminPageHeader,
-  AdminPanel,
-  AdminTextarea,
-} from "../../components/admin/ui";
-
-type Mode = "visual" | "json";
+import { AdminBadge, AdminButton } from "../../components/admin/ui";
+import { PageHeaderPremium } from "../../components/admin/PageHeaderPremium";
 
 export function AdminFlowsPage() {
   const [flows, setFlows] = useState<Array<Record<string, unknown>>>([]);
   const [definition, setDefinition] = useState<FlowDefinition | null>(null);
   const [json, setJson] = useState("");
-  const [mode, setMode] = useState<Mode>("visual");
-  const [selectedKey, setSelectedKey] = useState<string | null>("name");
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
 
-  function applyDefinition(def: FlowDefinition) {
+  const live = flows.find((f) => f.publishedAt);
+  const draftOnly = !live && flows.length > 0;
+
+  function applyDefinition(def: FlowDefinition, markDirty = false) {
     const normalized = normalizeFlowDefinition(def);
     setDefinition(normalized);
     setJson(flowToJson(normalized));
-    if (!normalized.steps.find((s) => s.key === selectedKey)) {
-      setSelectedKey(normalized.steps[0]?.key ?? null);
-    }
+    setDirty(markDirty);
   }
 
   async function load() {
@@ -40,41 +34,26 @@ export function AdminFlowsPage() {
     setFlows(items);
     const published = items.find((f) => f.publishedAt) || items[0];
     if (published?.definition) {
-      applyDefinition(normalizeFlowDefinition(published.definition));
+      applyDefinition(normalizeFlowDefinition(published.definition), false);
     }
   }
 
   useEffect(() => {
     void load().catch((e) => toast.error(e.message));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function syncFromJson(): FlowDefinition | null {
-    const parsed = parseFlowJson(json);
-    if (parsed.ok === false) {
-      toast.error(parsed.error);
-      return null;
-    }
-    applyDefinition(parsed.value);
-    return parsed.value;
-  }
-
-  function currentDefinition(): FlowDefinition | null {
-    if (mode === "json") return syncFromJson();
-    if (!definition) {
-      toast.error("Nenhum fluxo carregado");
-      return null;
-    }
-    return definition;
-  }
-
   async function save(publish: boolean) {
-    const def = currentDefinition();
-    if (!def) return;
+    const fromJson = parseFlowJson(json);
+    const def = fromJson.ok ? fromJson.value : definition;
+    if (!def) {
+      toast.error(fromJson.ok === false ? fromJson.error : "Nenhum fluxo");
+      return;
+    }
     setSaving(true);
     try {
       await adminApi.saveFlow({ definition: def, publish });
       toast.success(publish ? "Fluxo publicado" : "Rascunho salvo");
+      setDirty(false);
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar");
@@ -83,160 +62,84 @@ export function AdminFlowsPage() {
     }
   }
 
-  function switchMode(next: Mode) {
-    if (next === mode) return;
-    if (next === "json" && definition) {
-      setJson(flowToJson(definition));
-    }
-    if (next === "visual") {
-      const parsed = parseFlowJson(json);
-      if (parsed.ok === false) {
-        toast.error(`Corrija o JSON antes de voltar ao visual: ${parsed.error}`);
-        return;
-      }
-      applyDefinition(parsed.value);
-    }
-    setMode(next);
+  if (!definition) {
+    return (
+      <div className="rounded-[var(--radius)] border border-border/70 bg-card p-8 text-sm text-muted-foreground shadow-[var(--shadow-surface-sm)]">
+        Carregando builder…
+      </div>
+    );
   }
 
+  const stepCount = definition.steps?.length || 0;
+  const title = definition.name && definition.name !== "default"
+    ? definition.name
+    : "Diagnóstico agência";
+
   return (
-    <div className="space-y-8">
-      <AdminPageHeader
-        title="Fluxo do diagnóstico"
-        description="Edite os passos do chat visualmente. O público lê a versão publicada em tempo real."
+    <div className="space-y-5">
+      <PageHeaderPremium
+        eyebrow="Formulário inteligente"
+        title={title}
+        description="Monte o fluxo conversacional bloco a bloco."
         actions={
-          <div className="flex overflow-hidden border border-border">
-            <button
-              type="button"
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wide transition ${
-                mode === "visual"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => switchMode("visual")}
+          <div className="flex flex-wrap items-center gap-2">
+            <AdminBadge tone={live ? "live" : draftOnly ? "warn" : "neutral"}>
+              {live ? "Publicado" : "Rascunho"}
+            </AdminBadge>
+            <span className="text-xs font-medium text-muted-foreground">
+              {stepCount} etapas
+            </span>
+            {dirty && <AdminBadge tone="warn">Alterado</AdminBadge>}
+            <Link
+              to="/admin"
+              className="rounded-full border border-border/80 bg-card px-4 py-2.5 text-sm font-semibold text-foreground hover:border-primary/35"
             >
-              Visual
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wide transition ${
-                mode === "json"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => switchMode("json")}
+              Voltar
+            </Link>
+            <AdminButton
+              variant="ghost"
+              disabled={saving}
+              onClick={() => void save(false)}
             >
-              JSON
-            </button>
+              Salvar
+            </AdminButton>
+            <AdminButton disabled={saving} onClick={() => void save(true)}>
+              Publicar
+            </AdminButton>
           </div>
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_260px]">
-        <div className="min-w-0">
-          {mode === "visual" && definition ? (
-            <FlowVisualEditor
-              value={definition}
-              onChange={(next) => {
-                setDefinition(next);
-                setJson(flowToJson(next));
-              }}
-              selectedKey={selectedKey}
-              onSelectKey={setSelectedKey}
-            />
-          ) : mode === "visual" && !definition ? (
-            <AdminPanel>
-              <p className="text-sm text-muted-foreground">Carregando fluxo…</p>
-            </AdminPanel>
-          ) : (
-            <AdminPanel className="!p-0 overflow-hidden">
-              <AdminTextarea
-                className="min-h-[560px] resize-y rounded-none border-0 bg-muted/60 p-5 font-mono text-xs leading-relaxed focus:border-0"
-                value={json}
-                onChange={(e) => setJson(e.target.value)}
-                spellCheck={false}
-              />
-            </AdminPanel>
-          )}
-        </div>
+      <FlowBuilderWorkspace
+        value={definition}
+        json={json}
+        onJsonChange={(raw) => {
+          setJson(raw);
+          setDirty(true);
+          const parsed = parseFlowJson(raw);
+          if (parsed.ok) setDefinition(parsed.value);
+        }}
+        onChange={(next) => {
+          applyDefinition(next, true);
+        }}
+      />
 
-        <div className="space-y-3">
-          <AdminButton
-            disabled={saving || !definition}
-            className="w-full !py-3"
-            onClick={() => void save(true)}
-          >
-            Publicar nova versão
-          </AdminButton>
-          <AdminButton
-            variant="ghost"
-            disabled={saving || !definition}
-            className="w-full !py-3"
-            onClick={() => void save(false)}
-          >
-            Salvar rascunho
-          </AdminButton>
-
-          {mode === "json" && (
-            <AdminButton
-              variant="ghost"
-              className="w-full !py-2 text-xs"
-              onClick={() => {
-                const parsed = syncFromJson();
-                if (parsed) toast.success("JSON validado");
-              }}
+      {flows.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">Versões:</span>
+          {flows.map((f) => (
+            <button
+              key={String(f.id)}
+              type="button"
+              className="rounded-full border border-border/60 bg-card px-2.5 py-1 hover:border-primary/40 hover:text-primary"
+              onClick={() => applyDefinition(normalizeFlowDefinition(f.definition), false)}
             >
-              Validar JSON
-            </AdminButton>
-          )}
-
-          <AdminPanel title="Versões" className="!p-4">
-            <ul className="space-y-2">
-              {flows.map((f) => (
-                <li
-                  key={String(f.id)}
-                  className="flex items-center justify-between gap-2 border-b border-white/[0.05] pb-2 last:border-0 last:pb-0"
-                >
-                  <button
-                    type="button"
-                    className="text-left text-sm hover:text-primary"
-                    onClick={() => {
-                      applyDefinition(normalizeFlowDefinition(f.definition));
-                      setMode("visual");
-                    }}
-                  >
-                    <span className="font-semibold">v{String(f.version)}</span>
-                    <span className="ml-2">
-                      {f.publishedAt ? (
-                        <AdminBadge tone="live">Live</AdminBadge>
-                      ) : (
-                        <AdminBadge>Draft</AdminBadge>
-                      )}
-                    </span>
-                  </button>
-                  {!f.publishedAt && (
-                    <button
-                      type="button"
-                      className="text-xs font-bold text-primary"
-                      onClick={async () => {
-                        await adminApi.publishFlow(String(f.id));
-                        toast.success("Publicado");
-                        void load();
-                      }}
-                    >
-                      Publish
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </AdminPanel>
-
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            Dica: altere o texto de um passo, publique e abra /diagnostico — a mudança vale na hora.
-          </p>
+              v{String(f.version)}
+              {f.publishedAt ? " · live" : " · draft"}
+            </button>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
