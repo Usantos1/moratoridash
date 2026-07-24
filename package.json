@@ -14,6 +14,8 @@
     "build": "npm run build -w @muratori/database && npm run build -w @muratori/api && npm run build -w @muratori/web",
     "build:api": "npm run build -w @muratori/api",
     "build:web": "npm run build -w @muratori/web",
+    "postinstall": "npm run db:generate",
+    "install:prod-build": "npm install --include=dev",
     "start": "npm run start -w @muratori/api",
     "db:generate": "npm run generate -w @muratori/database",
     "db:migrate": "npm run migrate:dev -w @muratori/database --",

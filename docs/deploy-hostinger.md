@@ -186,14 +186,17 @@ Depois: `pm2 restart muratori-api`
 
 ```bash
 cd /var/www/muratori
-git pull
-npm install
-npm run db:generate
-npm run db:migrate:deploy
+git fetch origin
+git reset --hard origin/main
+
+# Importante: com NODE_ENV=production o npm pula devDeps.
+# Use --include=dev OU deixe as deps de build no package do web.
+unset NODE_ENV
+npm install --include=dev
+set -a && . ./.env && set +a
+
 npm run build
-pm2 restart muratori-api
-# se o Nginx serve o SPA:
-# (build já gera apps/web/dist)
+pm2 restart muratori-api --update-env
 ```
 
 ## Backup do Postgres
