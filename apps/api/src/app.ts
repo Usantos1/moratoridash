@@ -9,6 +9,8 @@ import { leadsExtraRoutes } from "./routes/leads-extra";
 import { authRoutes } from "./routes/auth";
 import { adminRoutes } from "./routes/admin";
 import { settingsAdminRoutes, settingsPublicRoutes } from "./routes/settings";
+import { smartFormsAdminRoutes } from "./smart-forms/admin-routes";
+import { smartFormsPublicRoutes } from "./smart-forms/public-routes";
 
 export async function buildApp() {
   const app = Fastify({
@@ -35,6 +37,8 @@ export async function buildApp() {
   await app.register(settingsPublicRoutes, { prefix: "/api" });
   await app.register(adminRoutes, { prefix: "/api" });
   await app.register(settingsAdminRoutes, { prefix: "/api" });
+  await app.register(smartFormsAdminRoutes, { prefix: "/api" });
+  await app.register(smartFormsPublicRoutes, { prefix: "/api" });
 
   app.addHook("onClose", async () => {
     await prisma.$disconnect();

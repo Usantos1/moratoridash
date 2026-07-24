@@ -142,6 +142,65 @@ async function main() {
     });
   }
 
+  const emptySmartDef = {
+    schemaVersion: 1,
+    startNodeId: "welcome",
+    nodes: [
+      {
+        id: "welcome",
+        type: "message",
+        title: "Olá!",
+        description:
+          "Vamos fazer um diagnóstico rápido para entender melhor o seu perfil.",
+      },
+      {
+        id: "name",
+        type: "text",
+        title: "Qual é o seu nome?",
+        placeholder: "Seu nome completo",
+        required: true,
+        mapTo: "fullName",
+      },
+      {
+        id: "thanks",
+        type: "confirmation",
+        title: "Obrigado!",
+        description: "Recebemos suas respostas. Em breve entraremos em contato.",
+      },
+    ],
+    edges: [
+      { id: "e1", from: "welcome", to: "name" },
+      { id: "e2", from: "name", to: "thanks" },
+    ],
+  };
+
+  const existingTpl = await prisma.smartFormTemplate.findFirst({
+    where: { organizationId: null, slug: "diagnostico-basico" },
+  });
+  if (existingTpl) {
+    await prisma.smartFormTemplate.update({
+      where: { id: existingTpl.id },
+      data: {
+        definition: emptySmartDef,
+        isActive: true,
+        name: "Diagnóstico básico",
+      },
+    });
+  } else {
+    await prisma.smartFormTemplate.create({
+      data: {
+        organizationId: null,
+        name: "Diagnóstico básico",
+        slug: "diagnostico-basico",
+        category: "lead",
+        definition: emptySmartDef,
+        settings: {},
+        isActive: true,
+        sortOrder: 0,
+      },
+    });
+  }
+
   console.log("✅ Seed Muratori Dash concluído");
   console.log(`   Admin: ${adminEmail}`);
 }

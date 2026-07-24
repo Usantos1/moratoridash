@@ -228,3 +228,241 @@ model DeliveryLog {
   @@index([status])
   @@map("delivery_logs")
 }
+
+// ---------------------------------------------------------------------------
+// Smart Forms (contrato Ativadash → Muratori)
+// ---------------------------------------------------------------------------
+
+enum SmartFormStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SmartFormLeadTemperature {
+  COLD
+  WARM
+  HOT
+  VERY_HOT
+}
+
+enum SmartFormLeadStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+  DISQUALIFIED
+}
+
+enum SmartFormDomainStatus {
+  pending_dns
+  pending_ssl
+  active
+  error
+}
+
+model SmartForm {
+  id                 String          @id @default(cuid())
+  organizationId     String          @default("muratori") @map("organization_id")
+  name               String          @db.VarChar(160)
+  slug               String          @db.VarChar(80)
+  publicSlug         String          @unique @map("public_slug") @db.VarChar(80)
+  status             SmartFormStatus @default(DRAFT)
+  description        String?         @db.Text
+  draftDefinition    Json            @default("{}") @map("draft_definition")
+  publishedVersionId String?         @unique @map("published_version_id")
+  scoreColdMax       Int             @default(24) @map("score_cold_max")
+  scoreWarmMax       Int             @default(49) @map("score_warm_max")
+  scoreHotMax        Int             @default(74) @map("score_hot_max")
+  aiSystemPrompt     String?         @map("ai_system_prompt") @db.Text
+  aiEnabled          Boolean         @default(true) @map("ai_enabled")
+  crmSyncEnabled     Boolean         @default(true) @map("crm_sync_enabled")
+  settings           Json            @default("{}")
+  createdByUserId    String?         @map("created_by_user_id")
+  updatedByUserId    String?         @map("updated_by_user_id")
+  publishedAt        DateTime?       @map("published_at")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+  deletedAt          DateTime?       @map("deleted_at")
+
+  publishedVersion SmartFormVersion?  @relation("PublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  versions         SmartFormVersion[] @relation("FormVersions")
+  sessions         SmartFormSession[]
+  leads            SmartFormLead[]
+  domains          SmartFormDomain[]
+  analyticsDaily   SmartFormAnalyticsDaily[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, status, deletedAt])
+  @@map("smart_forms")
+}
+
+model SmartFormVersion {
+  id                String   @id @default(cuid())
+  formId            String   @map("form_id")
+  versionNumber     Int      @map("version_number")
+  definition        Json
+  publishedByUserId String?  @map("published_by_user_id")
+  publishedAt       DateTime @default(now()) @map("published_at")
+  note              String?  @db.VarChar(240)
+
+  form               SmartForm  @relation("FormVersions", fields: [formId], references: [id], onDelete: Cascade)
+  publishedForForm   SmartForm? @relation("PublishedVersion")
+
+  @@unique([formId, versionNumber])
+  @@index([formId])
+  @@map("smart_form_versions")
+}
+
+model SmartFormSession {
+  id                    String              @id @default(cuid())
+  formId                String              @map("form_id")
+  sessionToken          String              @unique @map("session_token") @db.VarChar(64)
+  status                SmartFormLeadStatus @default(IN_PROGRESS)
+  currentNodeId         String?             @map("current_node_id") @db.VarChar(64)
+  answers               Json                @default("{}")
+  score                 Int                 @default(0)
+  tags                  String[]            @default([])
+  utmSource             String?             @map("utm_source")
+  utmMedium             String?             @map("utm_medium")
+  utmCampaign           String?             @map("utm_campaign")
+  utmTerm               String?             @map("utm_term")
+  utmContent            String?             @map("utm_content")
+  gclid                 String?
+  fbclid                String?
+  ttclid                String?
+  referrer              String?             @db.Text
+  landingPage           String?             @map("landing_page") @db.Text
+  ipAddress             String?             @map("ip_address")
+  userAgent             String?             @map("user_agent") @db.Text
+  deviceType            String?             @map("device_type") @db.VarChar(40)
+  osName                String?             @map("os_name") @db.VarChar(80)
+  browserName           String?             @map("browser_name") @db.VarChar(80)
+  geoCity               String?             @map("geo_city")
+  geoState              String?             @map("geo_state")
+  geoCountry            String?             @map("geo_country")
+  visitorKey            String?             @map("visitor_key") @db.VarChar(80)
+  completionRedirectUrl String?             @map("completion_redirect_url") @db.Text
+  startedAt             DateTime            @default(now()) @map("started_at")
+  lastActivityAt        DateTime            @default(now()) @map("last_activity_at")
+  completedAt           DateTime?           @map("completed_at")
+  abandonedAt           DateTime?           @map("abandoned_at")
+
+  form SmartForm      @relation(fields: [formId], references: [id], onDelete: Cascade)
+  lead SmartFormLead?
+
+  @@index([formId, status])
+  @@index([visitorKey])
+  @@map("smart_form_sessions")
+}
+
+model SmartFormLead {
+  id              String                   @id @default(cuid())
+  formId          String                   @map("form_id")
+  sessionId       String                   @unique @map("session_id")
+  status          SmartFormLeadStatus      @default(COMPLETED)
+  temperature     SmartFormLeadTemperature @default(COLD)
+  score           Int                      @default(0)
+  tags            String[]                 @default([])
+  fullName        String?                  @map("full_name") @db.VarChar(200)
+  email           String?                  @db.VarChar(320)
+  phone           String?                  @db.VarChar(32)
+  companyName     String?                  @map("company_name") @db.VarChar(200)
+  customFields    Json                     @default("{}") @map("custom_fields")
+  answers         Json                     @default("{}")
+  aiSummary       Json?                    @map("ai_summary")
+  aiProcessedAt   DateTime?                @map("ai_processed_at")
+  aiError         String?                  @map("ai_error") @db.Text
+  utmSource       String?                  @map("utm_source")
+  utmMedium       String?                  @map("utm_medium")
+  utmCampaign     String?                  @map("utm_campaign")
+  utmTerm         String?                  @map("utm_term")
+  utmContent      String?                  @map("utm_content")
+  gclid           String?
+  fbclid          String?
+  ttclid          String?
+  referrer        String?                  @db.Text
+  landingPage     String?                  @map("landing_page") @db.Text
+  crmContactId    String?                  @map("crm_contact_id")
+  crmSyncedAt     DateTime?                @map("crm_synced_at")
+  crmSyncError    String?                  @map("crm_sync_error") @db.Text
+  webhookSentAt   DateTime?                @map("webhook_sent_at")
+  createdAt       DateTime                 @default(now()) @map("created_at")
+  updatedAt       DateTime                 @updatedAt @map("updated_at")
+
+  form   SmartForm            @relation(fields: [formId], references: [id], onDelete: Cascade)
+  session SmartFormSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  events  SmartFormLeadEvent[]
+
+  @@index([formId, createdAt(sort: Desc)])
+  @@index([email])
+  @@index([phone])
+  @@index([temperature])
+  @@map("smart_form_leads")
+}
+
+model SmartFormLeadEvent {
+  id        String   @id @default(cuid())
+  leadId    String   @map("lead_id")
+  eventType String   @map("event_type") @db.VarChar(40)
+  eventName String   @map("event_name") @db.VarChar(120)
+  nodeId    String?  @map("node_id") @db.VarChar(64)
+  payload   Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lead SmartFormLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, createdAt(sort: Desc)])
+  @@map("smart_form_lead_events")
+}
+
+model SmartFormTemplate {
+  id             String   @id @default(cuid())
+  organizationId String?  @map("organization_id")
+  name           String   @db.VarChar(160)
+  slug           String   @db.VarChar(80)
+  category       String?  @db.VarChar(80)
+  definition     Json
+  settings       Json     @default("{}")
+  isActive       Boolean  @default(true) @map("is_active")
+  sortOrder      Int      @default(0) @map("sort_order")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, slug])
+  @@index([isActive, sortOrder])
+  @@map("smart_form_templates")
+}
+
+model SmartFormDomain {
+  id        String                @id @default(cuid())
+  hostname  String                @unique @db.VarChar(255)
+  status    SmartFormDomainStatus @default(pending_dns)
+  formId    String?               @map("form_id")
+  createdAt DateTime              @default(now()) @map("created_at")
+  updatedAt DateTime              @updatedAt @map("updated_at")
+
+  form SmartForm? @relation(fields: [formId], references: [id], onDelete: SetNull)
+
+  @@index([formId])
+  @@map("smart_form_domains")
+}
+
+model SmartFormAnalyticsDaily {
+  id            String   @id @default(cuid())
+  formId        String   @map("form_id")
+  day           DateTime @db.Date
+  visitors      Int      @default(0)
+  started       Int      @default(0)
+  completed     Int      @default(0)
+  abandoned     Int      @default(0)
+  qualified     Int      @default(0)
+  disqualified  Int      @default(0)
+  breakdowns    Json     @default("{}")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  form SmartForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@unique([formId, day])
+  @@map("smart_form_analytics_daily")
+}
