@@ -70,8 +70,8 @@ Health checks:
 |------|--------|
 | **1** | Base Prisma + Postgres + API + health + autosave de leads |
 | **2 (agora)** | Formulário diagnóstico conversacional (chat WhatsApp) + página `/diagnostico` |
-| **3** | Painel admin + auth + configs de página |
-| **4** | Tracking, Meta/Google CAPI, pipeline de entrega |
+| **3 (agora)** | Painel admin + auth + configs + entregas |
+| **4** | Meta/Google CAPI completo + pixels no front |
 | **5** | Flow builder + onboarding da marca |
 
 ## Produção (Hostinger KVM2)

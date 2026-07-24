@@ -1,6 +1,8 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { prisma } from "@muratori/database";
+import { sendInternalAlert } from "../services/notify";
+import { enqueueDelivery } from "../services/delivery";
 
 const completeSchema = z.object({
   id: z.string().uuid(),
@@ -82,6 +84,42 @@ export const leadsExtraRoutes: FastifyPluginAsync = async (app) => {
           sourcePage: lead.sourcePage ?? parsed.data.sourcePage ?? undefined,
         },
       });
+
+      // Alertas e pipeline — não bloqueiam resposta
+      void sendInternalAlert({
+        event: "lead_completed",
+        leadId: updated.id,
+        name: updated.name,
+        email: updated.email,
+        phone: updated.phone,
+        companyName: updated.companyName,
+        attendants: updated.numberOfAttendants,
+        clientsPerDay: updated.clientsPerDay,
+        niches: updated.niches,
+        sourcePage: updated.sourcePage,
+        path: parsed.data.path,
+        isQualified: qualified,
+      });
+
+      void enqueueDelivery({
+        leadId: updated.id,
+        destination: "internal_webhook",
+        eventName: "LeadCompleted",
+        payload: { path: parsed.data.path, isQualified: qualified },
+      });
+
+      if (qualified) {
+        void enqueueDelivery({
+          leadId: updated.id,
+          destination: "meta_capi",
+          eventName: "QualifiedLead",
+        });
+        void enqueueDelivery({
+          leadId: updated.id,
+          destination: "google_ads",
+          eventName: "QualifiedLead",
+        });
+      }
 
       return {
         id: updated.id,

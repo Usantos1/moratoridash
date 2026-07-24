@@ -6,6 +6,8 @@ import { env } from "./config/env";
 import { healthRoutes } from "./routes/health";
 import { leadsRoutes } from "./routes/leads";
 import { leadsExtraRoutes } from "./routes/leads-extra";
+import { authRoutes } from "./routes/auth";
+import { adminRoutes } from "./routes/admin";
 
 export async function buildApp() {
   const app = Fastify({
@@ -26,8 +28,10 @@ export async function buildApp() {
   app.decorate("prisma", prisma);
 
   await app.register(healthRoutes);
+  await app.register(authRoutes, { prefix: "/api" });
   await app.register(leadsRoutes, { prefix: "/api" });
   await app.register(leadsExtraRoutes, { prefix: "/api" });
+  await app.register(adminRoutes, { prefix: "/api" });
 
   app.addHook("onClose", async () => {
     await prisma.$disconnect();

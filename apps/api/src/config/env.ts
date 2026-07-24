@@ -38,7 +38,8 @@ const envSchema = z.object({
   API_PORT: z.coerce.number().default(3340),
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
   DATABASE_URL: z.string().min(1),
-  JWT_SECRET: z.string().min(16).optional(),
+  JWT_SECRET: z.string().min(16).default("muratori-dev-secret-change-me!!"),
+  INTERNAL_WEBHOOK_URL: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
