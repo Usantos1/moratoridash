@@ -407,12 +407,7 @@ export async function answerSession(
   }
 
   let nextId = resolveNextNodeId(definition, nodeId, validated.value, answers, score, tags);
-  nextId = advancePastDisplayNodes(definition, nextId, answers, score, tags);
-
-  const nextNode = findNode(definition, nextId);
-  if (nextNode && isTerminal(nextNode.type) && nextNode.type === "redirect") {
-    // stay on terminal for client to show, then complete on answer/auto
-  }
+  // Não pula `message` aqui — o client auto-avança display-only para mostrar o transcript.
 
   const updated = await prisma.smartFormSession.update({
     where: { id: session.id },
@@ -425,17 +420,7 @@ export async function answerSession(
     },
   });
 
-  if (nextNode && isTerminal(nextNode.type)) {
-    // Auto-complete when landing on terminal after advance (message→confirmation)
-    // Keep current on terminal; client submits display-only or we complete now for confirmation
-    if (nextNode.type === "confirmation" || nextNode.type === "redirect") {
-      // Leave as current so client can show confirmation; auto-complete confirmation without answer
-      return completeSession(updated.id, nextNode.id);
-    }
-  }
-
   if (!nextId) {
-    // no next → treat as complete without terminal
     return completeSession(updated.id, nodeId);
   }
 

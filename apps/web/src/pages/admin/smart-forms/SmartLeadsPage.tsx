@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Download, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getAdminToken } from "../../../lib/admin-api";
@@ -162,11 +163,16 @@ export function SmartLeadsPage() {
                   return (
                     <tr key={String(lead.id)} className="border-b border-border/40 last:border-0">
                       <td className="px-4 py-3">
-                        <div className="font-semibold text-foreground">{name}</div>
+                        <Link
+                          to={`/admin/forms/leads/${String(lead.id)}`}
+                          className="font-semibold text-foreground hover:text-primary"
+                        >
+                          {name}
+                        </Link>
                         <div className="text-xs text-muted-foreground">
                           {(lead.phone as string) || (lead.email as string) || "—"}
                         </div>
-                        <AdminBadge tone="warn" >
+                        <AdminBadge tone="warn">
                           {statusLabel(String(lead.status))}
                         </AdminBadge>
                       </td>

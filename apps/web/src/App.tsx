@@ -17,6 +17,8 @@ import { SmartTemplatesPage } from "./pages/admin/smart-forms/SmartTemplatesPage
 import { SmartLeadsPage } from "./pages/admin/smart-forms/SmartLeadsPage";
 import { SmartConfigPage } from "./pages/admin/smart-forms/SmartConfigPage";
 import { SmartFormBuilderPage } from "./pages/admin/smart-forms/SmartFormBuilderPage";
+import { SmartFormsDashboardPage } from "./pages/admin/smart-forms/SmartFormsDashboardPage";
+import { SmartLeadDetailPage } from "./pages/admin/smart-forms/SmartLeadDetailPage";
 
 export default function App() {
   return (
@@ -36,8 +38,10 @@ export default function App() {
           <Route path="flows" element={<AdminFlowsPage />} />
           <Route path="deliveries" element={<AdminDeliveriesPage />} />
           <Route path="forms" element={<SmartFormsListPage />} />
+          <Route path="forms/dashboard" element={<SmartFormsDashboardPage />} />
           <Route path="forms/templates" element={<SmartTemplatesPage />} />
           <Route path="forms/leads" element={<SmartLeadsPage />} />
+          <Route path="forms/leads/:leadId" element={<SmartLeadDetailPage />} />
           <Route path="forms/config" element={<SmartConfigPage />} />
           <Route path="forms/:id" element={<SmartFormBuilderPage />} />
         </Route>

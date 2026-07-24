@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 const ITEMS = [
-  { to: "/admin", end: true, label: "Dashboard" },
+  { to: "/admin/forms/dashboard", end: true, label: "Dashboard" },
   { to: "/admin/forms", end: true, label: "Formulários" },
   { to: "/admin/forms/templates", label: "Templates" },
   { to: "/admin/forms/leads", label: "Leads" },

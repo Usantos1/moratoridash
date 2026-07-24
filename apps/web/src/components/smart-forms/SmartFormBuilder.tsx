@@ -33,6 +33,7 @@ import {
   newNodeId,
 } from "../../lib/smart-forms/types";
 import { AdminField, AdminInput, AdminSelect, AdminTextarea } from "../admin/ui";
+import { DraftSimulator } from "./DraftSimulator";
 
 type SidebarTab = "score" | "visual" | "simulador" | "pixels" | "dominio";
 
@@ -212,7 +213,6 @@ export function SmartFormBuilder({
   }
 
   const primary = theme.primaryColor || "#128c7e";
-  const previewNodes = nodes.filter((n) => n.type !== "redirect").slice(0, 4);
 
   return (
     <div className="grid w-full items-start gap-5 xl:grid-cols-[minmax(0,1fr)_min(420px,34%)]">
@@ -768,61 +768,12 @@ export function SmartFormBuilder({
             )}
 
             {sidebar === "simulador" && (
-              <div>
-                <h3 className="text-sm font-bold">Simulador do chat</h3>
-                <p className="mt-0.5 mb-4 text-xs text-muted-foreground">
-                  Prévia do rascunho — bolhas seguem os blocos configurados.
-                </p>
-                <div className="mx-auto w-[260px] overflow-hidden rounded-[1.75rem] border-[6px] border-[#1a1a1a] bg-[#0b141a] shadow-xl">
-                  <div
-                    className="flex items-center gap-2 px-3 py-2.5 text-white"
-                    style={{ background: primary }}
-                  >
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
-                      {(form.name || "M").slice(0, 1).toUpperCase()}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="truncate text-[12px] font-semibold">{form.name}</div>
-                      <div className="text-[10px] text-white/75">
-                        {theme.headerSubtitle || "diagnóstico online"}
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className="min-h-[320px] space-y-2 p-3"
-                    style={{
-                      background:
-                        theme.backgroundColorDark ||
-                        theme.backgroundColor ||
-                        "#0b141a",
-                    }}
-                  >
-                    <div className="mx-auto w-fit rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/70">
-                      Hoje
-                    </div>
-                    {previewNodes.map((n) => (
-                      <div
-                        key={n.id}
-                        className="max-w-[92%] rounded-2xl rounded-bl-sm bg-white px-3 py-2 text-[12px] leading-snug text-[#111B21]"
-                      >
-                        {n.title || n.description || BLOCK_META[n.type]?.label}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2 border-t border-white/10 bg-[#1a1a1a] p-2">
-                    <div className="flex-1 rounded-full bg-white px-3 py-2 text-[11px] text-muted-foreground">
-                      {nodes.find((n) => n.type === "text")?.placeholder ||
-                        "Digite aqui…"}
-                    </div>
-                    <div
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-white"
-                      style={{ background: primary }}
-                    >
-                      ✈
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <DraftSimulator
+                definition={definition}
+                formName={form.name}
+                primaryColor={primary}
+                settings={settings}
+              />
             )}
 
             {sidebar === "pixels" && (

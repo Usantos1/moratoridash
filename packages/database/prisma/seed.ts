@@ -174,31 +174,192 @@ async function main() {
     ],
   };
 
-  const existingTpl = await prisma.smartFormTemplate.findFirst({
-    where: { organizationId: null, slug: "diagnostico-basico" },
-  });
-  if (existingTpl) {
-    await prisma.smartFormTemplate.update({
-      where: { id: existingTpl.id },
-      data: {
-        definition: emptySmartDef,
-        isActive: true,
-        name: "Diagnóstico básico",
+  const clinicDef = {
+    schemaVersion: 1,
+    startNodeId: "welcome",
+    nodes: [
+      {
+        id: "welcome",
+        type: "message",
+        title: "Oi! 👋 Sou a assistente da clínica.",
+        description:
+          "Vou fazer umas perguntinhas rápidas pra entender seu caso e te direcionar melhor.",
       },
-    });
-  } else {
-    await prisma.smartFormTemplate.create({
-      data: {
-        organizationId: null,
-        name: "Diagnóstico básico",
-        slug: "diagnostico-basico",
-        category: "lead",
-        definition: emptySmartDef,
-        settings: {},
-        isActive: true,
-        sortOrder: 0,
+      {
+        id: "name",
+        type: "text",
+        title: "Como posso te chamar?",
+        placeholder: "Seu primeiro nome",
+        required: true,
+        mapTo: "fullName",
       },
+      {
+        id: "phone",
+        type: "phone",
+        title: "Qual o melhor WhatsApp pra gente te retornar?",
+        placeholder: "(11) 99999-9999",
+        required: true,
+        mapTo: "phone",
+      },
+      {
+        id: "urgency",
+        type: "buttons",
+        title: "Com que urgência você precisa de atendimento?",
+        required: true,
+        options: [
+          { id: "u1", label: "Hoje / emergência", value: "hoje", scoreDelta: 40 },
+          { id: "u2", label: "Esta semana", value: "semana", scoreDelta: 25 },
+          { id: "u3", label: "Só pesquisando", value: "pesquisa", scoreDelta: 5 },
+        ],
+      },
+      {
+        id: "specialty",
+        type: "text",
+        title: "Qual especialidade ou sintoma te preocupa agora?",
+        placeholder: "Ex.: dor de garganta, check-up…",
+        required: true,
+        mapTo: "custom:sintoma",
+      },
+      {
+        id: "insurance",
+        type: "buttons",
+        title: "Você tem convênio ou prefere particular?",
+        required: true,
+        options: [
+          { id: "i1", label: "Convênio", value: "convenio", scoreDelta: 10 },
+          { id: "i2", label: "Particular", value: "particular", scoreDelta: 15 },
+        ],
+      },
+      {
+        id: "thanks",
+        type: "confirmation",
+        title: "Perfeito!",
+        description: "Recebemos suas respostas. Em breve nossa equipe entra em contato.",
+      },
+    ],
+    edges: [
+      { id: "e1", from: "welcome", to: "name" },
+      { id: "e2", from: "name", to: "phone" },
+      { id: "e3", from: "phone", to: "urgency" },
+      { id: "e4", from: "urgency", to: "specialty" },
+      { id: "e5", from: "specialty", to: "insurance" },
+      { id: "e6", from: "insurance", to: "thanks" },
+    ],
+  };
+
+  const assistDef = {
+    schemaVersion: 1,
+    startNodeId: "welcome",
+    nodes: [
+      {
+        id: "welcome",
+        type: "message",
+        title: "Olá! Assistência técnica por aqui.",
+        description: "Me conta rapidinho o que aconteceu com o aparelho.",
+      },
+      {
+        id: "name",
+        type: "text",
+        title: "Qual seu nome?",
+        required: true,
+        mapTo: "fullName",
+      },
+      {
+        id: "phone",
+        type: "phone",
+        title: "WhatsApp para orçamento:",
+        required: true,
+        mapTo: "phone",
+      },
+      {
+        id: "device",
+        type: "buttons",
+        title: "Qual aparelho?",
+        required: true,
+        options: [
+          { id: "d1", label: "iPhone", value: "iphone", scoreDelta: 20 },
+          { id: "d2", label: "Samsung", value: "samsung", scoreDelta: 15 },
+          { id: "d3", label: "Outro", value: "outro", scoreDelta: 10 },
+        ],
+      },
+      {
+        id: "issue",
+        type: "text",
+        title: "Qual o problema?",
+        placeholder: "Ex.: trocar tela, bateria…",
+        required: true,
+        mapTo: "custom:problema",
+        scoreDelta: 10,
+      },
+      {
+        id: "thanks",
+        type: "confirmation",
+        title: "Recebido!",
+        description: "Vamos montar o orçamento e te chamar no WhatsApp.",
+      },
+    ],
+    edges: [
+      { id: "e1", from: "welcome", to: "name" },
+      { id: "e2", from: "name", to: "phone" },
+      { id: "e3", from: "phone", to: "device" },
+      { id: "e4", from: "device", to: "issue" },
+      { id: "e5", from: "issue", to: "thanks" },
+    ],
+  };
+
+  const templates = [
+    {
+      slug: "diagnostico-basico",
+      name: "Diagnóstico básico",
+      category: "Marketing",
+      definition: emptySmartDef,
+      sortOrder: 0,
+    },
+    {
+      slug: "clinica-saude",
+      name: "Clínica & Saúde",
+      category: "Saúde",
+      definition: clinicDef,
+      sortOrder: 1,
+    },
+    {
+      slug: "assistencia-tecnica",
+      name: "Assistência Técnica",
+      category: "Serviços",
+      definition: assistDef,
+      sortOrder: 2,
+    },
+  ];
+
+  for (const tpl of templates) {
+    const existing = await prisma.smartFormTemplate.findFirst({
+      where: { organizationId: null, slug: tpl.slug },
     });
+    if (existing) {
+      await prisma.smartFormTemplate.update({
+        where: { id: existing.id },
+        data: {
+          name: tpl.name,
+          category: tpl.category,
+          definition: tpl.definition,
+          isActive: true,
+          sortOrder: tpl.sortOrder,
+        },
+      });
+    } else {
+      await prisma.smartFormTemplate.create({
+        data: {
+          organizationId: null,
+          name: tpl.name,
+          slug: tpl.slug,
+          category: tpl.category,
+          definition: tpl.definition,
+          settings: {},
+          isActive: true,
+          sortOrder: tpl.sortOrder,
+        },
+      });
+    }
   }
 
   console.log("✅ Seed Muratori Dash concluído");
