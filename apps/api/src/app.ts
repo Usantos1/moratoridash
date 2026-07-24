@@ -5,6 +5,7 @@ import { prisma } from "@muratori/database";
 import { env } from "./config/env";
 import { healthRoutes } from "./routes/health";
 import { leadsRoutes } from "./routes/leads";
+import { leadsExtraRoutes } from "./routes/leads-extra";
 
 export async function buildApp() {
   const app = Fastify({
@@ -26,6 +27,7 @@ export async function buildApp() {
 
   await app.register(healthRoutes);
   await app.register(leadsRoutes, { prefix: "/api" });
+  await app.register(leadsExtraRoutes, { prefix: "/api" });
 
   app.addHook("onClose", async () => {
     await prisma.$disconnect();

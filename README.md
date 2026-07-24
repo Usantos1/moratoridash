@@ -68,8 +68,8 @@ Health checks:
 
 | Fase | Escopo |
 |------|--------|
-| **1 (agora)** | Base Prisma + Postgres + API + health + autosave de leads |
-| **2** | Formulário diagnóstico conversacional (chat WhatsApp) |
+| **1** | Base Prisma + Postgres + API + health + autosave de leads |
+| **2 (agora)** | Formulário diagnóstico conversacional (chat WhatsApp) + página `/diagnostico` |
 | **3** | Painel admin + auth + configs de página |
 | **4** | Tracking, Meta/Google CAPI, pipeline de entrega |
 | **5** | Flow builder + onboarding da marca |

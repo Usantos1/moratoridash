@@ -129,17 +129,22 @@ curl http://127.0.0.1:3340/health
 curl http://127.0.0.1:3340/health/db
 ```
 
-## 9. Nginx + SSL
+## 9. Nginx + SSL (API + frontend)
+
+Com o front buildado (`apps/web/dist`), o Nginx serve o SPA e faz proxy da API:
 
 ```bash
-apt install -y nginx certbot python3-certbot-nginx
+cd /var/www/muratori
+npm run build:web
 
 cat >/etc/nginx/sites-available/muratori-api <<'NGINX'
 server {
     listen 80;
-    server_name api.seudominio.com;
+    server_name app.muratorimkt.com.br;
+    root /var/www/muratori/apps/web/dist;
+    index index.html;
 
-    location / {
+    location /api/ {
         proxy_pass http://127.0.0.1:3340;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -147,14 +152,35 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+
+    location /health {
+        proxy_pass http://127.0.0.1:3340;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
 }
 NGINX
 
-ln -s /etc/nginx/sites-available/muratori-api /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
-
-certbot --nginx -d api.seudominio.com
 ```
+
+SSL (se ainda não tiver):
+
+```bash
+certbot --nginx -d app.muratorimkt.com.br --non-interactive --agree-tos -m time@muratorimkt.com.br --redirect
+```
+
+No `.env` da API, inclua o domínio no CORS:
+
+```env
+CORS_ORIGIN=https://app.muratorimkt.com.br,http://localhost:5173
+```
+
+Depois: `pm2 restart muratori-api`
 
 ## 10. Atualizar (deploy)
 
@@ -166,6 +192,8 @@ npm run db:generate
 npm run db:migrate:deploy
 npm run build
 pm2 restart muratori-api
+# se o Nginx serve o SPA:
+# (build já gera apps/web/dist)
 ```
 
 ## Backup do Postgres

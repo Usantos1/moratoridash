@@ -8,9 +8,12 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @muratori/api",
+    "dev": "npm run dev -w @muratori/web",
     "dev:api": "npm run dev -w @muratori/api",
-    "build": "npm run build -w @muratori/api",
+    "dev:web": "npm run dev -w @muratori/web",
+    "build": "npm run build -w @muratori/database && npm run build -w @muratori/api && npm run build -w @muratori/web",
+    "build:api": "npm run build -w @muratori/api",
+    "build:web": "npm run build -w @muratori/web",
     "start": "npm run start -w @muratori/api",
     "db:generate": "npm run generate -w @muratori/database",
     "db:migrate": "npm run migrate:dev -w @muratori/database --",
