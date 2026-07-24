@@ -9,12 +9,19 @@ type Props = {
 
 export function AppShell({ user, onLogout, children }: Props) {
   return (
-    <div className="min-h-dvh bg-background bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,hsl(var(--primary)/0.07),transparent_52%)]">
+    <div className="min-h-dvh bg-[#f1f3f6]">
+      <div
+        className="pointer-events-none fixed inset-x-0 top-0 h-[42vh]"
+        style={{
+          background:
+            "radial-gradient(ellipse 120% 80% at 50% -20%, hsl(var(--primary) / 0.07), transparent 52%)",
+        }}
+      />
       <AppTopbar user={user} onLogout={onLogout} />
       <main
-        className="mx-auto w-full max-w-6xl px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-4 md:px-5"
+        className="relative mx-auto w-full max-w-[1200px] px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-4 md:px-5"
         style={{
-          paddingTop: "calc(1rem + 4.5rem + env(safe-area-inset-top))",
+          paddingTop: "calc(1.15rem + 4.5rem + env(safe-area-inset-top))",
         }}
       >
         {children}

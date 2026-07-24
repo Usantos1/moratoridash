@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { adminApi, getAdminToken, setAdminToken } from "../../lib/admin-api";
 import { AppShell } from "../../components/shell/AppShell";
-import { FormsModuleNav } from "../../components/admin/FormsModuleNav";
 
 export function AdminLayout() {
   const navigate = useNavigate();
@@ -31,10 +30,10 @@ export function AdminLayout() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-[#f1f3f6] text-muted-foreground">
         <div className="text-center">
-          <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">
-            Muratori
+          <div className="text-[15px] font-bold tracking-tight">
+            <span className="text-brand-600">MURATORI</span>{" "}
+            <span className="text-primary">DASH</span>
           </div>
-          <div className="mt-1 text-lg font-bold tracking-tight text-foreground">Dash</div>
           <p className="mt-2 text-sm">Abrindo o painel…</p>
         </div>
       </div>
@@ -49,7 +48,6 @@ export function AdminLayout() {
         navigate("/admin/login");
       }}
     >
-      <FormsModuleNav />
       <Outlet />
     </AppShell>
   );

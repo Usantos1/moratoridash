@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ChevronDown,
   GripVertical,
@@ -13,7 +13,6 @@ import type { FlowBranchRule, FlowDefinition, FlowStepDef } from "../../lib/qual
 import { normalizeFlowDefinition } from "../../lib/qualification/flow-runtime";
 import {
   AdminBadge,
-  AdminButton,
   AdminField,
   AdminInput,
   AdminSelect,
@@ -44,6 +43,11 @@ const STEP_LABELS: Record<string, string> = {
 };
 
 type SidebarTab = "score" | "visual" | "simulador" | "json";
+
+function displayName(name?: string) {
+  if (!name || name === "default") return "Diagnóstico agência";
+  return name;
+}
 
 function optionsToText(options: FlowStepDef["options"]): string {
   if (!options?.length) return "";
@@ -115,12 +119,16 @@ type Props = {
 };
 
 export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Props) {
-  const [expanded, setExpanded] = useState<string | null>(value.steps[0]?.key ?? null);
+  const [expanded, setExpanded] = useState<string | null>(null);
   const [sidebar, setSidebar] = useState<SidebarTab>("score");
-  const [formName, setFormName] = useState(value.name || "Diagnóstico agência");
+  const [formName, setFormName] = useState(displayName(value.name));
   const [formDesc, setFormDesc] = useState(
     "Monte o fluxo conversacional bloco a bloco."
   );
+
+  useEffect(() => {
+    setFormName(displayName(value.name));
+  }, [value.name]);
 
   const steps = value.steps || [];
   const branch = value.branching?.[0];
@@ -188,18 +196,16 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
   ];
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-      {/* —— Coluna principal —— */}
-      <div className="min-w-0 space-y-5">
-        {/* Identidade */}
-        <section className="rounded-[var(--radius)] border border-border/70 bg-card p-5 shadow-[var(--shadow-surface-sm)]">
+    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="min-w-0 space-y-4">
+        <section className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)]">
           <div className="grid gap-4 sm:grid-cols-2">
             <AdminField label="Nome">
               <AdminInput
                 value={formName}
                 onChange={(e) => {
                   setFormName(e.target.value);
-                  patchRoot({ name: e.target.value || "default" });
+                  patchRoot({ name: e.target.value.trim() || "Diagnóstico agência" });
                 }}
                 placeholder="Ex.: Diagnóstico agência"
               />
@@ -214,39 +220,36 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
           </div>
         </section>
 
-        {/* Fluxo conversacional */}
-        <section className="rounded-[var(--radius)] border border-border/70 bg-card p-4 shadow-[var(--shadow-surface-sm)] sm:p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-bold tracking-tight text-foreground">
-                Fluxo conversacional
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                {steps.length} etapas · clique para expandir
-              </p>
-            </div>
-            <AdminButton className="!py-2 text-xs" onClick={() => insertStep(0)}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
+        <section className="rounded-2xl border border-border/60 bg-white p-4 shadow-[var(--shadow-surface-sm)] sm:p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-[15px] font-bold tracking-tight text-foreground">
+              Fluxo conversacional
+            </h2>
+            <button
+              type="button"
+              onClick={() => insertStep(steps.length)}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-sm hover:brightness-110"
+            >
+              <Plus className="h-3.5 w-3.5" />
               Adicionar bloco
-            </AdminButton>
+            </button>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {steps.map((step, i) => {
               const open = expanded === step.key;
               const meta = typeMeta(String(step.type));
               const Icon = meta.icon;
               const mode = optionsMode(String(step.type));
-              const label = STEP_LABELS[step.key] || step.key;
 
               return (
                 <div key={step.key}>
                   {i > 0 && (
-                    <div className="flex justify-center py-1">
+                    <div className="flex justify-center py-0.5">
                       <button
                         type="button"
                         onClick={() => insertStep(i)}
-                        className="rounded-full px-3 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-primary"
+                        className="text-[11px] font-medium text-muted-foreground/80 hover:text-primary"
                       >
                         + Adicionar bloco
                       </button>
@@ -254,64 +257,71 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                   )}
 
                   <div
-                    className={`overflow-hidden rounded-2xl border transition ${
+                    className={`overflow-hidden rounded-xl border bg-white transition ${
                       open
-                        ? "border-primary/40 bg-primary/[0.03] shadow-[var(--shadow-surface-sm)]"
-                        : "border-border/70 bg-background hover:border-primary/25"
+                        ? "border-primary/35 shadow-[var(--shadow-surface-sm)]"
+                        : "border-border/55 hover:border-border"
                     }`}
                   >
-                    <div className="flex items-stretch gap-1">
-                      <div className="flex flex-col justify-center border-r border-border/50 px-1.5 text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5 pl-2 text-muted-foreground/50">
                         <button
                           type="button"
-                          className="rounded p-1 hover:bg-muted disabled:opacity-30"
+                          className="rounded p-1 hover:bg-muted hover:text-foreground disabled:opacity-25"
                           disabled={i === 0}
                           onClick={() => moveStep(step.key, -1)}
                           aria-label="Subir"
                         >
-                          ▲
+                          <span className="text-[10px]">▲</span>
                         </button>
-                        <GripVertical className="mx-auto h-4 w-4 opacity-40" />
+                        <GripVertical className="h-4 w-4" />
                         <button
                           type="button"
-                          className="rounded p-1 hover:bg-muted disabled:opacity-30"
+                          className="rounded p-1 hover:bg-muted hover:text-foreground disabled:opacity-25"
                           disabled={i === steps.length - 1}
                           onClick={() => moveStep(step.key, 1)}
                           aria-label="Descer"
                         >
-                          ▼
+                          <span className="text-[10px]">▼</span>
                         </button>
                       </div>
 
                       <button
                         type="button"
-                        className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left"
+                        className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pr-3 text-left"
                         onClick={() => setExpanded(open ? null : step.key)}
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                          <Icon className="h-4 w-4" />
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                          <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
                         </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="mb-0.5 flex items-center gap-2">
-                            <span className="font-mono text-[10px] font-semibold text-muted-foreground">
-                              {String(i + 1).padStart(2, "0")}
-                            </span>
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                              {meta.label}
-                            </span>
-                          </span>
-                          <span className="line-clamp-2 text-[14px] font-medium leading-snug text-foreground">
-                            {step.bot_text || label}
-                          </span>
+                        <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground">
+                          {step.bot_text || STEP_LABELS[step.key] || step.key}
                         </span>
-                        <span className="hidden w-36 shrink-0 sm:block">
-                          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                            Label interno
-                          </span>
-                          <span className="block truncate rounded-lg border border-border/60 bg-muted/40 px-2 py-1.5 font-mono text-xs text-foreground">
-                            {step.key}
-                          </span>
-                        </span>
+                        <input
+                          className="hidden w-32 shrink-0 rounded-lg border border-border/60 bg-[#f8f9fb] px-2 py-1.5 font-mono text-[11px] text-muted-foreground outline-none focus:border-primary sm:block"
+                          value={step.key}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            const nextKey = e.target.value
+                              .trim()
+                              .replace(/\s+/g, "_")
+                              .toLowerCase();
+                            if (
+                              !nextKey ||
+                              steps.some((s) => s.key === nextKey && s.key !== step.key)
+                            ) {
+                              return;
+                            }
+                            onChange({
+                              ...value,
+                              steps: steps.map((s) =>
+                                s.key === step.key ? { ...s, key: nextKey } : s
+                              ),
+                            });
+                            if (expanded === step.key) setExpanded(nextKey);
+                          }}
+                          aria-label="Label interno"
+                        />
                         <ChevronDown
                           className={`h-4 w-4 shrink-0 text-muted-foreground transition ${
                             open ? "rotate-180" : ""
@@ -321,7 +331,7 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                     </div>
 
                     {open && (
-                      <div className="space-y-4 border-t border-border/60 bg-card px-4 py-4 sm:px-5">
+                      <div className="space-y-3 border-t border-border/50 bg-[#fbfcfd] px-4 py-4">
                         <div className="grid gap-3 sm:grid-cols-2">
                           <AdminField label="Tipo">
                             <AdminSelect
@@ -335,43 +345,12 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                               ))}
                             </AdminSelect>
                           </AdminField>
-                          <AdminField label="Label interno (key)">
-                            <AdminInput
-                              value={step.key}
-                              onChange={(e) => {
-                                const nextKey = e.target.value
-                                  .trim()
-                                  .replace(/\s+/g, "_")
-                                  .toLowerCase();
-                                if (!nextKey || steps.some((s) => s.key === nextKey && s.key !== step.key)) {
-                                  return;
-                                }
-                                onChange({
-                                  ...value,
-                                  steps: steps.map((s) =>
-                                    s.key === step.key ? { ...s, key: nextKey } : s
-                                  ),
-                                });
-                                setExpanded(nextKey);
-                              }}
-                            />
-                          </AdminField>
-                          <AdminField label="Campo do lead (field_key)">
+                          <AdminField label="Campo do lead">
                             <AdminInput
                               value={step.field_key || ""}
                               onChange={(e) =>
                                 updateStep(step.key, {
                                   field_key: e.target.value.trim() || null,
-                                })
-                              }
-                            />
-                          </AdminField>
-                          <AdminField label="Erro (opcional)">
-                            <AdminInput
-                              value={step.error || ""}
-                              onChange={(e) =>
-                                updateStep(step.key, {
-                                  error: e.target.value || undefined,
                                 })
                               }
                             />
@@ -383,10 +362,21 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                           hint="{brand} {primeiroNome} {nome} {empresa}"
                         >
                           <AdminTextarea
-                            className="min-h-28"
+                            className="min-h-24"
                             value={step.bot_text || ""}
                             onChange={(e) =>
                               updateStep(step.key, { bot_text: e.target.value })
+                            }
+                          />
+                        </AdminField>
+
+                        <AdminField label="Erro (opcional)">
+                          <AdminInput
+                            value={step.error || ""}
+                            onChange={(e) =>
+                              updateStep(step.key, {
+                                error: e.target.value || undefined,
+                              })
                             }
                           />
                         </AdminField>
@@ -400,7 +390,7 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                             }
                           >
                             <AdminTextarea
-                              className="min-h-32 font-mono text-xs"
+                              className="min-h-28 font-mono text-xs"
                               value={optionsToText(step.options)}
                               onChange={(e) =>
                                 updateStep(step.key, {
@@ -411,7 +401,7 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                           </AdminField>
                         )}
 
-                        <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                           <label className="flex items-center gap-2 text-sm text-foreground">
                             <input
                               type="checkbox"
@@ -423,13 +413,13 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                             />
                             Obrigatório
                           </label>
-                          <AdminButton
-                            variant="danger"
-                            className="!py-2 text-xs"
+                          <button
+                            type="button"
+                            className="text-xs font-semibold text-destructive hover:underline"
                             onClick={() => removeStep(step.key)}
                           >
                             Remover bloco
-                          </AdminButton>
+                          </button>
                         </div>
                       </div>
                     )}
@@ -437,31 +427,19 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                 </div>
               );
             })}
-
-            <div className="flex justify-center pt-2">
-              <button
-                type="button"
-                onClick={() => insertStep(steps.length)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-4 py-2 text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Adicionar bloco
-              </button>
-            </div>
           </div>
         </section>
       </div>
 
-      {/* —— Sidebar —— */}
-      <aside className="space-y-3 xl:sticky xl:top-[calc(4.5rem+1rem)] xl:self-start">
-        <div className="overflow-hidden rounded-[var(--radius)] border border-border/70 bg-card shadow-[var(--shadow-surface-sm)]">
-          <div className="flex border-b border-border/60">
+      <aside className="xl:sticky xl:top-[calc(4.5rem+1rem)] xl:self-start">
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-[var(--shadow-surface-sm)]">
+          <div className="flex border-b border-border/50">
             {sidebarTabs.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setSidebar(tab.id)}
-                className={`flex-1 px-2 py-3 text-[11px] font-semibold uppercase tracking-wide transition ${
+                className={`flex-1 px-1.5 py-3 text-[11px] font-semibold uppercase tracking-wide transition ${
                   sidebar === tab.id
                     ? "border-b-2 border-primary text-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -476,8 +454,8 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
             {sidebar === "score" && (
               <div className="space-y-4">
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Branching: valores do campo abaixo vão para <strong>oferta</strong>; demais vão
-                  para WhatsApp.
+                  Valores listados seguem para <strong className="text-foreground">oferta</strong>;
+                  os demais vão para WhatsApp.
                 </p>
                 <AdminField label="Campo">
                   <AdminInput
@@ -496,7 +474,7 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                     }
                   />
                 </AdminField>
-                <AdminField label="Valores → oferta (um por linha)">
+                <AdminField label="Valores → oferta">
                   <AdminTextarea
                     className="min-h-28 font-mono text-xs"
                     value={(branch?.when?.in || []).join("\n")}
@@ -516,13 +494,13 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                   />
                 </AdminField>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-center">
-                    <div className="text-[10px] font-bold uppercase text-warning">Oferta</div>
-                    <div className="mt-1 text-xs text-foreground">then</div>
+                  <div className="rounded-xl bg-[#FFF7E8] px-3 py-3 text-center">
+                    <div className="text-[10px] font-bold uppercase text-[#B45309]">Oferta</div>
+                    <div className="mt-0.5 text-xs text-foreground">then</div>
                   </div>
-                  <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-center">
+                  <div className="rounded-xl bg-primary/10 px-3 py-3 text-center">
                     <div className="text-[10px] font-bold uppercase text-primary">WhatsApp</div>
-                    <div className="mt-1 text-xs text-foreground">else</div>
+                    <div className="mt-0.5 text-xs text-foreground">else</div>
                   </div>
                 </div>
               </div>
@@ -544,48 +522,40 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                     placeholder="{brand} · IA"
                   />
                 </AdminField>
-                <div className="rounded-xl border border-border/60 bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
-                  Cores do chat público ficam em <strong className="text-foreground">Marca</strong>{" "}
-                  (teal WhatsApp). O laranja do dashboard não entra no formulário.
-                </div>
-                <AdminBadge tone="live">Chat primary #128C7E</AdminBadge>
+                <p className="rounded-xl bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
+                  O chat público usa teal WhatsApp. Cores do formulário ficam em{" "}
+                  <strong className="text-foreground">Marca</strong>.
+                </p>
+                <AdminBadge tone="live">#128C7E</AdminBadge>
               </div>
             )}
 
             {sidebar === "simulador" && (
-              <div className="overflow-hidden rounded-2xl border border-black/10 bg-[#E5DDD5]">
+              <div className="overflow-hidden rounded-2xl border border-black/5 bg-[#E5DDD5]">
                 <div className="bg-[linear-gradient(180deg,#128C7E,#0D655B)] px-3 py-2.5 text-white">
                   <div className="text-[13px] font-semibold">Muratori · IA</div>
-                  <div className="text-[10px] text-white/70">prévia do fluxo</div>
+                  <div className="text-[10px] text-white/70">prévia</div>
                 </div>
                 <div className="space-y-2 p-3">
                   {previewBubbles.map((text, i) => (
                     <div
                       key={i}
-                      className="max-w-[90%] rounded-2xl rounded-bl-sm bg-white px-3 py-2 text-[12px] leading-snug text-[#111B21] shadow-sm"
+                      className="max-w-[92%] rounded-2xl rounded-bl-sm bg-white px-3 py-2 text-[12px] leading-snug text-[#111B21] shadow-sm"
                     >
                       {text}
                     </div>
                   ))}
-                  {!previewBubbles.length && (
-                    <p className="text-xs text-[#54656F]">Sem mensagens ainda.</p>
-                  )}
                 </div>
               </div>
             )}
 
             {sidebar === "json" && (
-              <div className="space-y-2">
-                <AdminTextarea
-                  className="min-h-[360px] font-mono text-[11px] leading-relaxed"
-                  value={json}
-                  onChange={(e) => onJsonChange(e.target.value)}
-                  spellCheck={false}
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  Edição avançada. Ao salvar, o JSON precisa ser válido.
-                </p>
-              </div>
+              <AdminTextarea
+                className="min-h-[380px] font-mono text-[11px] leading-relaxed"
+                value={json}
+                onChange={(e) => onJsonChange(e.target.value)}
+                spellCheck={false}
+              />
             )}
           </div>
         </div>

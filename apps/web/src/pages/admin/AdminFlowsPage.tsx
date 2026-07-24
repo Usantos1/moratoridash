@@ -20,7 +20,6 @@ export function AdminFlowsPage() {
   const [dirty, setDirty] = useState(false);
 
   const live = flows.find((f) => f.publishedAt);
-  const draftOnly = !live && flows.length > 0;
 
   function applyDefinition(def: FlowDefinition, markDirty = false) {
     const normalized = normalizeFlowDefinition(def);
@@ -83,13 +82,12 @@ export function AdminFlowsPage() {
         description="Monte o fluxo conversacional bloco a bloco."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <AdminBadge tone={live ? "live" : draftOnly ? "warn" : "neutral"}>
-              {live ? "Publicado" : "Rascunho"}
+            <AdminBadge tone={dirty || !live ? "warn" : "live"}>
+              {dirty || !live ? "Rascunho" : "Publicado"}
             </AdminBadge>
             <span className="text-xs font-medium text-muted-foreground">
               {stepCount} etapas
             </span>
-            {dirty && <AdminBadge tone="warn">Alterado</AdminBadge>}
             <Link
               to="/admin"
               className="rounded-full border border-border/80 bg-card px-4 py-2.5 text-sm font-semibold text-foreground hover:border-primary/35"

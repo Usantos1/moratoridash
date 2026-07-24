@@ -1,29 +1,27 @@
 import { NavLink } from "react-router-dom";
 
+/** Tabs de módulo estilo Ativa (texto, sem chips pesados) — fica no header da página */
 const ITEMS = [
   { to: "/admin", end: true, label: "Dashboard" },
-  { to: "/admin/pages", label: "Páginas" },
+  { to: "/admin/pages", label: "Formulários" },
   { to: "/admin/flows", label: "Builder" },
   { to: "/admin/leads", label: "Leads" },
-  { to: "/admin/whatsapp", label: "WhatsApp" },
-  { to: "/admin/marca", label: "Marca" },
-  { to: "/admin/deliveries", label: "Entregas" },
+  { to: "/admin/whatsapp", label: "Configurações" },
 ] as const;
 
-/** Nav interna do módulo Formulário Inteligente */
-export function FormsModuleNav() {
+export function FormsModuleNav({ className = "" }: { className?: string }) {
   return (
-    <nav className="mb-6 flex flex-wrap gap-2">
+    <nav className={`flex flex-wrap items-center gap-x-4 gap-y-1 ${className}`}>
       {ITEMS.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
           end={"end" in item ? item.end : false}
           className={({ isActive }) =>
-            `rounded-full border px-3 py-1.5 text-xs font-semibold tracking-tight transition ${
+            `text-sm font-medium transition ${
               isActive
-                ? "border-primary/45 bg-primary/12 text-primary shadow-[var(--shadow-surface-sm)]"
-                : "border-border/55 bg-card/50 text-muted-foreground hover:border-primary/25 hover:text-foreground"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
             }`
           }
         >
