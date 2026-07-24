@@ -234,7 +234,7 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
   }
 
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+    <div className="grid w-full items-start gap-5 xl:grid-cols-[minmax(0,1fr)_min(400px,32%)]">
       <div className="min-w-0 space-y-5">
         <section className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
           <h2 className="mb-4 text-[15px] font-bold tracking-tight text-foreground">
