@@ -26,7 +26,8 @@ export function AdminFlowsPage() {
       <div>
         <h1 className="font-display text-3xl font-extrabold">Fluxo do diagnóstico</h1>
         <p className="mt-1 text-sm text-white/55">
-          Editor JSON versionado (base do flow builder). Publicar não quebra rascunhos antigos.
+          O chat público lê o fluxo <strong className="text-white/80">publicado</strong> em tempo real
+          (textos, opções, ordem e branching). Edite o JSON e publique para valer.
         </p>
       </div>
 

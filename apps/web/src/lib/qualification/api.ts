@@ -51,6 +51,16 @@ export function getWhatsappConfig() {
   );
 }
 
+/** Fluxo publicado (ou preset fallback da API). */
+export function getPublishedFlow() {
+  return request<{
+    id?: string;
+    version: number;
+    definition: unknown;
+    publishedAt: string | null;
+  }>("/api/config/flow");
+}
+
 export function checkCompleted(email?: string, phone?: string) {
   const q = new URLSearchParams();
   if (email) q.set("email", email);

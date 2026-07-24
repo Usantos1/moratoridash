@@ -6,8 +6,6 @@ import {
   NICHES,
   REVENUE_OPTIONS,
   RESPONSE_OPTIONS,
-  STEPS,
-  botQuestion,
   emptyForm,
   firstName,
   responseLabel,
@@ -30,9 +28,21 @@ import {
   completeLead,
   getBrandSettings,
   getPageConfig,
+  getPublishedFlow,
   getWhatsappConfig,
   trackWhatsapp,
 } from "../../lib/qualification/api";
+import {
+  choiceOptionsForStep,
+  getNextQuestionStep,
+  getQuestionSteps,
+  normalizeFlowDefinition,
+  progressPercent,
+  renderStepBotText,
+  resolveAssistantLabel,
+  shouldShowOfferFromFlow,
+  type FlowDefinition,
+} from "../../lib/qualification/flow-runtime";
 import {
   formatPhoneMask,
   validateCompany,
@@ -100,6 +110,7 @@ const startedRef = { current: false };
 
 export function QualificationChat({ mode = "page", onClose, brandOverride }: Props) {
   const [config, setConfig] = useState<PageConfig>({ ...DEFAULT_CONFIG, ...brandOverride });
+  const [flow, setFlow] = useState<FlowDefinition | null>(null);
   const [form, setForm] = useState<FormData>(emptyForm);
   const [step, setStep] = useState<ChatStep>("name");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -128,18 +139,40 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
   const messagesRef = useRef(messages);
   const nichesRef = useRef(pendingNiches);
   const leadIdRef = useRef(leadId);
+  const flowRef = useRef<FlowDefinition | null>(null);
+  const configRef = useRef(config);
 
   formRef.current = form;
   stepRef.current = step;
   messagesRef.current = messages;
   nichesRef.current = pendingNiches;
   leadIdRef.current = leadId;
+  flowRef.current = flow;
+  configRef.current = config;
 
   const showChoices = !typing && !botBusy && !checkingDuplicate;
-  const progress = useMemo(() => {
-    const idx = STEPS.indexOf(step === "offer_ask" || step === "offer_detail" || step === "offer_done" ? "result" : step);
-    return Math.round(((Math.max(idx, 0) + 1) / STEPS.length) * 100);
-  }, [step]);
+  const questionSteps = useMemo(() => getQuestionSteps(flow), [flow]);
+  const progress = useMemo(() => progressPercent(flow, step), [flow, step]);
+  const nicheOptions = useMemo(
+    () => choiceOptionsForStep(flow, "niches").niches || [...NICHES],
+    [flow]
+  );
+  const attendantChips = useMemo(
+    () => choiceOptionsForStep(flow, "attendants").chips || [...ATTENDANT_OPTIONS],
+    [flow]
+  );
+  const clientChips = useMemo(
+    () => choiceOptionsForStep(flow, "clients").chips || [...CLIENTS_OPTIONS],
+    [flow]
+  );
+  const revenueCards = useMemo(
+    () => choiceOptionsForStep(flow, "revenue").cards || REVENUE_OPTIONS.map((o) => ({ ...o })),
+    [flow]
+  );
+  const responseCards = useMemo(
+    () => choiceOptionsForStep(flow, "response").cards || RESPONSE_OPTIONS.map((o) => ({ ...o })),
+    [flow]
+  );
 
   const statusText = checkingDuplicate
     ? "verificando..."
@@ -185,7 +218,8 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
     const ms = next === "name" ? 900 : 1400;
     await sleep(ms);
     setTyping(false);
-    const text = botQuestion(next, formData, config.brandName);
+    const brand = configRef.current.brandName;
+    const text = renderStepBotText(flowRef.current, next, formData, brand);
     setMessages((prev) => [...prev, { id: nextId(), role: "bot", text }]);
     if (["name", "email", "phone", "company", "attendants", "clients"].includes(next)) {
       setTimeout(() => inputRef.current?.focus(), 80);
@@ -231,7 +265,11 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
 
     setMessages((prev) => [
       ...prev,
-      { id: nextId(), role: "bot", text: botQuestion("result", nextForm, config.brandName) },
+      {
+        id: nextId(),
+        role: "bot",
+        text: renderStepBotText(flowRef.current, "result", nextForm, config.brandName),
+      },
       { id: nextId(), role: "report", report },
     ]);
     trackDiagnosticEvent("diagnostic_report_viewed", {
@@ -287,7 +325,8 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
 
     setPauseAutoScroll(false);
 
-    if (report.isLowRevenue) {
+    const showOffer = shouldShowOfferFromFlow(flowRef.current, nextForm);
+    if (showOffer) {
       if (id) {
         try {
           await completeLead(id, "offer_view");
@@ -331,11 +370,10 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
     }
     trackDiagnosticEvent("diagnostic_step_completed", {
       step: fromStep,
-      step_index: STEPS.indexOf(fromStep) + 1,
+      step_index: questionSteps.indexOf(fromStep) + 1,
     });
 
-    const idx = STEPS.indexOf(fromStep);
-    const next = STEPS[idx + 1];
+    const next = getNextQuestionStep(flowRef.current, fromStep);
 
     let id = leadId;
     if (["email", "phone", "company", "attendants", "niches", "clients", "revenue", "response"].includes(fromStep)) {
@@ -363,12 +401,12 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
       setCheckingDuplicate(false);
     }
 
-    if (fromStep === "response") {
+    if (!next || fromStep === "response") {
       await runResultSequence(nextForm, id);
       return;
     }
 
-    if (next) await askStep(next, nextForm);
+    await askStep(next, nextForm);
   }
 
   async function handleTextSubmit() {
@@ -557,6 +595,20 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
       installTrackingTags(tracking);
       trackDiagnosticEvent("diagnostic_page_view", { mode });
 
+      try {
+        const published = await getPublishedFlow();
+        const def = normalizeFlowDefinition(published.definition);
+        setFlow(def);
+        flowRef.current = def;
+        setConfig((c) => ({
+          ...c,
+          assistantName: resolveAssistantLabel(def, c.brandName, c.assistantName),
+          ...brandOverride,
+        }));
+      } catch {
+        // fallback: STEPS hardcoded + botQuestion
+      }
+
       const draft = loadDraft();
       if (draft) {
         setForm(draft.formData);
@@ -737,7 +789,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
         {showChoices && step === "niches" && (
           <div className="space-y-3 rounded-2xl bg-white/70 p-3">
             <div className="flex flex-wrap gap-2">
-              {NICHES.map((n) => {
+              {nicheOptions.map((n) => {
                 const on = pendingNiches.includes(n);
                 return (
                   <button
@@ -774,7 +826,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
 
         {showChoices && step === "attendants" && (
           <div className="flex flex-wrap gap-2">
-            {ATTENDANT_OPTIONS.map((o) => (
+            {attendantChips.map((o) => (
               <button
                 key={o}
                 type="button"
@@ -789,7 +841,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
 
         {showChoices && step === "clients" && (
           <div className="flex flex-wrap gap-2">
-            {CLIENTS_OPTIONS.map((o) => (
+            {clientChips.map((o) => (
               <button
                 key={o}
                 type="button"
@@ -806,7 +858,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
 
         {showChoices && step === "revenue" && (
           <div className="space-y-2">
-            {REVENUE_OPTIONS.map((o) => (
+            {revenueCards.map((o) => (
               <button
                 key={o.value}
                 type="button"
@@ -814,7 +866,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
                 className="flex w-full items-center gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50 px-3 py-3 text-left font-bold text-emerald-800 hover:bg-emerald-600 hover:text-white"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg">
-                  {o.emoji}
+                  {o.emoji || "•"}
                 </span>
                 {o.label}
               </button>
@@ -824,7 +876,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
 
         {showChoices && step === "response" && (
           <div className="space-y-2">
-            {RESPONSE_OPTIONS.map((o) => (
+            {responseCards.map((o) => (
               <button
                 key={o.value}
                 type="button"
@@ -832,7 +884,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
                 className="flex w-full items-center gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50 px-3 py-3 text-left font-bold text-emerald-800 hover:bg-emerald-600 hover:text-white"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg">
-                  {o.emoji}
+                  {o.emoji || "•"}
                 </span>
                 {o.label}
               </button>
@@ -840,7 +892,7 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
           </div>
         )}
 
-        {showChoices && step === "result" && !LOW_CHECK(form) && (
+        {showChoices && step === "result" && !shouldShowOfferFromFlow(flow, form) && (
           <button
             type="button"
             onClick={handleWhatsappCta}
@@ -942,8 +994,4 @@ export function QualificationChat({ mode = "page", onClose, brandOverride }: Pro
       )}
     </div>
   );
-}
-
-function LOW_CHECK(form: FormData) {
-  return ["de_10_25", "baixo", "ate_25k"].includes(form.revenue_level);
 }
