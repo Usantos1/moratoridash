@@ -1,38 +1,58 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { QualificationModal } from "../components/qualification/QualificationModal";
+
+const FEATURES = [
+  {
+    title: "Builder com ramificações",
+    text: "Monte o fluxo com blocos, condições e simulador no celular — publique quando estiver pronto.",
+  },
+  {
+    title: "Leads com contexto real",
+    text: "Respostas com título, UTM, dispositivo e temperatura (Quente, Morno, Frio) no mesmo painel.",
+  },
+  {
+    title: "Tracking e domínio",
+    text: "Meta Pixel, GTM, GA4, Google Ads e CAPI — mais domínio customizado no formulário.",
+  },
+] as const;
 
 const STEPS = [
   {
     n: "01",
-    title: "Conversa que qualifica",
-    text: "O lead responde em formato de chat — sem formulário frio, sem abandono na metade.",
+    title: "Escolha um template",
+    text: "Comece por um modelo do seu nicho ou do zero — Marketing, Saúde, Imóveis e mais.",
   },
   {
     n: "02",
-    title: "Diagnóstico na hora",
-    text: "A IA lê operação, faturamento e tempo de resposta e devolve um relatório claro.",
+    title: "Ajuste e publique",
+    text: "Edite perguntas, score, visual e tracking. O simulador mostra o chat antes de ir ao ar.",
   },
   {
     n: "03",
-    title: "Oferta ou WhatsApp",
-    text: "Quem cabe no plano vê o checkout. Quem precisa de conversa vai direto pro comercial.",
+    title: "O lead responde em conversa",
+    text: "No celular, o formulário parece um chat — opções, ramificações e abandono controlado.",
+  },
+  {
+    n: "04",
+    title: "Receba o lead qualificado",
+    text: "No Dash você vê contato, respostas, origem e temperatura — pronto pro comercial.",
   },
 ] as const;
 
+const NICHES = [
+  "Agência de Marketing",
+  "Clínica & Saúde",
+  "Imobiliária",
+  "Advocacia",
+  "Estética",
+  "Academia & Fitness",
+  "Consultoria",
+  "Infoproduto & Cursos",
+] as const;
+
 export function HomePage() {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setOpen(true);
-    window.addEventListener("openQualificationModal", handler);
-    return () => window.removeEventListener("openQualificationModal", handler);
-  }, []);
-
-  const openChat = () => setOpen(true);
-
   return (
-    <div className="relative min-h-[100dvh] overflow-x-hidden bg-[var(--ink)] text-[#f3f7f4]">
+    <div className="relative min-h-[100dvh] overflow-x-hidden bg-[var(--ink)] text-[#f5f0ec]">
       {/* —— HERO —— */}
       <section className="grain relative min-h-[100dvh]">
         <div className="pointer-events-none absolute inset-0">
@@ -40,166 +60,94 @@ export function HomePage() {
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(90% 70% at 85% 20%, rgba(59,24,18,0.95) 0%, transparent 55%), linear-gradient(155deg, #0a0a0a 0%, #141414 40%, #0f0c0b 100%)",
+                "radial-gradient(90% 70% at 88% 18%, rgba(59,24,18,0.92) 0%, transparent 55%), linear-gradient(155deg, #0a0a0a 0%, #141110 42%, #0f0c0b 100%)",
             }}
           />
-          <div className="anim-glow absolute -right-16 top-[-8%] h-[75vh] w-[75vh] rounded-full bg-[radial-gradient(circle,rgba(249,76,48,0.22),transparent_68%)] blur-2xl" />
-          <div className="absolute bottom-[-25%] left-[-15%] h-[60vh] w-[60vh] rounded-full bg-[radial-gradient(circle,rgba(59,24,18,0.65),transparent_70%)] blur-3xl" />
+          <div className="anim-glow absolute -right-20 top-[-10%] h-[78vh] w-[78vh] rounded-full bg-[radial-gradient(circle,rgba(249,76,48,0.24),transparent_68%)] blur-2xl" />
+          <div className="absolute bottom-[-28%] left-[-18%] h-[58vh] w-[58vh] rounded-full bg-[radial-gradient(circle,rgba(59,24,18,0.7),transparent_70%)] blur-3xl" />
           <div
-            className="absolute inset-0 opacity-[0.16]"
+            className="absolute inset-0 opacity-[0.14]"
             style={{
               backgroundImage:
-                "linear-gradient(rgba(249,76,48,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(249,76,48,0.1) 1px, transparent 1px)",
+                "linear-gradient(rgba(249,76,48,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(249,76,48,0.11) 1px, transparent 1px)",
               backgroundSize: "64px 64px",
-              maskImage: "radial-gradient(ellipse at 70% 30%, black 15%, transparent 72%)",
+              maskImage: "radial-gradient(ellipse at 72% 28%, black 12%, transparent 72%)",
             }}
           />
         </div>
 
         <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 sm:px-8">
-          <Link
-            to="/"
-            className="font-display text-lg font-extrabold tracking-tight text-white sm:text-xl"
-          >
-            MURATORI
+          <Link to="/" className="inline-flex items-baseline gap-1.5 select-none">
+            <span className="text-lg font-extrabold tracking-tight text-[#6ba3ff] sm:text-xl">
+              MURATORI
+            </span>
+            <span className="text-lg font-extrabold tracking-tight text-[var(--leaf)] sm:text-xl">
+              DASH
+            </span>
           </Link>
-          <nav className="flex items-center gap-4 sm:gap-6">
-            <a
-              href="#produto"
-              className="hidden text-sm text-white/55 transition hover:text-white sm:inline"
-            >
-              Produto
-            </a>
-            <a
-              href="#como-funciona"
-              className="hidden text-sm text-white/55 transition hover:text-white sm:inline"
-            >
-              Como funciona
-            </a>
-            <button
-              type="button"
-              onClick={openChat}
-              className="border border-[var(--line)] bg-white/[0.04] px-4 py-2 text-sm font-semibold text-white/85 transition hover:border-[var(--leaf)]/50 hover:text-white"
-            >
-              Testar agora
-            </button>
-          </nav>
+          <Link
+            to="/admin/login"
+            className="border border-[var(--line)] bg-white/[0.04] px-4 py-2 text-sm font-semibold text-white/85 transition hover:border-[var(--leaf)]/50 hover:text-white"
+          >
+            Entrar
+          </Link>
         </header>
 
-        <div className="relative z-10 mx-auto grid min-h-[calc(100dvh-88px)] w-full max-w-6xl items-center gap-10 px-6 pb-16 pt-6 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:pb-20">
+        <div className="relative z-10 mx-auto grid min-h-[calc(100dvh-88px)] w-full max-w-6xl items-center gap-12 px-6 pb-16 pt-4 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:pb-20">
           <div className="max-w-xl">
-            <h1 className="anim-rise font-display text-[clamp(3.4rem,11vw,6.75rem)] font-extrabold leading-[0.88] tracking-[-0.045em] text-white">
-              MURATORI
+            <h1 className="anim-rise font-display text-[clamp(2.35rem,7.5vw,4.25rem)] font-extrabold leading-[0.95] tracking-[-0.04em] text-white">
+              Formulários inteligentes que qualificam em conversa.
             </h1>
-
             <p className="anim-rise anim-rise-delay-1 mt-6 max-w-md text-lg leading-relaxed text-[var(--fog)] sm:text-xl">
-              Formulários de diagnóstico inteligentes que qualificam leads em conversa — feitos para
-              agências que vendem performance.
+              Builder, chat estilo WhatsApp e lead score no mesmo painel — do template ao lead
+              quente.
             </p>
-
             <div className="anim-rise anim-rise-delay-2 mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button
-                type="button"
-                onClick={openChat}
-                className="bg-[var(--leaf)] px-7 py-3.5 text-sm font-bold tracking-wide text-white transition hover:brightness-110"
+              <Link
+                to="/admin/login"
+                className="inline-flex items-center justify-center bg-[var(--leaf)] px-7 py-3.5 text-sm font-bold tracking-wide text-white transition hover:brightness-110"
               >
-                Experimentar o diagnóstico
-              </button>
+                Entrar no painel
+              </Link>
               <Link
                 to="/diagnostico"
                 className="px-1 text-sm font-medium text-white/55 underline-offset-4 transition hover:text-white hover:underline"
               >
-                Abrir em tela cheia
+                Ver formulário ao vivo
               </Link>
             </div>
           </div>
 
-          {/* Âncora visual: preview do produto (chat) full-bleed no eixo direito */}
-          <div className="anim-rise anim-rise-delay-3 relative mx-auto w-full max-w-[340px] lg:mx-0 lg:justify-self-end">
+          <div className="anim-rise anim-rise-delay-3 relative mx-auto w-full max-w-[300px] lg:mx-0 lg:max-w-[320px] lg:justify-self-end">
             <div
-              className="pointer-events-none absolute -inset-8 -z-10 rounded-full opacity-70 blur-2xl"
+              className="pointer-events-none absolute -inset-10 -z-10 rounded-full opacity-80 blur-2xl"
               style={{
-                background: "radial-gradient(circle, rgba(249,76,48,0.2), transparent 65%)",
+                background: "radial-gradient(circle, rgba(249,76,48,0.22), transparent 65%)",
               }}
             />
-            <div className="home-phone-float overflow-hidden border border-white/10 bg-[#0a1210] shadow-[0_40px_100px_rgba(0,0,0,0.55)]">
-              <div
-                className="flex items-center gap-3 px-4 py-3"
-                style={{ backgroundColor: "#075e54" }}
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-xs font-bold text-emerald-900">
-                  M
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-white">Muratori · IA</div>
-                  <div className="text-[11px] text-white/70">diagnóstico online</div>
-                </div>
-              </div>
-              <div className="space-y-3 bg-[#efeae2] px-3 py-4">
-                <ChatBubble bot>
-                  Oi! Eu sou a IA da Muratori. Em 2 minutos mostro onde a operação da sua agência
-                  trava.
-                </ChatBubble>
-                <ChatBubble>Beleza — quero ver o diagnóstico.</ChatBubble>
-                <ChatBubble bot>
-                  Quantos leads novos vocês atendem por dia no WhatsApp?
-                </ChatBubble>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {["20", "50", "100", "200+"].map((n) => (
-                    <span
-                      key={n}
-                      className="border border-emerald-600/40 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800"
-                    >
-                      {n}/dia
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="border-t border-white/5 bg-[#0e1614] px-4 py-3 text-center text-[11px] text-white/40">
-                Formulário inteligente · estilo WhatsApp
-              </div>
-            </div>
+            <PhonePreview />
           </div>
         </div>
       </section>
 
-      {/* —— PRODUTO —— */}
+      {/* —— O QUE O SISTEMA FAZ —— */}
       <section id="produto" className="relative border-t border-white/[0.06]">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            background:
-              "linear-gradient(180deg, #0f0c0b 0%, #121010 50%, #0a0a0a 100%)",
+            background: "linear-gradient(180deg, #0f0c0b 0%, #121010 50%, #0a0a0a 100%)",
           }}
         />
         <div className="relative mx-auto max-w-6xl px-6 py-24 sm:px-8 sm:py-28">
           <p className="font-display text-[11px] font-bold uppercase tracking-[0.28em] text-[var(--leaf)]">
-            Para agências
+            O que o sistema faz
           </p>
           <h2 className="font-display mt-4 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl">
-            Pare de perder lead no formulário. Qualifique em conversa.
+            Tudo que você usa no Dash — em um fluxo só.
           </h2>
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/55 sm:text-lg">
-            A Muratori cria e opera formulários de diagnóstico inteligentes: o visitante fala com a
-            IA, você recebe lead quente com contexto de operação — nicho, volume, faturamento e
-            tempo de resposta — pronto para oferta ou atendimento.
-          </p>
 
           <div className="mt-16 grid gap-10 border-t border-white/[0.08] pt-12 md:grid-cols-3 md:gap-8">
-            {[
-              {
-                title: "Conversão mais alta",
-                text: "Chat engaja. Campos longos abandonam. O diagnóstico guia o lead até o fim.",
-              },
-              {
-                title: "Qualificação real",
-                text: "Não é só nome e e-mail. Você vê se a agência cabe no plano ou precisa de call.",
-              },
-              {
-                title: "Pronto pra mídia",
-                text: "Tracking, UTM, Meta e GA4 no fluxo — lead qualificado vira conversão mensurável.",
-              },
-            ].map((item) => (
+            {FEATURES.map((item) => (
               <div key={item.title}>
                 <div className="h-px w-10 bg-[var(--leaf)]" />
                 <h3 className="font-display mt-5 text-xl font-bold text-white">{item.title}</h3>
@@ -218,7 +166,7 @@ export function HomePage() {
             Como funciona
           </p>
           <h2 className="font-display mt-4 max-w-2xl text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Do clique ao lead qualificado em três atos.
+            Do template ao lead qualificado.
           </h2>
 
           <ol className="mt-14 space-y-0">
@@ -227,7 +175,7 @@ export function HomePage() {
                 key={step.n}
                 className="grid gap-4 border-t border-white/[0.08] py-8 md:grid-cols-[5rem_1fr_1.2fr] md:items-baseline md:gap-8"
               >
-                <span className="font-display text-3xl font-extrabold text-[var(--leaf)]/80">
+                <span className="font-display text-3xl font-extrabold text-[var(--leaf)]/85">
                   {step.n}
                 </span>
                 <h3 className="font-display text-2xl font-bold text-white">{step.title}</h3>
@@ -238,39 +186,70 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* —— NICHOS / TEMPLATES —— */}
+      <section className="relative border-t border-white/[0.06]">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, #0a0a0a 0%, #121010 100%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-6xl px-6 py-24 sm:px-8 sm:py-28">
+          <p className="font-display text-[11px] font-bold uppercase tracking-[0.28em] text-[var(--leaf)]">
+            Templates
+          </p>
+          <h2 className="font-display mt-4 max-w-2xl text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            Pronto para o seu nicho.
+          </h2>
+          <p className="mt-4 max-w-xl text-base text-white/50">
+            Modelos do sistema pra começar rápido — ou monte o seu do zero no builder.
+          </p>
+
+          <ul className="mt-12 flex flex-wrap gap-x-8 gap-y-4 border-t border-white/[0.08] pt-10">
+            {NICHES.map((name) => (
+              <li
+                key={name}
+                className="font-display text-lg font-semibold tracking-tight text-white/80 sm:text-xl"
+              >
+                <span className="mr-2 text-[var(--leaf)]">·</span>
+                {name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       {/* —— CTA FINAL —— */}
       <section className="relative border-t border-white/[0.06]">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(70% 80% at 50% 100%, rgba(249,76,48,0.14) 0%, transparent 55%), #0a0a0a",
+              "radial-gradient(70% 80% at 50% 100%, rgba(249,76,48,0.16) 0%, transparent 55%), #0a0a0a",
           }}
         />
         <div className="relative mx-auto max-w-6xl px-6 py-24 text-center sm:px-8 sm:py-32">
           <p className="font-display text-[11px] font-bold uppercase tracking-[0.28em] text-[var(--leaf)]">
-            Muratori
+            Muratori Dash
           </p>
           <h2 className="font-display mx-auto mt-5 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl">
-            Veja o formulário inteligente na prática.
+            Abra o painel e publique seu primeiro formulário.
           </h2>
           <p className="mx-auto mt-5 max-w-lg text-base text-white/55">
-            Rode o diagnóstico agora — é o mesmo fluxo que suas campanhas podem usar para qualificar
-            agências e donos de operação.
+            Workspaces, usuários, cargos e Smart Forms — tudo no mesmo lugar.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={openChat}
-              className="bg-[var(--leaf)] px-8 py-4 text-sm font-bold text-white transition hover:brightness-110"
-            >
-              Abrir diagnóstico
-            </button>
             <Link
               to="/admin/login"
+              className="inline-flex items-center justify-center bg-[var(--leaf)] px-8 py-4 text-sm font-bold text-white transition hover:brightness-110"
+            >
+              Entrar no painel
+            </Link>
+            <Link
+              to="/diagnostico"
               className="px-4 py-3 text-sm font-medium text-white/45 transition hover:text-white"
             >
-              Acessar o painel
+              Ver formulário ao vivo
             </Link>
           </div>
         </div>
@@ -278,30 +257,72 @@ export function HomePage() {
 
       <footer className="relative border-t border-white/[0.06] px-6 py-8 sm:px-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 text-xs text-white/35">
-          <span className="font-display font-bold tracking-wide text-white/50">MURATORI</span>
-          <span>Formulários de diagnóstico inteligentes para agências</span>
+          <span className="inline-flex items-baseline gap-1.5 font-display font-bold tracking-wide">
+            <span className="text-white/55">MURATORI</span>
+            <span className="text-[var(--leaf)]/80">DASH</span>
+          </span>
+          <Link to="/admin/login" className="transition hover:text-white/70">
+            Acessar o painel
+          </Link>
         </div>
       </footer>
-
-      <QualificationModal open={open} onClose={() => setOpen(false)} />
     </div>
   );
 }
 
-function ChatBubble({
-  children,
-  bot,
-}: {
-  children: ReactNode;
-  bot?: boolean;
-}) {
+function PhonePreview() {
+  return (
+    <div className="home-phone-float overflow-hidden rounded-[1.75rem] border-[5px] border-[#1a1a1a] bg-[#0b141a] shadow-[0_40px_100px_rgba(0,0,0,0.55)]">
+      <div
+        className="flex items-center gap-2.5 px-3.5 py-2.5"
+        style={{ backgroundColor: "#128c7e" }}
+      >
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-[11px] font-extrabold text-[#0d655b]">
+          SF
+        </div>
+        <div className="min-w-0">
+          <div className="truncate text-[13px] font-semibold text-white">Clínica & Saúde</div>
+          <div className="text-[10px] text-white/65">formulário inteligente</div>
+        </div>
+      </div>
+
+      <div className="space-y-2.5 bg-[#efeae2] px-3 py-3.5">
+        <ChatBubble bot>
+          Olá! Vamos entender seu perfil em poucos passos para indicar o melhor atendimento.
+        </ChatBubble>
+        <ChatBubble>Quero marcar uma avaliação.</ChatBubble>
+        <ChatBubble bot>Qual é a sua principal necessidade hoje?</ChatBubble>
+        <div className="flex flex-col gap-1.5 pt-0.5">
+          {["Consulta", "Exame", "Retorno", "Urgência"].map((opt) => (
+            <span
+              key={opt}
+              className="rounded-xl bg-white px-3 py-2 text-left text-[11px] font-semibold text-slate-800 shadow-sm"
+              style={{ boxShadow: "inset 3px 0 0 #128c7e" }}
+            >
+              {opt}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-white/5 bg-[#1a1a1a] px-3.5 py-2.5">
+        <span className="text-[10px] font-medium text-white/40">Lead score</span>
+        <span className="rounded-full bg-[var(--leaf)]/20 px-2 py-0.5 text-[10px] font-bold text-[var(--leaf)]">
+          Quente
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ChatBubble({ children, bot }: { children: ReactNode; bot?: boolean }) {
   return (
     <div className={`flex ${bot ? "justify-start" : "justify-end"}`}>
       <div
-        className={`max-w-[88%] px-3 py-2 text-[12px] leading-snug shadow-sm ${
+        className={`max-w-[90%] px-2.5 py-1.5 text-[11.5px] leading-snug shadow-sm ${
           bot
             ? "rounded-2xl rounded-bl-md bg-white text-slate-800"
-            : "rounded-2xl rounded-br-md bg-[#d9fdd3] text-slate-900"
+            : "rounded-2xl rounded-br-md bg-[#dcf8c6] text-slate-900"
         }`}
       >
         {children}
