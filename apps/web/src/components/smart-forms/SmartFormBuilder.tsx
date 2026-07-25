@@ -114,22 +114,22 @@ export function SmartFormBuilder({
       {
         label: "Frio",
         range: `0–${form.scoreColdMax} pts`,
-        cls: "border-sky-200 bg-sky-50 text-sky-700",
+        cls: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300",
       },
       {
         label: "Morno",
         range: `${form.scoreColdMax + 1}–${form.scoreWarmMax} pts`,
-        cls: "border-amber-200 bg-amber-50 text-amber-800",
+        cls: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300",
       },
       {
         label: "Quente",
         range: `${form.scoreWarmMax + 1}–${form.scoreHotMax} pts`,
-        cls: "border-orange-200 bg-orange-50 text-orange-700",
+        cls: "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300",
       },
       {
         label: "Muito quente",
         range: `${form.scoreHotMax + 1} pts ou mais`,
-        cls: "border-rose-200 bg-rose-50 text-rose-700",
+        cls: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300",
       },
     ],
     [form.scoreColdMax, form.scoreWarmMax, form.scoreHotMax]
@@ -222,7 +222,7 @@ export function SmartFormBuilder({
   return (
     <div className="grid w-full items-start gap-5 xl:grid-cols-[minmax(0,1fr)_min(420px,34%)]">
       <div className="min-w-0 space-y-5">
-        <section className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
+        <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
           <h2 className="mb-4 text-[15px] font-bold tracking-tight text-foreground">
             Identidade
           </h2>
@@ -243,7 +243,7 @@ export function SmartFormBuilder({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
+        <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
           <div className="mb-1 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-[15px] font-bold tracking-tight text-foreground">
@@ -259,7 +259,7 @@ export function SmartFormBuilder({
                   <Plus className="h-3.5 w-3.5" />
                   Adicionar bloco
                 </summary>
-                <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-xl border border-border bg-white py-1 shadow-lg">
+                <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-lg">
                   {ADDABLE.map((t) => (
                     <button
                       key={t}
@@ -300,8 +300,8 @@ export function SmartFormBuilder({
                   <div
                     className={`overflow-hidden rounded-xl border transition ${
                       open
-                        ? "border-primary/40 bg-white shadow-[var(--shadow-surface-sm)]"
-                        : "border-border/55 bg-white hover:border-border"
+                        ? "border-primary/40 bg-card shadow-[var(--shadow-surface-sm)]"
+                        : "border-border/55 bg-card hover:border-border"
                     }`}
                   >
                     <div className="flex items-center gap-2 pl-2.5 pr-3">
@@ -364,7 +364,7 @@ export function SmartFormBuilder({
                     </div>
 
                     {open && (
-                      <div className="space-y-3 border-t border-border/50 bg-[#fbfcfd] px-4 py-4">
+                      <div className="space-y-3 border-t border-border/50 bg-muted/30 px-4 py-4">
                         <div className="grid gap-3 sm:grid-cols-2">
                           <AdminField label="Tipo">
                             <AdminSelect
@@ -515,7 +515,7 @@ export function SmartFormBuilder({
       </div>
 
       <aside className="xl:sticky xl:top-[calc(4.5rem+1rem)] xl:self-start">
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-[var(--shadow-surface-sm)]">
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[var(--shadow-surface-sm)]">
           <div className="grid grid-cols-5 border-b border-border/50">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -867,7 +867,7 @@ export function SmartFormBuilder({
                   </AdminField>
                 </div>
 
-                <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50/50 p-3">
+                <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50/50 dark:border-amber-500/30 dark:bg-amber-500/10 p-3">
                   <p className="text-[11px] font-bold uppercase text-amber-800">
                     Filtrar conversão no Ads e Meta
                   </p>
@@ -884,7 +884,7 @@ export function SmartFormBuilder({
                       className={`flex cursor-pointer items-start gap-2 rounded-xl border px-3 py-2.5 text-[13px] ${
                         (tracking.conversionMinTemperature || "ALL") === val
                           ? "border-primary bg-primary/8"
-                          : "border-border/60 bg-white"
+                          : "border-border/60 bg-card"
                       }`}
                     >
                       <input

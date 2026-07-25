@@ -8,7 +8,7 @@ type Props = {
 
 export function AppShell({ onLogout, children }: Props) {
   return (
-    <div className="min-h-dvh bg-[#f1f3f6]">
+    <div className="min-h-dvh bg-canvas">
       <div
         className="pointer-events-none fixed inset-x-0 top-0 h-[42vh]"
         style={{

@@ -72,28 +72,28 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
             aria-modal="true"
             aria-labelledby="confirm-title"
             aria-describedby={pending.description ? "confirm-desc" : undefined}
-            className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-[#e5e7eb] bg-white shadow-[0_24px_80px_rgba(16,24,40,0.28)]"
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-border bg-card shadow-[0_24px_80px_rgba(16,24,40,0.28)]"
           >
             <div className="px-6 pt-6">
               <div
                 className={`mb-4 flex h-11 w-11 items-center justify-center rounded-2xl ${
                   pending.danger === false
                     ? "bg-primary/10 text-primary"
-                    : "bg-red-50 text-[#ef4444]"
+                    : "bg-destructive/10 text-destructive"
                 }`}
               >
                 <AlertTriangle className="h-5 w-5" />
               </div>
-              <h2 id="confirm-title" className="text-lg font-bold text-[#1d202b]">
+              <h2 id="confirm-title" className="text-lg font-bold text-foreground">
                 {pending.title}
               </h2>
               {pending.description && (
-                <p id="confirm-desc" className="mt-2 text-sm leading-relaxed text-[#6b7280]">
+                <p id="confirm-desc" className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {pending.description}
                 </p>
               )}
             </div>
-            <div className="mt-6 flex items-center justify-end gap-2 border-t border-[#eef0f4] px-6 py-4">
+            <div className="mt-6 flex items-center justify-end gap-2 border-t border-border px-6 py-4">
               <AdminButton
                 variant="ghost"
                 className="!px-4 !py-2 text-sm"

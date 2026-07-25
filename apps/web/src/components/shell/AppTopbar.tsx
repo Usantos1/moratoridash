@@ -10,12 +10,14 @@ import {
   Moon,
   Search,
   Settings,
+  Sun,
   UserCog,
 } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
 import { MENU_GROUPS, PRIMARY_NAV, filterNav } from "../../lib/navigation";
 import { useSession } from "../../lib/session-context";
 import { assetSrc } from "../../lib/asset-url";
+import { getTheme, toggleTheme, type Theme } from "../../lib/theme";
 import { ProfileModal } from "../admin/ProfileModal";
 import { CommandSearchModal } from "./CommandSearchModal";
 
@@ -24,7 +26,7 @@ type Props = {
 };
 
 const pillBase =
-  "inline-flex h-11 items-center gap-2 rounded-full border border-[#d8dde6] bg-white px-4 text-sm font-medium text-[#1d202b] shadow-[0_1px_0_rgba(16,24,40,0.04)] transition hover:border-primary/35 hover:bg-[#f8fafc]";
+  "inline-flex h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground shadow-[0_1px_0_rgba(16,24,40,0.04)] transition hover:border-primary/35 hover:bg-accent";
 
 export function AppTopbar({ onLogout }: Props) {
   const { user, workspace, workspaces, can, switchWorkspace } = useSession();
@@ -34,6 +36,7 @@ export function AppTopbar({ onLogout }: Props) {
   const [userOpen, setUserOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [theme, setThemeState] = useState<Theme>(() => getTheme());
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -99,7 +102,7 @@ export function AppTopbar({ onLogout }: Props) {
 
   return (
     <header
-      className="fixed inset-x-0 top-0 z-40 w-full border-b border-[#e8ecf2] bg-white"
+      className="fixed inset-x-0 top-0 z-40 w-full border-b border-border bg-card"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="flex h-[4.5rem] w-full items-center gap-2 px-3 sm:px-4 md:gap-2.5 md:px-5">
@@ -119,7 +122,7 @@ export function AppTopbar({ onLogout }: Props) {
                     `inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition ${
                       isActive
                         ? "border-primary bg-primary text-white shadow-sm"
-                        : "border-[#d8dde6] bg-white text-[#1d202b] shadow-[0_1px_0_rgba(16,24,40,0.04)] hover:border-primary/35 hover:bg-[#f8fafc]"
+                        : "border-border bg-card text-foreground shadow-[0_1px_0_rgba(16,24,40,0.04)] hover:border-primary/35 hover:bg-accent"
                     }`
                   }
                 >
@@ -143,7 +146,7 @@ export function AppTopbar({ onLogout }: Props) {
             >
               <Menu className="h-4 w-4 text-brand-600" strokeWidth={2} />
               <span>Menu</span>
-              <ChevronDown className="h-4 w-4 text-[#6b7280]" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </button>
 
             {menuOpen && (
@@ -154,10 +157,10 @@ export function AppTopbar({ onLogout }: Props) {
                   aria-label="Fechar"
                   onClick={() => setMenuOpen(false)}
                 />
-                <div className="absolute left-0 top-[calc(100%+0.55rem)] z-50 max-h-[72vh] w-[min(360px,calc(100vw-2rem))] overflow-y-auto rounded-[28px] border border-[#e5e7eb] bg-white p-3 shadow-[0_18px_50px_rgba(16,24,40,0.18)]">
+                <div className="absolute left-0 top-[calc(100%+0.55rem)] z-50 max-h-[72vh] w-[min(360px,calc(100vw-2rem))] overflow-y-auto rounded-[28px] border border-border bg-card p-3 shadow-[0_18px_50px_rgba(16,24,40,0.18)]">
                   {menuGroups.map((group) => (
                     <div key={group.group} className="mb-2">
-                      <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
+                      <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                         {group.group}
                       </div>
                       <ul className="space-y-0.5">
@@ -173,18 +176,18 @@ export function AppTopbar({ onLogout }: Props) {
                                   `flex items-center gap-3 rounded-2xl border-l-2 px-3 py-3 transition ${
                                     isActive
                                       ? "border-l-primary bg-primary/10"
-                                      : "border-l-transparent hover:border-l-brand-600 hover:bg-[#f3f4f6]"
+                                      : "border-l-transparent hover:border-l-brand-600 hover:bg-accent"
                                   }`
                                 }
                               >
-                                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ebf3ff] text-brand-600">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-brand-600">
                                   <Icon className="h-4 w-4" />
                                 </span>
                                 <span className="min-w-0">
-                                  <span className="block text-[15px] font-semibold text-[#1d202b]">
+                                  <span className="block text-[15px] font-semibold text-foreground">
                                     {item.label}
                                   </span>
-                                  <span className="block text-xs leading-5 text-[#6b7280]">
+                                  <span className="block text-xs leading-5 text-muted-foreground">
                                     {item.desc}
                                   </span>
                                 </span>
@@ -202,7 +205,7 @@ export function AppTopbar({ onLogout }: Props) {
 
           <button
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#d8dde6] bg-white text-brand-600 shadow-[0_1px_0_rgba(16,24,40,0.04)] hover:bg-[#f8fafc]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-brand-600 shadow-[0_1px_0_rgba(16,24,40,0.04)] hover:bg-accent"
             aria-label="Buscar"
             title="Buscar (Ctrl+K)"
             onClick={() => {
@@ -222,7 +225,7 @@ export function AppTopbar({ onLogout }: Props) {
           <div className="relative hidden xl:block">
             <button
               type="button"
-              className="h-11 max-w-[220px] items-center gap-2 rounded-full border border-primary/45 bg-white px-3 text-left shadow-[0_1px_0_rgba(16,24,40,0.04)] inline-flex"
+              className="h-11 max-w-[220px] items-center gap-2 rounded-full border border-primary/45 bg-card px-3 text-left shadow-[0_1px_0_rgba(16,24,40,0.04)] inline-flex"
               title="Trocar workspace"
               onClick={() => {
                 setMenuOpen(false);
@@ -233,7 +236,7 @@ export function AppTopbar({ onLogout }: Props) {
             >
               <WorkspaceMark name={workspace?.name ?? "M"} logoUrl={workspace?.logoUrl} />
               <span className="min-w-0 leading-tight">
-                <span className="block truncate text-[13px] font-bold text-[#1d202b]">
+                <span className="block truncate text-[13px] font-bold text-foreground">
                   {workspace?.name ?? "Sem workspace"}
                 </span>
                 <span className="block truncate text-[11px] font-semibold text-primary">
@@ -251,8 +254,8 @@ export function AppTopbar({ onLogout }: Props) {
                   aria-label="Fechar"
                   onClick={() => setWsOpen(false)}
                 />
-                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-72 rounded-2xl border border-[#e5e7eb] bg-white p-2 shadow-lg">
-                  <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
+                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-72 rounded-2xl border border-border bg-card p-2 shadow-lg">
+                  <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Workspaces
                   </div>
                   <ul className="max-h-72 space-y-0.5 overflow-y-auto">
@@ -260,7 +263,7 @@ export function AppTopbar({ onLogout }: Props) {
                       <li key={item.id}>
                         <button
                           type="button"
-                          className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition hover:bg-[#f3f4f6] ${
+                          className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition hover:bg-accent ${
                             item.id === workspace?.id ? "bg-primary/10 font-semibold" : ""
                           }`}
                           onClick={async () => {
@@ -270,8 +273,8 @@ export function AppTopbar({ onLogout }: Props) {
                         >
                           <WorkspaceMark name={item.name} logoUrl={item.logoUrl} />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[#1d202b]">{item.name}</span>
-                            <span className="block truncate text-[11px] text-[#6b7280]">
+                            <span className="block truncate text-foreground">{item.name}</span>
+                            <span className="block truncate text-[11px] text-muted-foreground">
                               {item.role?.name ?? "Sem cargo"} · {item.slug}
                             </span>
                           </span>
@@ -283,11 +286,11 @@ export function AppTopbar({ onLogout }: Props) {
                     ))}
                   </ul>
                   {user.role === "superadmin" && (
-                    <div className="mt-1 border-t border-[#eef0f4] pt-1">
+                    <div className="mt-1 border-t border-border pt-1">
                       <Link
                         to="/admin/workspace"
                         onClick={() => setWsOpen(false)}
-                        className="block rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-[#f3f4f6]"
+                        className="block rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-accent"
                       >
                         Gerenciar workspaces
                       </Link>
@@ -298,7 +301,7 @@ export function AppTopbar({ onLogout }: Props) {
             )}
           </div>
 
-          <div className="hidden h-9 items-center rounded-full border border-[#d8dde6] bg-[#f3f4f6]/70 px-3 font-mono text-xs font-semibold tabular-nums text-[#1d202b] lg:inline-flex">
+          <div className="hidden h-9 items-center rounded-full border border-border bg-muted/70 px-3 font-mono text-xs font-semibold tabular-nums text-foreground lg:inline-flex">
             {clock}
           </div>
 
@@ -317,7 +320,7 @@ export function AppTopbar({ onLogout }: Props) {
                 🇧🇷
               </span>
               <span>Português</span>
-              <ChevronDown className="h-4 w-4 text-[#6b7280]" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </button>
             {langOpen && (
               <>
@@ -327,10 +330,10 @@ export function AppTopbar({ onLogout }: Props) {
                   aria-label="Fechar"
                   onClick={() => setLangOpen(false)}
                 />
-                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-44 rounded-2xl border border-[#e5e7eb] bg-white p-2 shadow-lg">
+                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-44 rounded-2xl border border-border bg-card p-2 shadow-lg">
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-[#1d202b] hover:bg-[#f3f4f6]"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent"
                     onClick={() => setLangOpen(false)}
                   >
                     🇧🇷 Português
@@ -342,15 +345,21 @@ export function AppTopbar({ onLogout }: Props) {
 
           <button
             type="button"
-            className="hidden h-10 w-10 items-center justify-center rounded-full text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1d202b] lg:inline-flex"
-            aria-label="Tema"
+            className="hidden h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground lg:inline-flex"
+            aria-label={theme === "dark" ? "Tema claro" : "Tema escuro"}
+            title={theme === "dark" ? "Tema claro" : "Tema escuro"}
+            onClick={() => setThemeState(toggleTheme())}
           >
-            <Moon className="h-4 w-4" strokeWidth={2} />
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4" strokeWidth={2} />
+            ) : (
+              <Moon className="h-4 w-4" strokeWidth={2} />
+            )}
           </button>
 
           <button
             type="button"
-            className="relative hidden h-10 w-10 items-center justify-center rounded-full text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1d202b] lg:inline-flex"
+            className="relative hidden h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground lg:inline-flex"
             aria-label="Notificações"
           >
             <Bell className="h-4 w-4" strokeWidth={2} />
@@ -360,7 +369,7 @@ export function AppTopbar({ onLogout }: Props) {
           <div className="relative">
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#ebf3ff] text-sm font-bold text-brand-600 ring-1 ring-[#d8dde6] hover:ring-primary/40"
+              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-sm font-bold text-brand-600 ring-1 ring-border hover:ring-primary/40"
               title={user.email}
               onClick={() => {
                 setLangOpen(false);
@@ -384,9 +393,9 @@ export function AppTopbar({ onLogout }: Props) {
                   aria-label="Fechar"
                   onClick={() => setUserOpen(false)}
                 />
-                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-[264px] rounded-2xl border border-[#e5e7eb] bg-white p-2 shadow-[0_18px_50px_rgba(16,24,40,0.18)]">
-                  <div className="flex items-center gap-3 border-b border-[#eef0f4] px-3 pb-3 pt-2">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#ebf3ff] text-sm font-bold text-brand-600 ring-1 ring-[#e5e7eb]">
+                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-[264px] rounded-2xl border border-border bg-card p-2 shadow-[0_18px_50px_rgba(16,24,40,0.18)]">
+                  <div className="flex items-center gap-3 border-b border-border px-3 pb-3 pt-2">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-sm font-bold text-brand-600 ring-1 ring-border">
                       {avatarSrc ? (
                         <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
                       ) : (
@@ -394,12 +403,12 @@ export function AppTopbar({ onLogout }: Props) {
                       )}
                     </span>
                     <div className="min-w-0">
-                      <div className="truncate text-[15px] font-semibold text-[#1d202b]">
+                      <div className="truncate text-[15px] font-semibold text-foreground">
                         {user.name || "Admin"}
                       </div>
-                      <div className="truncate text-xs text-[#6b7280]">{user.email}</div>
+                      <div className="truncate text-xs text-muted-foreground">{user.email}</div>
                       {workspace?.role && (
-                        <div className="truncate text-[11px] text-[#9aa1ad]">
+                        <div className="truncate text-[11px] text-muted-foreground">
                           {workspace.role.name}
                         </div>
                       )}
@@ -412,24 +421,24 @@ export function AppTopbar({ onLogout }: Props) {
                       setUserOpen(false);
                       setProfileOpen(true);
                     }}
-                    className="mt-1 flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-[#1d202b] hover:bg-[#f3f4f6]"
+                    className="mt-1 flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent"
                   >
-                    <UserCog className="h-4 w-4 text-[#6b7280]" />
+                    <UserCog className="h-4 w-4 text-muted-foreground" />
                     Meu perfil
                   </button>
                   {settingsPath && (
                     <Link
                       to={settingsPath}
                       onClick={() => setUserOpen(false)}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-[#1d202b] hover:bg-[#f3f4f6]"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent"
                     >
-                      <Settings className="h-4 w-4 text-[#6b7280]" />
+                      <Settings className="h-4 w-4 text-muted-foreground" />
                       Configurações
                     </Link>
                   )}
                   <button
                     type="button"
-                    className="mt-1 flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#ef4444] hover:bg-red-50"
+                    className="mt-1 flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10"
                     onClick={() => {
                       setUserOpen(false);
                       onLogout();

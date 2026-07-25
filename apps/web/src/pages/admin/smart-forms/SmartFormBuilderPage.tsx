@@ -80,7 +80,7 @@ export function SmartFormBuilderPage() {
 
   if (!form || !definition) {
     return (
-      <div className="rounded-2xl border border-border/60 bg-white p-8 text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-border/60 bg-card p-8 text-sm text-muted-foreground">
         Carregando builder…
       </div>
     );

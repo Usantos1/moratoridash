@@ -195,13 +195,13 @@ export function SmartLeadsPage() {
                 className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition ${
                   active
                     ? "border-primary bg-primary/10 text-primary"
-                    : "border-border/70 bg-white text-[#1d202b] hover:border-primary/35"
+                    : "border-border/70 bg-card text-foreground hover:border-primary/35"
                 }`}
               >
                 <span className="max-w-[180px] truncate">{form.name}</span>
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-[11px] tabular-nums ${
-                    active ? "bg-primary text-white" : "bg-[#f3f4f6] text-[#6b7280]"
+                    active ? "bg-primary text-white" : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {count}
@@ -212,7 +212,7 @@ export function SmartLeadsPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-white p-3 shadow-[var(--shadow-surface-sm)]">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-card p-3 shadow-[var(--shadow-surface-sm)]">
         <AdminInput
           className="min-w-[220px] flex-1"
           placeholder="Buscar nome, e-mail ou telefone..."
@@ -236,7 +236,7 @@ export function SmartLeadsPage() {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-[var(--shadow-surface-sm)]">
+      <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[var(--shadow-surface-sm)]">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] text-left text-sm">
             <thead className="border-b border-border/50 bg-muted/30 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
@@ -278,7 +278,7 @@ export function SmartLeadsPage() {
                   return (
                     <tr
                       key={String(lead.id)}
-                      className="cursor-pointer border-b border-border/40 last:border-0 hover:bg-[#f8fafc]"
+                      className="cursor-pointer border-b border-border/40 last:border-0 hover:bg-accent"
                       onClick={() => openLead(String(lead.id))}
                     >
                       <td className="px-4 py-3">

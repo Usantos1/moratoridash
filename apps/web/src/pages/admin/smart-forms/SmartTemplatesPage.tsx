@@ -41,14 +41,14 @@ const ICON_BY_SLUG: Record<string, LucideIcon> = {
 };
 
 const TINT_BY_CATEGORY: Record<string, string> = {
-  Marketing: "bg-orange-50",
-  Saúde: "bg-emerald-50",
-  Imóveis: "bg-sky-50",
-  Jurídico: "bg-violet-50",
-  Beleza: "bg-pink-50",
-  Fitness: "bg-orange-50",
-  Serviços: "bg-slate-100",
-  Digital: "bg-indigo-50",
+  Marketing: "bg-orange-50 dark:bg-orange-500/10",
+  Saúde: "bg-emerald-50 dark:bg-emerald-500/10",
+  Imóveis: "bg-sky-50 dark:bg-sky-500/10",
+  Jurídico: "bg-violet-50 dark:bg-violet-500/10",
+  Beleza: "bg-pink-50 dark:bg-pink-500/10",
+  Fitness: "bg-orange-50 dark:bg-orange-500/10",
+  Serviços: "bg-slate-100 dark:bg-slate-500/10",
+  Digital: "bg-indigo-50 dark:bg-indigo-500/10",
 };
 
 type Card = {
@@ -90,7 +90,7 @@ export function SmartTemplatesPage() {
                 "Fluxo conversacional pronto — use e personalize no builder.",
               steps: Array.isArray(def?.nodes) ? def!.nodes!.length : 0,
               icon: ICON_BY_SLUG[slug] || HeartPulse,
-              tint: TINT_BY_CATEGORY[category] || "bg-primary/8",
+              tint: TINT_BY_CATEGORY[category] || "bg-primary/8 dark:bg-primary/10",
             };
           })
         );
@@ -144,7 +144,7 @@ export function SmartTemplatesPage() {
             className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${
               cat === c
                 ? "border-primary bg-primary/10 text-primary"
-                : "border-border/70 bg-white text-muted-foreground hover:text-foreground"
+                : "border-border/70 bg-card text-muted-foreground hover:text-foreground"
             }`}
           >
             {c}
@@ -162,7 +162,7 @@ export function SmartTemplatesPage() {
           ))}
         </div>
       ) : visible.length === 0 ? (
-        <p className="rounded-2xl border border-border/60 bg-white px-4 py-8 text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-border/60 bg-card px-4 py-8 text-sm text-muted-foreground">
           Nenhum template nesta categoria.
         </p>
       ) : (
@@ -175,7 +175,7 @@ export function SmartTemplatesPage() {
                 className={`flex flex-col rounded-2xl border border-border/60 p-5 shadow-[var(--shadow-surface-sm)] ${card.tint}`}
               >
                 <div className="mb-3 flex items-start justify-between">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 text-foreground shadow-sm">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-card/90 text-foreground shadow-sm ring-1 ring-border/50">
                     <Icon className="h-5 w-5" />
                   </span>
                   <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">

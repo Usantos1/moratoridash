@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* dark: segue a classe .dark no <html> (toggle manual), não o prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* —— Dashboard (Muratori Dash · primary laranja da marca) —— */
 :root {
   --background: 0 0% 100%;
@@ -24,6 +27,8 @@
   --border: 220 13% 84%;
   --input: 220 13% 84%;
   --ring: 8 94% 58%;
+  /* Canvas do app (cinza claro atrás dos cards) */
+  --canvas: 220 16% 96%;
   --radius: 0.75rem;
   --shadow-surface: 0 1px 0 hsl(220 13% 91% / 0.9), 0 14px 40px -24px hsl(224 20% 14% / 0.18);
   --shadow-surface-sm: 0 1px 0 hsl(220 13% 91% / 0.85), 0 8px 24px -18px hsl(224 20% 14% / 0.12);
@@ -108,6 +113,14 @@
   --border: 224 20% 18%;
   --input: 224 20% 18%;
   --ring: 8 90% 58%;
+  --canvas: 224 22% 7%;
+  /* Brand azul mais claro para contraste no dark */
+  --brand-50: 216 60% 16%;
+  --brand-100: 216 55% 22%;
+  --brand-200: 216 60% 32%;
+  --brand-600: 216 90% 72%;
+  --brand-800: 216 90% 82%;
+  --brand-900: 216 90% 88%;
   --shadow-surface: 0 1px 0 hsl(224 20% 18% / 0.9), 0 18px 48px -28px hsl(0 0% 0% / 0.55);
   --shadow-surface-sm: 0 1px 0 hsl(224 20% 18% / 0.8), 0 10px 28px -20px hsl(0 0% 0% / 0.4);
 }
@@ -139,6 +152,7 @@
   --color-brand-100: hsl(var(--brand-100));
   --color-brand-200: hsl(var(--brand-200));
   --color-brand-600: hsl(var(--brand-600));
+  --color-canvas: hsl(var(--canvas));
   --radius-lg: var(--radius);
 }
 
@@ -152,7 +166,7 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   font-feature-settings: "rlig" 1, "calt" 1;
-  background: #f1f3f6;
+  background: hsl(var(--canvas));
   color: hsl(var(--foreground));
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;

@@ -207,25 +207,25 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
       key: "cold",
       label: "Frio",
       range: `0–${score.coldMax} pts`,
-      cls: "border-sky-200 bg-sky-50 text-sky-700",
+      cls: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300",
     },
     {
       key: "warm",
       label: "Morno",
       range: `${score.coldMax + 1}–${score.warmMax} pts`,
-      cls: "border-amber-200 bg-amber-50 text-amber-700",
+      cls: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300",
     },
     {
       key: "hot",
       label: "Quente",
       range: `${score.warmMax + 1}–${score.hotMax} pts`,
-      cls: "border-orange-200 bg-orange-50 text-orange-700",
+      cls: "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300",
     },
     {
       key: "very",
       label: "Muito quente",
       range: `${score.hotMax + 1} pts ou mais`,
-      cls: "border-rose-200 bg-rose-50 text-rose-700",
+      cls: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300",
     },
   ];
 
@@ -236,7 +236,7 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
   return (
     <div className="grid w-full items-start gap-5 xl:grid-cols-[minmax(0,1fr)_min(400px,32%)]">
       <div className="min-w-0 space-y-5">
-        <section className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
+        <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
           <h2 className="mb-4 text-[15px] font-bold tracking-tight text-foreground">
             Identidade
           </h2>
@@ -261,7 +261,7 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
+        <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
           <div className="mb-1 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-[15px] font-bold tracking-tight text-foreground">
@@ -311,8 +311,8 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                   <div
                     className={`overflow-hidden rounded-xl border transition ${
                       open
-                        ? "border-primary/40 bg-white shadow-[var(--shadow-surface-sm)]"
-                        : "border-border/55 bg-white hover:border-border"
+                        ? "border-primary/40 bg-card shadow-[var(--shadow-surface-sm)]"
+                        : "border-border/55 bg-card hover:border-border"
                     }`}
                   >
                     <div className="flex items-center gap-2 pl-2.5 pr-3">
@@ -399,7 +399,7 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
                     </div>
 
                     {open && (
-                      <div className="space-y-3 border-t border-border/50 bg-[#fbfcfd] px-4 py-4">
+                      <div className="space-y-3 border-t border-border/50 bg-muted/30 px-4 py-4">
                         <div className="grid gap-3 sm:grid-cols-2">
                           <AdminField label="Tipo">
                             <AdminSelect
@@ -502,7 +502,7 @@ export function FlowBuilderWorkspace({ value, onChange, json, onJsonChange }: Pr
       </div>
 
       <aside className="xl:sticky xl:top-[calc(4.5rem+1rem)] xl:self-start">
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-[var(--shadow-surface-sm)]">
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[var(--shadow-surface-sm)]">
           <div className="grid grid-cols-4 border-b border-border/50">
             {sidebarTabs.map((tab) => {
               const TabIcon = tab.icon;

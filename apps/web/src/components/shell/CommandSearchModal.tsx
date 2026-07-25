@@ -203,44 +203,44 @@ export function CommandSearchModal({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="command-search-title"
-        className="relative z-10 flex max-h-[min(640px,76vh)] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-[#e5e7eb] bg-white shadow-[0_24px_80px_rgba(16,24,40,0.28)]"
+        className="relative z-10 flex max-h-[min(640px,76vh)] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[0_24px_80px_rgba(16,24,40,0.28)]"
       >
-        <div className="flex items-start justify-between gap-3 border-b border-[#eef0f4] px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div>
-            <h2 id="command-search-title" className="text-lg font-bold text-[#1d202b]">
+            <h2 id="command-search-title" className="text-lg font-bold text-foreground">
               Ir para…
             </h2>
-            <p className="mt-0.5 text-xs text-[#6b7280]">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Busca global para navegar mais rápido no painel
             </p>
           </div>
-          <span className="shrink-0 rounded-lg border border-[#e5e7eb] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
+          <span className="shrink-0 rounded-lg border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground">
             Atalho Ctrl+K
           </span>
         </div>
 
         <div className="px-5 py-3">
           <label className="relative block">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9aa1ad]" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               ref={inputRef}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscar página, módulo ou rota…"
-              className="h-11 w-full rounded-full border border-[#d8dde6] bg-white pl-10 pr-4 text-sm text-[#1d202b] outline-none transition placeholder:text-[#9aa1ad] focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11 w-full rounded-full border border-border bg-card pl-10 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </label>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
           {items.length === 0 ? (
-            <p className="px-3 py-8 text-center text-sm text-[#6b7280]">
+            <p className="px-3 py-8 text-center text-sm text-muted-foreground">
               Nenhum resultado para “{q}”.
             </p>
           ) : (
             grouped.map(([group, groupItems]) => (
               <div key={group} className="mb-2">
-                <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9aa1ad]">
+                <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   {group}
                 </div>
                 <ul className="space-y-0.5">
@@ -261,17 +261,17 @@ export function CommandSearchModal({ open, onClose }: Props) {
                           className={`flex w-full items-center gap-3 rounded-2xl border-l-2 px-3 py-3 text-left transition ${
                             isActive
                               ? "border-l-primary bg-primary/10"
-                              : "border-l-transparent hover:bg-[#f3f4f6]"
+                              : "border-l-transparent hover:bg-accent"
                           }`}
                         >
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#ebf3ff] text-brand-600">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-brand-600">
                             <Icon className="h-4 w-4" />
                           </span>
                           <span className="min-w-0">
-                            <span className="block text-[15px] font-semibold text-[#1d202b]">
+                            <span className="block text-[15px] font-semibold text-foreground">
                               {item.label}
                             </span>
-                            <span className="block text-xs leading-5 text-[#6b7280]">
+                            <span className="block text-xs leading-5 text-muted-foreground">
                               {item.desc}
                             </span>
                           </span>
@@ -285,7 +285,7 @@ export function CommandSearchModal({ open, onClose }: Props) {
           )}
         </div>
 
-        <div className="border-t border-[#eef0f4] px-5 py-2.5 text-[11px] text-[#9aa1ad]">
+        <div className="border-t border-border px-5 py-2.5 text-[11px] text-muted-foreground">
           ↑↓ navegar · Enter abrir · Esc fechar
         </div>
       </div>

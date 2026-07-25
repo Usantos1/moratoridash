@@ -32,7 +32,7 @@ export function SmartConfigPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
+        <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
           <h2 className="text-[15px] font-bold text-foreground">Checklist rápido</h2>
           <ol className="mt-4 space-y-3">
             {CHECKLIST.map((item, i) => (
@@ -55,7 +55,7 @@ export function SmartConfigPage() {
         </section>
 
         <section className="space-y-4">
-          <div className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
+          <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
             <h2 className="text-[15px] font-bold text-foreground">Link público</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Cada formulário ganha um slug único após publicar.
@@ -65,7 +65,7 @@ export function SmartConfigPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border/60 bg-white p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
+          <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-[var(--shadow-surface-sm)] sm:p-6">
             <h2 className="text-[15px] font-bold text-foreground">Domínio próprio</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               No builder → aba Domínio: cadastre o hostname do cliente e aponte o CNAME.

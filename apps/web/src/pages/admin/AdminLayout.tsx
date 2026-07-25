@@ -7,7 +7,7 @@ import { ConfirmProvider } from "../../components/admin/ConfirmDialog";
 
 function LoadingScreen({ message }: { message: string }) {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-[#f1f3f6] text-muted-foreground">
+    <div className="flex min-h-dvh items-center justify-center bg-canvas text-muted-foreground">
       <div className="text-center">
         <div className="text-[17px] font-extrabold tracking-tight">
           <span className="text-brand-600">MURATORI</span>{" "}

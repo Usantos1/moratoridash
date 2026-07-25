@@ -167,16 +167,16 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
         role="dialog"
         aria-modal="true"
         aria-labelledby="lead-modal-title"
-        className="relative z-10 flex max-h-[min(920px,94dvh)] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-[#e5e7eb] bg-white shadow-[0_24px_80px_rgba(16,24,40,0.28)] sm:rounded-3xl"
+        className="relative z-10 flex max-h-[min(920px,94dvh)] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-[0_24px_80px_rgba(16,24,40,0.28)] sm:rounded-3xl"
       >
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#eef0f4] px-5 py-4">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6b7280]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {form?.name || "Formulário"}
             </p>
             <h2
               id="lead-modal-title"
-              className="mt-0.5 truncate text-xl font-bold text-[#1d202b]"
+              className="mt-0.5 truncate text-xl font-bold text-foreground"
             >
               {loading ? "Carregando…" : displayName}
             </h2>
@@ -186,7 +186,7 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
                   {tempLabel(String(lead.temperature))}
                 </AdminBadge>
                 <AdminBadge tone="warn">{statusLabel(String(lead.status))}</AdminBadge>
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#ebf3ff] px-2.5 py-0.5 text-[11px] font-semibold text-brand-600">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-brand-600">
                   <Thermometer className="h-3 w-3" />
                   Score {String(lead.score ?? 0)}
                 </span>
@@ -195,7 +195,7 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
           </div>
           <button
             type="button"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1d202b]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
             aria-label="Fechar"
             onClick={onClose}
           >
@@ -257,21 +257,21 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
                   ) : (
                     <>
                       {answerItems.map((a) => (
-                        <div key={a.nodeId} className="bg-white px-4 py-3">
-                          <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6b7280]">
+                        <div key={a.nodeId} className="bg-card px-4 py-3">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                             {a.title || a.nodeId}
                           </div>
-                          <div className="mt-1 text-sm font-medium text-[#1d202b]">
+                          <div className="mt-1 text-sm font-medium text-foreground">
                             {formatValue(a.value)}
                           </div>
                         </div>
                       ))}
                       {extraCustom.map(([k, v]) => (
-                        <div key={`custom:${k}`} className="bg-white px-4 py-3">
-                          <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6b7280]">
+                        <div key={`custom:${k}`} className="bg-card px-4 py-3">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                             {v.label || k}
                           </div>
-                          <div className="mt-1 text-sm font-medium text-[#1d202b]">
+                          <div className="mt-1 text-sm font-medium text-foreground">
                             {formatValue(v.value)}
                           </div>
                         </div>
@@ -283,7 +283,7 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
 
               <section>
                 <SectionTitle>Origem / UTM</SectionTitle>
-                <dl className="mt-3 grid gap-2 rounded-2xl border border-border/60 bg-[#f8fafc] p-3 text-sm sm:grid-cols-2">
+                <dl className="mt-3 grid gap-2 rounded-2xl border border-border/60 bg-muted/50 p-3 text-sm sm:grid-cols-2">
                   <Row label="UTM Source" value={lead.utmSource} />
                   <Row label="UTM Medium" value={lead.utmMedium} />
                   <Row label="UTM Campaign" value={lead.utmCampaign} />
@@ -306,15 +306,15 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
                       .map((item) => (
                         <span
                           key={String(item)}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-white px-3 py-1 text-xs font-medium text-[#1d202b]"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-medium text-foreground"
                         >
-                          <Monitor className="h-3 w-3 text-[#6b7280]" />
+                          <Monitor className="h-3 w-3 text-muted-foreground" />
                           {String(item)}
                         </span>
                       ))}
                     {(session.geoCity || session.geoCountry) && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-white px-3 py-1 text-xs font-medium text-[#1d202b]">
-                        <MapPin className="h-3 w-3 text-[#6b7280]" />
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-medium text-foreground">
+                        <MapPin className="h-3 w-3 text-muted-foreground" />
                         {[session.geoCity, session.geoState, session.geoCountry]
                           .filter(Boolean)
                           .join(", ")}
@@ -327,7 +327,7 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
               {(lead.aiSummary as { text?: string } | null)?.text ? (
                 <section>
                   <SectionTitle>Resumo IA</SectionTitle>
-                  <p className="mt-3 rounded-2xl border border-border/60 bg-[#f8fafc] p-4 text-sm leading-relaxed text-[#374151]">
+                  <p className="mt-3 rounded-2xl border border-border/60 bg-muted/50 p-4 text-sm leading-relaxed text-foreground/80">
                     {String((lead.aiSummary as { text?: string }).text)}
                   </p>
                 </section>
@@ -340,13 +340,13 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
                     {events.map((ev) => (
                       <li
                         key={String(ev.id)}
-                        className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/50 bg-[#f8fafc] px-3 py-2 text-xs"
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/50 bg-muted/50 px-3 py-2 text-xs"
                       >
                         <span>
-                          <strong className="text-[#1d202b]">{String(ev.eventName)}</strong>
-                          <span className="text-[#6b7280]"> · {String(ev.eventType)}</span>
+                          <strong className="text-foreground">{String(ev.eventName)}</strong>
+                          <span className="text-muted-foreground"> · {String(ev.eventType)}</span>
                         </span>
-                        <span className="tabular-nums text-[#9aa1ad]">
+                        <span className="tabular-nums text-muted-foreground">
                           {ev.createdAt
                             ? new Date(String(ev.createdAt)).toLocaleString("pt-BR")
                             : ""}
@@ -360,7 +360,7 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
           )}
         </div>
 
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-[#eef0f4] px-5 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-5 py-3">
           {canDelete ? (
             <AdminButton variant="danger" className="!px-3 !py-2 text-xs" onClick={() => void remove()}>
               Excluir lead
@@ -379,7 +379,7 @@ export function SmartLeadModal({ leadId, onClose, onDeleted, onLoaded, canDelete
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6b7280]">
+    <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
       {children}
     </h3>
   );
@@ -396,8 +396,8 @@ function Row({
 }) {
   return (
     <div className={`flex justify-between gap-3 ${wide ? "sm:col-span-2" : ""}`}>
-      <dt className="shrink-0 text-[#6b7280]">{label}</dt>
-      <dd className="break-all text-right font-medium text-[#1d202b]">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="break-all text-right font-medium text-foreground">
         {formatValue(value)}
       </dd>
     </div>
@@ -417,19 +417,19 @@ function ContactCard({
 }) {
   const empty = !value;
   return (
-    <div className="rounded-2xl border border-border/60 bg-[#f8fafc] px-3 py-2.5">
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6b7280]">
+    <div className="rounded-2xl border border-border/60 bg-muted/50 px-3 py-2.5">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {icon}
         {label}
       </div>
       <div className="mt-1 flex items-center justify-between gap-2">
-        <span className={`truncate text-sm font-medium ${empty ? "text-[#9aa1ad]" : "text-[#1d202b]"}`}>
+        <span className={`truncate text-sm font-medium ${empty ? "text-muted-foreground" : "text-foreground"}`}>
           {empty ? "—" : value}
         </span>
         {copyable && value ? (
           <button
             type="button"
-            className="rounded-lg p-1 text-[#6b7280] hover:bg-white hover:text-[#1d202b]"
+            className="rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
             aria-label={`Copiar ${label}`}
             onClick={() => copyText(label, value)}
           >

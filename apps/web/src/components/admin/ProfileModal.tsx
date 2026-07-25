@@ -142,18 +142,18 @@ export function ProfileModal({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="profile-modal-title"
-        className="relative z-10 flex max-h-[min(880px,92dvh)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-[#e5e7eb] bg-white shadow-[0_24px_80px_rgba(16,24,40,0.28)] sm:rounded-3xl"
+        className="relative z-10 flex max-h-[min(880px,92dvh)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-border bg-card shadow-[0_24px_80px_rgba(16,24,40,0.28)] sm:rounded-3xl"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-[#eef0f4] px-5 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
           <div>
-            <h2 id="profile-modal-title" className="text-lg font-bold text-[#1d202b]">
+            <h2 id="profile-modal-title" className="text-lg font-bold text-foreground">
               Meu perfil
             </h2>
-            <p className="text-xs text-[#6b7280]">Foto, nome e senha de acesso</p>
+            <p className="text-xs text-muted-foreground">Foto, nome e senha de acesso</p>
           </div>
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#1d202b]"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
             aria-label="Fechar"
             onClick={onClose}
           >
@@ -163,11 +163,11 @@ export function ProfileModal({ open, onClose }: Props) {
 
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
           <section>
-            <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6b7280]">
+            <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Foto
             </div>
             <div className="flex flex-wrap items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-[#ebf3ff] text-xl font-bold text-brand-600 ring-1 ring-[#e5e7eb]">
+              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-xl font-bold text-brand-600 ring-1 ring-border">
                 {avatar ? (
                   <img src={avatar} alt="" className="h-full w-full object-cover" />
                 ) : (
@@ -201,12 +201,12 @@ export function ProfileModal({ open, onClose }: Props) {
                 />
               </div>
             </div>
-            <p className="mt-2 text-[11px] text-[#9aa1ad]">PNG, JPG ou WebP · máx. 4 MB</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">PNG, JPG ou WebP · máx. 4 MB</p>
           </section>
 
           <section>
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6b7280]">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Dados
               </span>
               {workspace?.role && <AdminBadge tone="live">{workspace.role.name}</AdminBadge>}
@@ -236,7 +236,7 @@ export function ProfileModal({ open, onClose }: Props) {
           </section>
 
           <section>
-            <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6b7280]">
+            <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Senha
             </div>
             <div className="grid gap-3">

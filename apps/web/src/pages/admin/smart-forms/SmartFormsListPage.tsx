@@ -156,7 +156,7 @@ export function SmartFormsListPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-white p-3 shadow-[var(--shadow-surface-sm)]">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-card p-3 shadow-[var(--shadow-surface-sm)]">
         <AdminInput
           className="min-w-[200px] flex-1"
           placeholder="Buscar por nome..."
@@ -190,7 +190,7 @@ export function SmartFormsListPage() {
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-white p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
           <p className="text-sm text-muted-foreground">Nenhum formulário ainda.</p>
           {canWrite && (
             <AdminButton className="mt-4" onClick={() => void createBlank()}>
@@ -207,7 +207,7 @@ export function SmartFormsListPage() {
             return (
               <article
                 key={form.id}
-                className="flex flex-col rounded-2xl border border-border/60 bg-white p-4 shadow-[var(--shadow-surface-sm)]"
+                className="flex flex-col rounded-2xl border border-border/60 bg-card p-4 shadow-[var(--shadow-surface-sm)]"
               >
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2.5">

@@ -16,6 +16,21 @@
       rel="stylesheet"
     />
     <title>Muratori Dash</title>
+    <script>
+      // Aplica o tema salvo antes da renderização (evita flash claro no dark).
+      (function () {
+        try {
+          var t = localStorage.getItem("muratori_theme");
+          if (!t) {
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+          }
+          if (t === "dark") document.documentElement.classList.add("dark");
+          document.documentElement.style.colorScheme = t;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
